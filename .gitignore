@@ -8,6 +8,8 @@ compose.development.yaml
 **/Insomnia*
 **/uploads/
 **/*.local
+**/dumps/
+
 
 # compiled output
 **/dist
