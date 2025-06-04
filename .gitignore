@@ -9,7 +9,7 @@ compose.development.yaml
 **/uploads/
 **/*.local
 **/dumps/
-
+client_secret_*.json
 
 # compiled output
 **/dist
