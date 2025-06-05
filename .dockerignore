@@ -26,3 +26,4 @@
 **/error.log
 **/dist
 *.pdf
+client_secret_*.json
