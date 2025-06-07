@@ -5,6 +5,8 @@ import { ConfigService } from "@nestjs/config";
 import AppModule from "./app.module.js";
 import { AppConfiguration } from "./configs/interfaces/appConfiguration.interface.js";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
+import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import fs from "fs";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -12,11 +14,34 @@ async function bootstrap(): Promise<void> {
   });
 
   const configService = app.get(ConfigService);
-  const { host, port, cookieSecret } =
+  const { host, port, cookieSecret, swaggerEnabled } =
     configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration")!;
 
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   app.use(cookieParser(cookieSecret));
+
+  if (swaggerEnabled) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const packageJson: Record<string, any> = JSON.parse(fs.readFileSync("../../package.json", "utf-8"));
+
+    const swaggerConfiguration = new DocumentBuilder()
+      .setTitle(packageJson.name)
+      .setDescription(packageJson.description)
+      .setVersion(packageJson.version)
+      .addBearerAuth({
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
+      })
+      .build();
+    const documentFactory = () => {
+      return SwaggerModule.createDocument(app, swaggerConfiguration);
+    };
+    SwaggerModule.setup("docs", app, documentFactory, {
+      jsonDocumentUrl: "docs/json",
+      yamlDocumentUrl: "docs/yaml",
+    });
+  }
 
   await app.listen(port, host, () => {
     app.get(WINSTON_MODULE_NEST_PROVIDER).log(`Server is running on http://${host}:${port}`, "SimpleAuth3");

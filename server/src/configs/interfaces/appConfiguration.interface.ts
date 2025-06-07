@@ -5,6 +5,7 @@ interface AppConfiguration {
     host: string;
     port: number;
     cookieSecret: string;
+    swaggerEnabled: boolean;
   };
   loggerConfiguration: WinstonModuleOptions;
 }

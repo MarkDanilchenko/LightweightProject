@@ -1,5 +1,5 @@
 {
-  "name": "nodejs_simpleauth3",
+  "name": "SimpleAuth3",
   "version": "1.0.0",
   "description": "This API based on NodeJS (NestJS) implementing different strategies of authentication.",
   "author": "",
@@ -26,6 +26,7 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.2.0",
     "cookie-parser": "^1.4.7",
     "nest-winston": "^1.10.2",
     "passport": "^0.7.0",
