@@ -15,7 +15,7 @@ async function bootstrap(): Promise<void> {
 
   const configService = app.get(ConfigService);
   const { host, port, cookieSecret, swaggerEnabled } =
-    configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration")!;
+    configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration");
 
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   app.use(cookieParser(cookieSecret));

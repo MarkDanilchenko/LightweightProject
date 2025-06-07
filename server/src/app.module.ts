@@ -15,7 +15,7 @@ import { AppConfiguration } from "./configs/interfaces/appConfiguration.interfac
     WinstonModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        return configService.get<AppConfiguration["loggerConfiguration"]>("loggerConfiguration")!;
+        return configService.get<AppConfiguration["loggerConfiguration"]>("loggerConfiguration");
       },
     }),
   ],
