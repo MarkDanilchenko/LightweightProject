@@ -1,12 +1,12 @@
+import * as fs from "node:fs";
+import * as cookieParser from "cookie-parser";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
-import * as cookieParser from "cookie-parser";
 import { ConfigService } from "@nestjs/config";
 import AppModule from "./app.module.js";
 import { AppConfiguration } from "./configs/interfaces/appConfiguration.interface.js";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import fs from "fs";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -22,7 +22,7 @@ async function bootstrap(): Promise<void> {
 
   if (swaggerEnabled) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const packageJson: Record<string, any> = JSON.parse(fs.readFileSync("../../package.json", "utf-8"));
+    const packageJson: Record<string, any> = JSON.parse(fs.readFileSync("../package.json", "utf-8"));
 
     const swaggerConfiguration = new DocumentBuilder()
       .setTitle(packageJson.name)
