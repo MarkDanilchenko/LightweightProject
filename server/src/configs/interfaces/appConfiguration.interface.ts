@@ -1,3 +1,4 @@
+import { TypeOrmModuleOptions } from "@nestjs/typeorm";
 import { WinstonModuleOptions } from "nest-winston";
 
 interface AppConfiguration {
@@ -8,6 +9,7 @@ interface AppConfiguration {
     swaggerEnabled: boolean;
   };
   loggerConfiguration: WinstonModuleOptions;
+  dbConfiguration: TypeOrmModuleOptions;
 }
 
 export { AppConfiguration };
