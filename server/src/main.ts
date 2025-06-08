@@ -7,6 +7,7 @@ import AppModule from "./app.module.js";
 import { AppConfiguration } from "./configs/interfaces/appConfiguration.interface.js";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { ValidationPipe } from "@nestjs/common";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -15,10 +16,15 @@ async function bootstrap(): Promise<void> {
 
   const configService = app.get(ConfigService);
   const { host, port, cookieSecret, swaggerEnabled } =
-    configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration");
+    configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration")!;
 
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
   app.use(cookieParser(cookieSecret));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+    }),
+  );
 
   if (swaggerEnabled) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

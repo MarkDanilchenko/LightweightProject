@@ -16,13 +16,13 @@ import { TypeOrmModule } from "@nestjs/typeorm";
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        return configService.get<AppConfiguration["dbConfiguration"]>("dbConfiguration");
+        return configService.get<AppConfiguration["dbConfiguration"]>("dbConfiguration")!;
       },
     }),
     WinstonModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        return configService.get<AppConfiguration["loggerConfiguration"]>("loggerConfiguration");
+        return configService.get<AppConfiguration["loggerConfiguration"]>("loggerConfiguration")!;
       },
     }),
   ],

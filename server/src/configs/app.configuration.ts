@@ -21,7 +21,7 @@ export default (): AppConfiguration => {
     serverConfiguration: {
       host: SERVER_HOST || "127.0.0.1",
       port: Number(SERVER_PORT) || 3000,
-      cookieSecret: COOKIE_SECRET,
+      cookieSecret: COOKIE_SECRET!,
       swaggerEnabled: SWAGGER_ENABLED === "true",
     },
     loggerConfiguration: {
