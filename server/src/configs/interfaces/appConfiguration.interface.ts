@@ -1,5 +1,6 @@
 import { TypeOrmModuleOptions } from "@nestjs/typeorm";
 import { WinstonModuleOptions } from "nest-winston";
+import { DataSourceOptions } from "typeorm";
 
 interface AppConfiguration {
   serverConfiguration: {
@@ -9,7 +10,7 @@ interface AppConfiguration {
     swaggerEnabled: boolean;
   };
   loggerConfiguration: WinstonModuleOptions;
-  dbConfiguration: TypeOrmModuleOptions;
+  dbConfiguration: TypeOrmModuleOptions | DataSourceOptions;
 }
 
 export { AppConfiguration };

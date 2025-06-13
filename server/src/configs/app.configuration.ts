@@ -1,6 +1,9 @@
-import { AppConfiguration } from "./interfaces/appConfiguration.interface.js";
+import * as dotenv from "dotenv";
 import * as winston from "winston";
+import { AppConfiguration } from "./interfaces/appConfiguration.interface.js";
 import { utilities as nestWinstonModuleUtilities } from "nest-winston";
+
+dotenv.config({ path: "./.env.development" });
 
 export default (): AppConfiguration => {
   const {
@@ -50,7 +53,7 @@ export default (): AppConfiguration => {
       password: DATABASE_PASSWORD,
       logging: TYPEORM_LOGGING === "true",
       migrationsRun: TYPEORM_MIGRATIONS_RUN === "true",
-      entities: ["dist/**/*.entity.js"],
+      entities: ["**/*.entity.js"],
       migrations: ["**/migrations/*.{ts,js}"],
       applicationName: "SimpleAuth3",
     },
