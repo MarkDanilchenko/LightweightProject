@@ -13,6 +13,7 @@ interface AppConfiguration {
   dbConfiguration: TypeOrmModuleOptions | DataSourceOptions;
   jwtConfiguration: {
     secret: string;
+    accessTokenExpiresIn: string;
   };
   authConfiguration: {
     google: {

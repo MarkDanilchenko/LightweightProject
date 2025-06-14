@@ -19,6 +19,7 @@ export default (): AppConfiguration => {
     TYPEORM_LOGGING,
     TYPEORM_MIGRATIONS_RUN,
     JWT_SECRET,
+    JWT_ACCESS_TOKEN_EXPIRES_IN,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_CALLBACK_URL,
@@ -63,6 +64,7 @@ export default (): AppConfiguration => {
     },
     jwtConfiguration: {
       secret: JWT_SECRET!,
+      accessTokenExpiresIn: JWT_ACCESS_TOKEN_EXPIRES_IN || "24h",
     },
     authConfiguration: {
       google: {
