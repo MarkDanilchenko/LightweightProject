@@ -5,6 +5,7 @@ import { WinstonModule } from "nest-winston";
 import { ConfigService } from "@nestjs/config";
 import { AppConfiguration } from "./configs/interfaces/appConfiguration.interface.js";
 import { TypeOrmModule } from "@nestjs/typeorm";
+import { AuthModule } from "@server/auth/auth.module";
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
         return configService.get<AppConfiguration["loggerConfiguration"]>("loggerConfiguration")!;
       },
     }),
+    AuthModule,
   ],
   exports: [],
   controllers: [],

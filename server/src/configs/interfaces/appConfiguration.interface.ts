@@ -11,6 +11,9 @@ interface AppConfiguration {
   };
   loggerConfiguration: WinstonModuleOptions;
   dbConfiguration: TypeOrmModuleOptions | DataSourceOptions;
+  jwtConfiguration: {
+    secret: string;
+  };
 }
 
 export { AppConfiguration };

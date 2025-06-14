@@ -18,6 +18,7 @@ export default (): AppConfiguration => {
     DATABASE_PASSWORD,
     TYPEORM_LOGGING,
     TYPEORM_MIGRATIONS_RUN,
+    JWT_SECRET,
   } = process.env;
 
   return {
@@ -56,6 +57,9 @@ export default (): AppConfiguration => {
       entities: ["**/*.entity.js"],
       migrations: ["**/migrations/*.{ts,js}"],
       applicationName: "SimpleAuth3",
+    },
+    jwtConfiguration: {
+      secret: JWT_SECRET!,
     },
   };
 };
