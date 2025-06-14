@@ -19,6 +19,9 @@ export default (): AppConfiguration => {
     TYPEORM_LOGGING,
     TYPEORM_MIGRATIONS_RUN,
     JWT_SECRET,
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_CALLBACK_URL,
   } = process.env;
 
   return {
@@ -60,6 +63,13 @@ export default (): AppConfiguration => {
     },
     jwtConfiguration: {
       secret: JWT_SECRET!,
+    },
+    authConfiguration: {
+      google: {
+        clientID: GOOGLE_CLIENT_ID!,
+        clientSecret: GOOGLE_CLIENT_SECRET!,
+        callbackURL: GOOGLE_CALLBACK_URL!,
+      },
     },
   };
 };

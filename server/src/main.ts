@@ -18,8 +18,12 @@ async function bootstrap(): Promise<void> {
   const { host, port, cookieSecret, swaggerEnabled } =
     configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration")!;
 
+  app.setGlobalPrefix("api/v1");
+
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+
   app.use(cookieParser(cookieSecret));
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,

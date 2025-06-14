@@ -14,6 +14,13 @@ interface AppConfiguration {
   jwtConfiguration: {
     secret: string;
   };
+  authConfiguration: {
+    google: {
+      clientID: string;
+      clientSecret: string;
+      callbackURL: string;
+    };
+  };
 }
 
 export { AppConfiguration };
