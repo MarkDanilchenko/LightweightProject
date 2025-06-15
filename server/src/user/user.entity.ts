@@ -8,7 +8,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import AuthenticationEntity from "@/auth/auth.entity.js";
+import AuthenticationEntity from "@server/auth/auth.entity";
 
 @Entity({ name: "users" })
 export default class UserEntity extends BaseEntity {
@@ -17,6 +17,12 @@ export default class UserEntity extends BaseEntity {
 
   @Column({ type: "varchar", unique: true })
   username: string;
+
+  @Column({ type: "varchar", nullable: true })
+  firstName?: string | null;
+
+  @Column({ type: "varchar", nullable: true })
+  lastName?: string | null;
 
   @Column({ type: "varchar", unique: true })
   email: string;
