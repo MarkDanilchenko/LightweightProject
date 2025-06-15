@@ -9,10 +9,10 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import UserEntity from "@/user/user.entity.js";
+import UserEntity from "@server/user/user.entity";
 
 @Entity({ name: "authentications" })
-@Index(["userId", "providerId"], { unique: true })
+@Index(["userId", "provider"], { unique: true })
 export default class AuthenticationEntity extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id: string;
@@ -24,13 +24,16 @@ export default class AuthenticationEntity extends BaseEntity {
   provider: string;
 
   @Column({ type: "varchar" })
-  providerId: string;
-
-  @Column({ type: "varchar" })
   accessToken: string;
 
   @Column({ type: "varchar", nullable: true })
   refreshToken?: string | null;
+
+  /**
+   * The user's password if the authentication provider is "local".
+   */
+  @Column({ type: "varchar", nullable: true })
+  password?: string | null;
 
   @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
