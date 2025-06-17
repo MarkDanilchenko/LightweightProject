@@ -23,10 +23,6 @@ export class CreateAuthenticationEntity1749980098822 implements MigrationInterfa
               type: "varchar",
             },
             {
-              name: "accessToken",
-              type: "varchar",
-            },
-            {
               name: "refreshToken",
               type: "varchar",
               isNullable: true,
