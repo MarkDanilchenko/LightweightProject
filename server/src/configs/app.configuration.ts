@@ -23,6 +23,7 @@ export default (): AppConfiguration => {
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_CALLBACK_URL,
+    HASH_SALT,
   } = process.env;
 
   return {
@@ -31,6 +32,7 @@ export default (): AppConfiguration => {
       port: Number(SERVER_PORT) || 3000,
       cookieSecret: COOKIE_SECRET!,
       swaggerEnabled: SWAGGER_ENABLED === "true",
+      hashSecret: HASH_SALT!,
     },
     loggerConfiguration: {
       transports: [

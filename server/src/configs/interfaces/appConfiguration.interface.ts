@@ -8,6 +8,7 @@ interface AppConfiguration {
     port: number;
     cookieSecret: string;
     swaggerEnabled: boolean;
+    hashSecret: string;
   };
   loggerConfiguration: WinstonModuleOptions;
   dbConfiguration: TypeOrmModuleOptions | DataSourceOptions;

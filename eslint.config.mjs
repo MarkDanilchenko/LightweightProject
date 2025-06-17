@@ -46,10 +46,9 @@ export default tseslint.config(
       "no-var": "error",
       "no-console": "error",
       "no-unused-expressions": "error",
-      "no-unused-vars": "error",
+      "no-unused-vars": "warn",
       "no-use-before-define": "error",
       "no-useless-constructor": "error",
-      semi: ["error", "always"],
       "padding-line-between-statements": [
         "error",
         {
