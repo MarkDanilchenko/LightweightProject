@@ -62,7 +62,7 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
       refreshToken,
     };
 
-    const user = await this.authService.validateUserAccordingToStrategy(idP, userProfile, userIdPTokens);
+    const user = await this.authService.validateUserAuthAccordingToStrategy(idP, userProfile, userIdPTokens);
 
     done(null, user);
   }

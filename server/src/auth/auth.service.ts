@@ -6,6 +6,8 @@ import { EntityManager, Repository } from "typeorm";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { AuthenticationProviderKind } from "./types/auth.types.js";
 import GoogleOAuth2 from "./interfaces/googleOAuth2.interface.js";
+import TokenService from "./token.service.js";
+import { encrypt } from "../utils/encoder.js";
 
 @Injectable()
 export default class AuthService {
@@ -17,9 +19,10 @@ export default class AuthService {
     private readonly authenticationRepository: Repository<AuthenticationEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    private readonly tokenService: TokenService,
   ) {}
 
-  async validateUserAccordingToStrategy(
+  async validateUserAuthAccordingToStrategy(
     idP: AuthenticationProviderKind,
     userProfile: GoogleOAuth2["userProfile"],
     userIdPTokens?: GoogleOAuth2["userIdPTokens"],
@@ -110,5 +113,20 @@ export default class AuthService {
         throw new NotAcceptableException(`Authentication provider is not supported.`);
       }
     }
+  }
+
+  async signIn(user: UserEntity, provider: AuthenticationProviderKind): Promise<{ accessToken: string }> {
+    const payload = {
+      userId: user.id,
+      provider,
+    };
+
+    const { accessToken, refreshToken } = await this.tokenService.generateBothTokens(payload);
+
+    const encryptedRefreshToken = encrypt(refreshToken);
+
+    await this.authenticationRepository.update({ userId: user.id }, { refreshToken: encryptedRefreshToken });
+
+    return { accessToken };
   }
 }
