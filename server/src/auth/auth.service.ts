@@ -12,6 +12,7 @@ import { encrypt } from "../utils/encoder.js";
 @Injectable()
 export default class AuthService {
   constructor(
+    private readonly tokenService: TokenService,
     private readonly entityManager: EntityManager,
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
@@ -19,7 +20,6 @@ export default class AuthService {
     private readonly authenticationRepository: Repository<AuthenticationEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-    private readonly tokenService: TokenService,
   ) {}
 
   async validateUserAuthAccordingToStrategy(
