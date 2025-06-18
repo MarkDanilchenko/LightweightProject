@@ -45,9 +45,5 @@ export default class TokenService {
     return refreshToken;
   }
 
-  async verifyRefreshToken(token: string): Promise<void> {
-    const isVerified = await this.jwtService.verifyAsync(token);
-
-    return isVerified;
-  }
+  async verifyRefreshToken(token: string): Promise<void> {}
 }

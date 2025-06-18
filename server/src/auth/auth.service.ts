@@ -102,9 +102,9 @@ export default class AuthService {
         return reloadUser;
       }
 
-      case "local": {
-        return;
-      }
+      // case "local": {
+      //   return;
+      // }
 
       default: {
         throw new NotAcceptableException(`Authentication provider is not supported.`);

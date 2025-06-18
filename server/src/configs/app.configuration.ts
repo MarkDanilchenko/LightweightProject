@@ -20,10 +20,11 @@ export default (): AppConfiguration => {
     TYPEORM_MIGRATIONS_RUN,
     JWT_SECRET,
     JWT_ACCESS_TOKEN_EXPIRES_IN,
+    JWT_REFRESH_TOKEN_EXPIRES_IN,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_CALLBACK_URL,
-    HASH_SALT,
+    ENCODER_SECRET,
   } = process.env;
 
   return {
@@ -32,7 +33,7 @@ export default (): AppConfiguration => {
       port: Number(SERVER_PORT) || 3000,
       cookieSecret: COOKIE_SECRET!,
       swaggerEnabled: SWAGGER_ENABLED === "true",
-      hashSecret: HASH_SALT!,
+      encoderSecret: ENCODER_SECRET!,
     },
     loggerConfiguration: {
       transports: [
@@ -67,6 +68,7 @@ export default (): AppConfiguration => {
     jwtConfiguration: {
       secret: JWT_SECRET!,
       accessTokenExpiresIn: JWT_ACCESS_TOKEN_EXPIRES_IN || "24h",
+      refreshTokenExpiresIn: JWT_REFRESH_TOKEN_EXPIRES_IN || "7d",
     },
     authConfiguration: {
       google: {

@@ -8,13 +8,14 @@ interface AppConfiguration {
     port: number;
     cookieSecret: string;
     swaggerEnabled: boolean;
-    hashSecret: string;
+    encoderSecret: string;
   };
   loggerConfiguration: WinstonModuleOptions;
   dbConfiguration: TypeOrmModuleOptions | DataSourceOptions;
   jwtConfiguration: {
     secret: string;
     accessTokenExpiresIn: string;
+    refreshTokenExpiresIn: string;
   };
   authConfiguration: {
     google: {
