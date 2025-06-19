@@ -62,7 +62,7 @@ export default (): AppConfiguration => {
       logging: TYPEORM_LOGGING === "true",
       migrationsRun: TYPEORM_MIGRATIONS_RUN === "true",
       entities: ["**/*.entity.js"],
-      migrations: ["**/migrations/*.{ts,js}"],
+      migrations: ["**/migrations/*.js"],
       applicationName: "SimpleAuth3",
     },
     jwtConfiguration: {
