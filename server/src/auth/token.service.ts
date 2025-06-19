@@ -1,7 +1,7 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import { AppConfiguration } from "../configs/interfaces/appConfiguration.interface.js";
+import AppConfiguration from "../configs/interfaces/appConfiguration.interface.js";
 
 @Injectable()
 export default class TokenService {
@@ -45,5 +45,13 @@ export default class TokenService {
     return refreshToken;
   }
 
-  async verifyRefreshToken(token: string): Promise<void> {}
+  async verifyRefreshToken(token: string): Promise<Record<string, any>> {
+    try {
+      const payload = await this.jwtService.verifyAsync<Record<string, any>>(token);
+
+      return payload;
+    } catch {
+      throw new UnauthorizedException("Invalid refresh token.");
+    }
+  }
 }
