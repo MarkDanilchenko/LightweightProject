@@ -4,7 +4,7 @@ import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@nestjs/config";
 import AppModule from "./app.module.js";
-import { AppConfiguration } from "./configs/interfaces/appConfiguration.interface.js";
+import AppConfiguration from "./configs/interfaces/appConfiguration.interface.js";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { ValidationPipe } from "@nestjs/common";
@@ -32,12 +32,12 @@ async function bootstrap(): Promise<void> {
 
   if (swaggerEnabled) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const packageJson: Record<string, any> = JSON.parse(fs.readFileSync("../package.json", "utf-8"));
+    const packageJsonInfo: Record<string, any> = JSON.parse(fs.readFileSync("../package.json", "utf-8"));
 
     const swaggerConfiguration = new DocumentBuilder()
-      .setTitle(packageJson.name)
-      .setDescription(packageJson.description)
-      .setVersion(packageJson.version)
+      .setTitle(packageJsonInfo.name)
+      .setDescription(packageJsonInfo.description)
+      .setVersion(packageJsonInfo.version)
       .addBearerAuth({
         type: "http",
         scheme: "bearer",

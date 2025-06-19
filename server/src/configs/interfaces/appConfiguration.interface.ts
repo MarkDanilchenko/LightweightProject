@@ -2,7 +2,7 @@ import { TypeOrmModuleOptions } from "@nestjs/typeorm";
 import { WinstonModuleOptions } from "nest-winston";
 import { DataSourceOptions } from "typeorm";
 
-interface AppConfiguration {
+export default interface AppConfiguration {
   serverConfiguration: {
     host: string;
     port: number;
@@ -25,5 +25,3 @@ interface AppConfiguration {
     };
   };
 }
-
-export { AppConfiguration };
