@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner, Table, TableForeignKey, TableIndex } from "typeorm";
 
-export class CreateAuthenticationEntity1749980098822 implements MigrationInterface {
+export class CreateAuthenticationEntity1750368815311 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.startTransaction();
 
@@ -49,6 +49,8 @@ export class CreateAuthenticationEntity1749980098822 implements MigrationInterfa
             },
           ],
         }),
+        // "true" - create table, if not exists;
+        true,
       );
 
       await queryRunner.createForeignKey(
