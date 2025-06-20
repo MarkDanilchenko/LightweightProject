@@ -1,4 +1,11 @@
-import { BadRequestException, Inject, Injectable, LoggerService, NotAcceptableException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  LoggerService,
+  NotAcceptableException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import UserEntity from "@server/user/user.entity";
@@ -42,11 +49,11 @@ export default class AuthService {
           where: { email, username: userName },
         });
 
-        if (!user) {
-          this.logger.log(`User ${userName ?? email} does not exist. Creating ...`);
+        await this.entityManager.transaction(async (transactionalEntityManager) => {
+          try {
+            if (!user) {
+              this.logger.log(`User ${userName ?? email} does not exist. Creating ...`);
 
-          await this.entityManager.transaction(async (transactionalEntityManager) => {
-            try {
               const user = transactionalEntityManager.create(UserEntity, {
                 username: userName,
                 firstName,
@@ -61,17 +68,9 @@ export default class AuthService {
                 provider: idP,
               });
               await transactionalEntityManager.save(authentication);
-            } catch (error) {
-              this.logger.error(error);
+            } else {
+              this.logger.log(`User ${userName ?? email} already exists. Checking authentication ...`);
 
-              throw new BadRequestException(`User ${userName ?? email} could not be created.`);
-            }
-          });
-        } else {
-          this.logger.log(`User ${userName ?? email} already exists. Checking authentication ...`);
-
-          await this.entityManager.transaction(async (transactionalEntityManager) => {
-            try {
               const authentication = await transactionalEntityManager.findOne(AuthenticationEntity, {
                 where: { userId: user.id, provider: idP },
               });
@@ -83,15 +82,13 @@ export default class AuthService {
                 });
                 await this.entityManager.save(authentication);
               }
-            } catch (error) {
-              this.logger.error(error);
-
-              throw new BadRequestException(
-                `Authentication for user ${userName ?? email} could not be set or updated.`,
-              );
             }
-          });
-        }
+          } catch (error) {
+            this.logger.error(error.message);
+
+            throw new BadRequestException(`Authentication for user: ${userName ?? email} failed.`);
+          }
+        });
 
         const reloadUser = await this.userRepository.findOne({
           where: { email, username: userName },
@@ -116,17 +113,23 @@ export default class AuthService {
   }
 
   async signIn(user: UserEntity, provider: AuthenticationProviderKind): Promise<{ accessToken: string }> {
-    const payload = {
-      userId: user.id,
-      provider,
-    };
+    try {
+      const payload = {
+        userId: user.id,
+        provider,
+      };
 
-    const { accessToken, refreshToken } = await this.tokenService.generateBothTokens(payload);
+      const { accessToken, refreshToken } = await this.tokenService.generateBothTokens(payload);
 
-    const encryptedRefreshToken = encrypt(refreshToken);
+      const encryptedRefreshToken = encrypt(refreshToken);
 
-    await this.authenticationRepository.update({ userId: user.id }, { refreshToken: encryptedRefreshToken });
+      await this.authenticationRepository.update({ userId: user.id }, { refreshToken: encryptedRefreshToken });
 
-    return { accessToken };
+      return { accessToken };
+    } catch (error) {
+      this.logger.error(error.message);
+
+      throw new UnauthorizedException("Authentication failed.");
+    }
   }
 }

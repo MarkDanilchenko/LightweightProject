@@ -46,12 +46,8 @@ export default class TokenService {
   }
 
   async verifyRefreshToken(token: string): Promise<Record<string, any>> {
-    try {
-      const payload = await this.jwtService.verifyAsync<Record<string, any>>(token);
+    const payload = await this.jwtService.verifyAsync<Record<string, any>>(token);
 
-      return payload;
-    } catch {
-      throw new UnauthorizedException("Invalid refresh token.");
-    }
+    return payload;
   }
 }
