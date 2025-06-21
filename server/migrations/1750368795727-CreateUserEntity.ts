@@ -10,6 +10,8 @@ export class CreateUserEntity1750368795727 implements MigrationInterface {
             name: "id",
             type: "uuid",
             isPrimary: true,
+            isNullable: false,
+            default: "uuid_generate_v4()",
           },
           {
             name: "username",

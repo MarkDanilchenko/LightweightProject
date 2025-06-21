@@ -2,16 +2,17 @@ import * as crypto from "crypto";
 import AppConfiguration from "../configs/app.configuration.js";
 
 const algorithm = "aes-256-cbc";
-const secretKey = AppConfiguration().serverConfiguration.encoderSecret;
-const iv = crypto.randomBytes(16);
 
 /**
- * Encrypts a given string using the configured algorithm and secret key.
- * @param strToEncrypt The string to be encrypted.
+ * Encrypts the given string applying AES-256-CBC with a secret key.
  *
- * @returns The encrypted string, prefixed with the initialization vector (hex encoded).
+ * @param {string} strToEncrypt The string to be encrypted.
+ * @returns {string} The encrypted string.
  */
 function encrypt(strToEncrypt: string): string {
+  const iv = crypto.randomBytes(16);
+  const secretKey = Buffer.from(AppConfiguration().serverConfiguration.encoderSecret, "hex");
+
   const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
   let encrypted = cipher.update(strToEncrypt, "utf8", "hex");
   encrypted += cipher.final("hex");
@@ -20,14 +21,15 @@ function encrypt(strToEncrypt: string): string {
 }
 
 /**
- * Decrypts a given string using the configured algorithm and secret key.
- * @param strToDecrypt The string to be decrypted, should be in the format of "iv:encryptedData" where
- *                     iv is the initialization vector as a hex encoded string and encryptedData is the
- *                     encrypted data as a hex encoded string.
+ * Decrypts a string that was encrypted using the
+ * `encrypt` function.
  *
- * @returns The decrypted string.
+ * @param {string} strToDecrypt The string to be decrypted.
+ * @returns {string} The decrypted string.
  */
 function decrypt(strToDecrypt: string): string {
+  const secretKey = Buffer.from(AppConfiguration().serverConfiguration.encoderSecret, "hex");
+
   const [ivHex, encryptedHex] = strToDecrypt.split(":");
   const decipher = crypto.createDecipheriv(algorithm, secretKey, Buffer.from(ivHex, "hex"));
   let decrypted = decipher.update(encryptedHex, "hex", "utf8");
