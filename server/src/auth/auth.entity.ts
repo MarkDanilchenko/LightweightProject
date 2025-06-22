@@ -2,7 +2,6 @@ import {
   BaseEntity,
   Column,
   CreateDateColumn,
-  DeleteDateColumn,
   Entity,
   Index,
   ManyToOne,
@@ -39,10 +38,7 @@ export default class AuthenticationEntity extends BaseEntity {
   createdAt: Date;
 
   @UpdateDateColumn({ type: "timestamptz" })
-  updatedAt: Date;
-
-  @DeleteDateColumn({ type: "timestamptz", nullable: true })
-  deletedAt?: Date | null;
+  lastAccessedAt: Date;
 
   @ManyToOne(() => UserEntity, (user) => user.authentications)
   user: UserEntity;

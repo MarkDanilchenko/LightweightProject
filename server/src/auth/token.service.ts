@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "../configs/interfaces/appConfiguration.interface.js";
+import { JwtPayload } from "./interfaces/auth.interface.js";
 
 @Injectable()
 export default class TokenService {
@@ -20,7 +21,13 @@ export default class TokenService {
     >("jwtConfiguration.refreshTokenExpiresIn")!;
   }
 
-  async generateBothTokens(payload: Record<string, unknown>): Promise<{ accessToken: string; refreshToken: string }> {
+  /**
+   * Generates both an access token and a refresh token given a payload.
+   * @param payload The payload to sign.
+   *
+   * @returns An object containing the access token and refresh token.
+   */
+  async generateBothTokens(payload: JwtPayload): Promise<{ accessToken: string; refreshToken: string }> {
     const [accessToken, refreshToken] = await Promise.all([
       this.generateAccessToken(payload),
       this.generateRefreshToken(payload),
@@ -29,7 +36,13 @@ export default class TokenService {
     return { accessToken, refreshToken };
   }
 
-  async generateAccessToken(payload: Record<string, unknown>): Promise<string> {
+  /**
+   * Generates an access token given a payload.
+   * @param payload The payload to sign.
+   *
+   * @returns A promise that resolves with the access token.
+   */
+  async generateAccessToken(payload: JwtPayload): Promise<string> {
     const accessToken = await this.jwtService.signAsync(payload, {
       expiresIn: this.jwtAccessTokenExpirationTime,
     });
@@ -37,7 +50,13 @@ export default class TokenService {
     return accessToken;
   }
 
-  async generateRefreshToken(payload: Record<string, unknown>): Promise<string> {
+  /**
+   * Generates a refresh token given a payload.
+   * @param payload The payload to sign.
+   *
+   * @returns A promise that resolves with the refresh token.
+   */
+  async generateRefreshToken(payload: JwtPayload): Promise<string> {
     const refreshToken = await this.jwtService.signAsync(payload, {
       expiresIn: this.jwtRefreshTokenExpirationTime,
     });

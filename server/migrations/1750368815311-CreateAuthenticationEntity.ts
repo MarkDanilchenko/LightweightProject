@@ -40,14 +40,9 @@ export class CreateAuthenticationEntity1750368815311 implements MigrationInterfa
               default: "now()",
             },
             {
-              name: "updatedAt",
+              name: "lastAccessedAt",
               type: "timestamptz",
               default: "now()",
-            },
-            {
-              name: "deletedAt",
-              type: "timestamptz",
-              isNullable: true,
             },
           ],
         }),
