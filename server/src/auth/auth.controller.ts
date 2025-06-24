@@ -13,7 +13,10 @@ export default class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Get("google")
-  @ApiOperation({ summary: "Google OAuth2 authentication" })
+  @ApiOperation({
+    summary: "Google OAuth2 authentication",
+    description: "Redirect to Google for further authentication",
+  })
   @UseGuards(AuthGuard("google"))
   async googleAuth(): Promise<void> {
     // The request will be redirected to Google for further authentication;
@@ -21,7 +24,7 @@ export default class AuthController {
   }
 
   @Get("google/redirect")
-  @ApiOperation({ summary: "Google OAuth2 authentication redirect" })
+  @ApiOperation({ summary: "Google OAuth2 authentication redirect", description: "Redirect from Google" })
   @UseGuards(AuthGuard("google"))
   async googleAuthRedirect(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
     const user = req.user as UserEntity;
@@ -43,7 +46,7 @@ export default class AuthController {
   }
 
   @Get("profile")
-  @ApiOperation({ summary: "Get user profile info" })
+  @ApiOperation({ summary: "Get user profile info", description: "Get user profile info" })
   @UseGuards(JwtAuthGuard)
   async getProfile(@Req() req: Request & { user: UserInfoByJwtAuthGuard }): Promise<Profile> {
     const userPartialInfo = req.user;

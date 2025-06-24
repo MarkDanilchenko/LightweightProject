@@ -22,12 +22,15 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
       callbackURL: configService.get<AppConfiguration["authConfiguration"]["google"]["callbackURL"]>(
         "authConfiguration.google.callbackURL",
       )!,
+      // LEARN For OAuth 2.0, the scope does not contain the `openid` scope !!!
+      // LEARN For OIDC the scope looks like: scope: ['openid', 'email', 'profile'];
       scope: ["email", "profile"],
     });
   }
 
   /**
    * Returns the authorization parameters for the Google OAuth strategy.
+   * This is needed for returning the refresh token while consent is accepted and related info is received at first time.
    *
    * @returns An object containing the access type and prompt settings.
    */
