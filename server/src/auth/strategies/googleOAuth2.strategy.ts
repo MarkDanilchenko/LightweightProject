@@ -4,7 +4,7 @@ import { Profile, Strategy, VerifyCallback } from "passport-google-oauth20";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interface";
 import { ConfigService } from "@nestjs/config";
 import AuthService from "../auth.service.js";
-import GoogleOAuth2 from "../interfaces/googleOAuth2.interface.js";
+import { GoogleOAuth20, idPTokens } from "../interfaces/auth.interface.js";
 
 @Injectable()
 export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "google") {
@@ -29,12 +29,12 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
   }
 
   /**
-   * Returns the authorization parameters for the Google OAuth strategy.
+   * Returns the additional authorization parameters for the Google OAuth strategy.
    * This is needed for returning the refresh token while consent is accepted and related info is received at first time.
    *
    * @returns An object containing the access type and prompt settings.
    */
-  authorizationParams(): GoogleOAuth2["authorizationParams"] {
+  authorizationParams(): GoogleOAuth20["authorizationParams"] {
     return {
       access_type: "offline",
       prompt: "consent",
@@ -42,7 +42,7 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
   }
 
   /**
-   * Validate the user using the Google OAuth strategy.
+   * Validate the user during the Google OAuth20 strategy.
    *
    * @param accessToken The access token received from Google.
    * @param refreshToken The refresh token received from Google.
@@ -53,19 +53,19 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
    */
   async validate(accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback): Promise<void> {
     const idP = profile.provider;
-    const userProfile: GoogleOAuth2["userProfile"] = {
+    const userProfile: GoogleOAuth20["userProfile"] = {
       userName: profile._json.name!,
       firstName: profile._json.given_name,
       lastName: profile._json.family_name,
       email: profile._json.email!,
       avatarUrl: profile._json.picture,
     };
-    const userIdPTokens: GoogleOAuth2["userIdPTokens"] = {
+    const idPTokens: idPTokens = {
       accessToken,
       refreshToken,
     };
 
-    const user = await this.authService.authAccordingToStrategy(idP, userProfile, userIdPTokens);
+    const user = await this.authService.authAccordingToStrategy(idP, userProfile, idPTokens);
 
     done(null, user);
   }

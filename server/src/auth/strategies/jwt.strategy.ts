@@ -1,7 +1,7 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
-import { JwtPayload, UserInfoByJwtAuthGuard } from "../interfaces/auth.interface.js";
+import { JwtPayload, UserInfoAfterJwtAuthGuard } from "../interfaces/auth.interface.js";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interface.js";
 import { Request } from "express";
@@ -23,7 +23,7 @@ export default class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     });
   }
 
-  async validate(payload: JwtPayload): Promise<UserInfoByJwtAuthGuard> {
+  async validate(payload: JwtPayload): Promise<UserInfoAfterJwtAuthGuard> {
     if (!payload) {
       throw new UnauthorizedException("Authentication failed. Token payload is not valid or not provided.");
     }
@@ -38,15 +38,15 @@ export default class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
       },
       relations: ["authentications"],
     });
+
     if (!user) {
       throw new UnauthorizedException("Authentication failed. User not found or not authenticated.");
     }
 
     return {
-      id: user.id,
       username: user.username,
       email: user.email,
-      idp: payload.provider,
+      provider: payload.provider,
     };
   }
 }

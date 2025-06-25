@@ -6,22 +6,22 @@ import {
   NotAcceptableException,
   UnauthorizedException,
 } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
+import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import UserEntity from "@server/user/user.entity";
-import { EntityManager, Not, Repository } from "typeorm";
+import { DataSource, EntityManager, Not, Repository } from "typeorm";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
-import { AuthenticationProviderKind } from "./types/auth.types.js";
-import GoogleOAuth2 from "./interfaces/googleOAuth2.interface.js";
+import { AuthenticationProvider, signInCredentials } from "./types/auth.types.js";
 import TokenService from "./token.service.js";
-import { encrypt } from "../utils/encoder.js";
-import { JwtPayload } from "./interfaces/auth.interface.js";
+import { decrypt, encrypt } from "../utils/encrypter.js";
+import { idPTokens, JwtPayload } from "./interfaces/auth.interface.js";
 
 @Injectable()
 export default class AuthService {
   constructor(
     private readonly tokenService: TokenService,
-    private readonly entityManager: EntityManager,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
     @Inject(WINSTON_MODULE_NEST_PROVIDER)
     private readonly logger: LoggerService,
     @InjectRepository(AuthenticationEntity)
@@ -31,45 +31,41 @@ export default class AuthService {
   ) {}
 
   /**
-   * Registers a new user if the user does not exist in the database and
-   * creates a new authentication record for the user. If the user already
-   * exists, it only creates a new authentication record for the user.
+   * Authenticate a user according to the given strategy.
    *
-   * @param idP The authentication provider kind.
-   * @param userProfile The user profile returned from the authentication provider.
-   * @param userIdPTokens The user IdP tokens containing the access token and refresh token.
-   *
-   * @returns The user entity with the newly created authentication record.
+   * @param idP The authentication provider to use.
+   * @param profile The user profile to authenticate.
+   * @param idPTokens The tokens for the given authentication provider.
+   * @returns A promise that resolves to the authenticated user.
    */
   async authAccordingToStrategy(
-    idP: AuthenticationProviderKind,
-    userProfile: GoogleOAuth2["userProfile"],
-    userIdPTokens?: GoogleOAuth2["userIdPTokens"],
+    idP: AuthenticationProvider,
+    profile: Partial<UserEntity>,
+    idPTokens?: idPTokens,
   ): Promise<UserEntity> {
-    const { userName, firstName, lastName, email, avatarUrl } = userProfile;
-    // NOTE: IdP access token and refresh token (userIdPTokens) are not used for authentication,
-    // so also not stored in database;
-    // NOTE: Inner access token and refresh token are configured by the web application
+    const { username, firstName, lastName, email, avatarUrl } = profile;
+    // NOTE: Both idPTokens are not used for authentication, so also not stored in database;
+    // NOTE: Inner access token and refresh token are configured by the web application itself
     // for further access to the protected API routes.
-    const { accessToken, refreshToken } = userIdPTokens ?? {};
+    const { accessToken, refreshToken } = idPTokens ?? {};
+
+    if (!username && !email) {
+      throw new BadRequestException("Username or email are required to proceed authentication.");
+    }
 
     switch (idP) {
       case "google": {
-        if (!userName || !email) {
-          throw new BadRequestException("User name or email are required from Google to proceed.");
-        }
-
         const user = await this.userRepository.findOne({
-          where: { email, username: userName },
+          where: [{ username }, { email }, { username, email }],
         });
 
-        await this.entityManager.transaction(async (transactionalEntityManager) => {
+        await this.dataSource.transaction(async (transactionalEntityManager: EntityManager) => {
           try {
             if (!user) {
-              this.logger.log(`User ${userName ?? email} does not exist. Creating ...`);
+              this.logger.log(`User "${username ?? email}" does not exist. Creating ...`);
 
               const user = transactionalEntityManager.create(UserEntity, {
-                username: userName,
+                username,
                 firstName,
                 lastName,
                 email,
@@ -83,34 +79,34 @@ export default class AuthService {
               });
               await transactionalEntityManager.save(authentication);
             } else {
-              this.logger.log(`User ${userName ?? email} already exists. Checking authentication ...`);
+              this.logger.log(`User "${username ?? email}" already exists. Checking authentication ...`);
 
               let authentication = await transactionalEntityManager.findOne(AuthenticationEntity, {
                 where: { userId: user.id, provider: idP },
               });
 
               if (!authentication) {
-                authentication = this.entityManager.create(AuthenticationEntity, {
+                authentication = transactionalEntityManager.create(AuthenticationEntity, {
                   userId: user.id,
                   provider: idP,
                 });
-
-                // NOTE: Set refresh token to null for all other authentication providers
-                // but not for the current one;
-                await this.entityManager.update(
-                  AuthenticationEntity,
-                  { userId: user.id, provider: Not(idP) },
-                  { refreshToken: null },
-                );
               }
-              // NOTE: Save is both to already existing and new authentication is needed
+
+              // NOTE: Reset refresh token to null for all other authentication providers but not for the current one;
+              await transactionalEntityManager.update(
+                AuthenticationEntity,
+                { userId: user.id, provider: Not(idP) },
+                { refreshToken: null },
+              );
+
+              // NOTE: Save is both to already existing and new authentication instance is needed
               // for properly setting the lastAuthenticatedAt field;
-              await this.entityManager.save(authentication);
+              await transactionalEntityManager.save(authentication);
             }
           } catch (error) {
             this.logger.error(error.message);
 
-            throw new BadRequestException(`Authentication for user: ${userName ?? email} failed.`);
+            throw new BadRequestException(`Authentication user "${username ?? email}" failed.`);
           }
         });
 
@@ -127,33 +123,54 @@ export default class AuthService {
     }
 
     const reloadUser = await this.userRepository.findOne({
-      where: { email, username: userName, authentications: { provider: idP } },
+      where: { email, username, authentications: { provider: idP } },
       relations: ["authentications"],
     });
 
-    if (!reloadUser) {
-      throw new BadRequestException("User could not be reloaded after authentication.");
-    }
-
-    return reloadUser;
+    return reloadUser!;
   }
 
   /**
-   * Generates an access token and saves a refresh token to the database
-   * for the given user and authentication provider.
+   * Signs in a user based on the provided credentials and returns an access token.
    *
-   * @param user The user to authenticate.
-   * @param provider The authentication provider to use.
+   * @param credentials - The sign-in credentials including provider, username, email, and password.
+   *
+   * @returns A promise that resolves with an object containing the access token.
    */
-  async signIn(user: UserEntity, provider: AuthenticationProviderKind): Promise<{ accessToken: string }> {
+  async signIn(credentials: signInCredentials): Promise<{ accessToken: string }> {
     try {
+      const { provider, username, email, password } = credentials;
+
+      const user = await this.userRepository.findOne({
+        where: [
+          { username, email, authentications: { provider } },
+          { username, authentications: { provider } },
+          { email, authentications: { provider } },
+        ],
+        relations: ["authentications"],
+      });
+      if (!user) {
+        throw new UnauthorizedException("Authentication failed. User not found.");
+      }
+
+      if (provider === "local") {
+        if (!password) {
+          throw new BadRequestException("Authentication failed. Password is required.");
+        }
+
+        const decryptedPassword = decrypt(user.authentications[0].password!);
+
+        if (decryptedPassword !== password) {
+          throw new UnauthorizedException("Authentication failed. Wrong password.");
+        }
+      }
+
       const payload: JwtPayload = {
         userId: user.id,
         provider,
       };
 
       const { accessToken, refreshToken } = await this.tokenService.generateBothTokens(payload);
-
       const encryptedRefreshToken = encrypt(refreshToken);
 
       await this.authenticationRepository.update(

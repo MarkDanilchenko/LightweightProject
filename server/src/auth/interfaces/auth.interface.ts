@@ -3,11 +3,10 @@ interface JwtPayload {
   provider: string;
 }
 
-interface UserInfoByJwtAuthGuard {
-  id: string;
+interface UserInfoAfterJwtAuthGuard {
   username: string;
   email: string;
-  idp: string;
+  provider: string;
 }
 
 interface Profile {
@@ -26,4 +25,23 @@ interface Profile {
   };
 }
 
-export { JwtPayload, UserInfoByJwtAuthGuard, Profile };
+interface idPTokens {
+  accessToken: string;
+  refreshToken?: string;
+}
+
+interface GoogleOAuth20 {
+  authorizationParams: {
+    access_type: string;
+    prompt: string;
+  };
+  userProfile: {
+    userName: string;
+    firstName?: string;
+    lastName?: string;
+    email: string;
+    avatarUrl?: string;
+  };
+}
+
+export { JwtPayload, UserInfoAfterJwtAuthGuard, Profile, GoogleOAuth20, idPTokens };
