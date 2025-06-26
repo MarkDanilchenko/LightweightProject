@@ -36,6 +36,7 @@ export default class AuthService {
    * @param idP The authentication provider to use.
    * @param profile The user profile to authenticate.
    * @param idPTokens The tokens for the given authentication provider.
+   *
    * @returns A promise that resolves to the authenticated user.
    */
   async authAccordingToStrategy(
@@ -92,13 +93,6 @@ export default class AuthService {
                 });
               }
 
-              // NOTE: Reset refresh token to null for all other authentication providers but not for the current one;
-              await transactionalEntityManager.update(
-                AuthenticationEntity,
-                { userId: user.id, provider: Not(idP) },
-                { refreshToken: null },
-              );
-
               // NOTE: Save is both to already existing and new authentication instance is needed
               // for properly setting the lastAuthenticatedAt field;
               await transactionalEntityManager.save(authentication);
@@ -138,51 +132,61 @@ export default class AuthService {
    * @returns A promise that resolves with an object containing the access token.
    */
   async signIn(credentials: signInCredentials): Promise<{ accessToken: string }> {
-    try {
-      const { provider, username, email, password } = credentials;
+    const { provider, username, email, password } = credentials;
 
-      const user = await this.userRepository.findOne({
-        where: [
-          { username, email, authentications: { provider } },
-          { username, authentications: { provider } },
-          { email, authentications: { provider } },
-        ],
-        relations: ["authentications"],
-      });
-      if (!user) {
-        throw new UnauthorizedException("Authentication failed. User not found.");
-      }
-
-      if (provider === "local") {
-        if (!password) {
-          throw new BadRequestException("Authentication failed. Password is required.");
-        }
-
-        const decryptedPassword = decrypt(user.authentications[0].password!);
-
-        if (decryptedPassword !== password) {
-          throw new UnauthorizedException("Authentication failed. Wrong password.");
-        }
-      }
-
-      const payload: JwtPayload = {
-        userId: user.id,
-        provider,
-      };
-
-      const { accessToken, refreshToken } = await this.tokenService.generateBothTokens(payload);
-      const encryptedRefreshToken = encrypt(refreshToken);
-
-      await this.authenticationRepository.update(
-        { userId: user.id, provider },
-        { refreshToken: encryptedRefreshToken },
-      );
-
-      return { accessToken };
-    } catch (error) {
-      this.logger.error(error.message);
-
-      throw new UnauthorizedException("Authentication failed.");
+    const user = await this.userRepository.findOne({
+      where: [
+        { username, email, authentications: { provider } },
+        { username, authentications: { provider } },
+        { email, authentications: { provider } },
+      ],
+      relations: ["authentications"],
+    });
+    if (!user) {
+      throw new UnauthorizedException("Authentication failed. User not found.");
     }
+
+    if (provider === "local") {
+      if (!password) {
+        throw new BadRequestException("Authentication failed. Password is required.");
+      }
+
+      const decryptedPassword = decrypt(user.authentications[0].password!);
+
+      if (decryptedPassword !== password) {
+        throw new UnauthorizedException("Authentication failed. Wrong password.");
+      }
+    }
+
+    const payload: JwtPayload = {
+      userId: user.id,
+      provider,
+    };
+
+    return this.dataSource.transaction(async (transactionalEntityManager: EntityManager) => {
+      try {
+        const { accessToken, refreshToken } = await this.tokenService.generateBothTokens(payload);
+        const encryptedRefreshToken = encrypt(refreshToken);
+
+        await transactionalEntityManager.update(
+          AuthenticationEntity,
+          { userId: user.id, provider },
+          { refreshToken: encryptedRefreshToken },
+        );
+
+        // NOTE: Reset refresh token to null for all other authentication providers, but not for the current one;
+        await transactionalEntityManager.update(
+          AuthenticationEntity,
+          { userId: user.id, provider: Not(provider) },
+          { refreshToken: null },
+        );
+
+        return { accessToken };
+      } catch (error) {
+        this.logger.error(error.message);
+
+        throw new UnauthorizedException("Authentication failed.");
+      }
+    });
   }
 }
