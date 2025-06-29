@@ -3,16 +3,22 @@ import { ApiTags, ApiOperation } from "@nestjs/swagger";
 import AuthService from "./auth.service.js";
 import { AuthGuard } from "@nestjs/passport";
 import { Request, Response } from "express";
-import UserEntity from "@server/user/user.entity";
-import { Profile, UserInfoAfterJwtAuthGuard } from "./interfaces/auth.interface.js";
-import { signInCredentials } from "./types/auth.types.js";
+import { Profile } from "./interfaces/auth.interface.js";
+import { requestWithUser, signInCredentials } from "./types/auth.types.js";
+import UserService from "../user/user.service.js";
+import { setCookie } from "../utils/cookie.js";
+import TokenService from "./token.service.js";
 
 @ApiTags("auth")
 @Controller("auth")
 export default class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+    private readonly tokenService: TokenService,
+  ) {}
 
-  @Get("signin/google")
+  @Get("google/signin")
   @ApiOperation({
     summary: "Google authentication via OAuth2",
     description: "The user will be redirected to Google for further authentication.",
@@ -29,12 +35,8 @@ export default class AuthController {
     description: "The user will be redirected to the home page of the web application after successful authentication.",
   })
   @UseGuards(AuthGuard("google"))
-  async googleSignInRedirect(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
-    const user = req.user as UserEntity;
-
-    if (!user) {
-      throw new UnauthorizedException("Authentication via Google failed.");
-    }
+  async googleSignInRedirect(@Req() req: requestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
+    const user = req.user;
 
     const credentials: signInCredentials = {
       provider: "google",
@@ -43,23 +45,20 @@ export default class AuthController {
     };
 
     const { accessToken } = await this.authService.signIn(credentials);
-    res.cookie("accessToken", accessToken, {
-      httpOnly: true,
-      sameSite: "strict",
-      signed: true,
-    });
 
-    // Redirect to the home page of the web application;
+    setCookie(res, "accessToken", accessToken);
+
     res.redirect("/");
   }
 
   @Get("profile")
   @ApiOperation({ summary: "User profile", description: "Get the user profile" })
   @UseGuards(AuthGuard("jwt"))
-  async getProfile(@Req() req: Request & { user: UserInfoAfterJwtAuthGuard }): Promise<Profile> {
-    const userPartialInfo = req.user;
+  async getProfile(@Req() req: requestWithUser): Promise<Profile> {
+    const { userId, username, email, provider } = req.user;
 
-    const profile = (await UserEntity.findOne({
+    const profile: Profile = (await this.userService.findByPk(userId, {
+      relations: ["authentications"],
       select: {
         id: true,
         username: true,
@@ -76,21 +75,39 @@ export default class AuthController {
         },
       },
       where: {
-        email: userPartialInfo.email,
-        username: userPartialInfo.username,
-        authentications: { provider: userPartialInfo.provider },
+        username,
+        email,
+        authentications: {
+          provider,
+        },
       },
-      relations: ["authentications"],
     })) as unknown as Profile;
 
     return profile;
   }
 
-  @Get("signin/local")
+  @Get("refresh")
   @ApiOperation({
-    summary: "Local authentication",
-    description: "The user will be authenticated locally with a username and password.",
+    summary: "Refresh authentication",
+    description: "The user will be re-authenticated with a new access token.",
   })
-  @UseGuards(AuthGuard("local"))
-  async localSignIn(): Promise<void> {}
+  async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
+    const accessToken: string = req.signedCookies?.accessToken || req.headers.authorization?.split(" ")[1];
+
+    if (!accessToken) {
+      throw new UnauthorizedException("Authentication failed. Token is not provided.");
+    }
+
+    const { accessToken: newAccessToken } = await this.tokenService.refreshAccessToken(accessToken);
+
+    setCookie(res, "accessToken", newAccessToken);
+  }
+
+  // @Get("local/signin")
+  // @ApiOperation({
+  //   summary: "Local authentication",
+  //   description: "The user will be authenticated locally with a username and password.",
+  // })
+  // @UseGuards(AuthGuard("local"))
+  // async localSignIn(@Req() req: Request & { user: }): Promise<void> {}
 }
