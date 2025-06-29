@@ -1,9 +1,11 @@
 interface JwtPayload {
+  jwti: string;
   userId: string;
   provider: string;
 }
 
-interface UserInfoAfterJwtAuthGuard {
+interface JwtAuthGuardResponse {
+  userId: string;
   username: string;
   email: string;
   provider: string;
@@ -30,12 +32,12 @@ interface idPTokens {
   refreshToken?: string;
 }
 
-interface GoogleOAuth20 {
+interface GoogleOAuth2 {
   authorizationParams: {
     access_type: string;
     prompt: string;
   };
-  userProfile: {
+  userInfo: {
     userName: string;
     firstName?: string;
     lastName?: string;
@@ -44,4 +46,4 @@ interface GoogleOAuth20 {
   };
 }
 
-export { JwtPayload, UserInfoAfterJwtAuthGuard, Profile, GoogleOAuth20, idPTokens };
+export { JwtPayload, JwtAuthGuardResponse, Profile, GoogleOAuth2, idPTokens };

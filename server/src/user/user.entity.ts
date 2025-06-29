@@ -39,6 +39,7 @@ export default class UserEntity extends BaseEntity {
   @DeleteDateColumn({ type: "timestamptz", nullable: true })
   deletedAt?: Date | null;
 
+  // associations
   @OneToMany(() => AuthenticationEntity, (authentication) => authentication.user)
   authentications: AuthenticationEntity[];
 }

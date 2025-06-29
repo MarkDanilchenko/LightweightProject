@@ -40,6 +40,7 @@ export default class AuthenticationEntity extends BaseEntity {
   @UpdateDateColumn({ type: "timestamptz" })
   lastAccessedAt: Date;
 
+  // associations
   @ManyToOne(() => UserEntity, (user) => user.authentications)
   user: UserEntity;
 }

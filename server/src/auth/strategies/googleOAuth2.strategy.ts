@@ -1,10 +1,10 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Profile, Strategy, VerifyCallback } from "passport-google-oauth20";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interface";
 import { ConfigService } from "@nestjs/config";
 import AuthService from "../auth.service.js";
-import { GoogleOAuth20, idPTokens } from "../interfaces/auth.interface.js";
+import { GoogleOAuth2, idPTokens } from "../interfaces/auth.interface.js";
 
 @Injectable()
 export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "google") {
@@ -29,12 +29,12 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
   }
 
   /**
-   * Returns the additional authorization parameters for the Google OAuth strategy.
-   * This is needed for returning the refresh token while consent is accepted and related info is received at first time.
+   * Returns the additional authorization parameters for the Google OAuth2 strategy.
+   * This is needed for returning the refresh token while consent is accepted and related user info is received at first time.
    *
    * @returns An object containing the access type and prompt settings.
    */
-  authorizationParams(): GoogleOAuth20["authorizationParams"] {
+  authorizationParams(): GoogleOAuth2["authorizationParams"] {
     return {
       access_type: "offline",
       prompt: "consent",
@@ -42,7 +42,7 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
   }
 
   /**
-   * Validate the user during the Google OAuth20 strategy.
+   * Validate the user during the Google OAuth2 strategy.
    *
    * @param accessToken The access token received from Google.
    * @param refreshToken The refresh token received from Google.
@@ -53,7 +53,7 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
    */
   async validate(accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback): Promise<void> {
     const idP = profile.provider;
-    const userProfile: GoogleOAuth20["userProfile"] = {
+    const userInfo: GoogleOAuth2["userInfo"] = {
       userName: profile._json.name!,
       firstName: profile._json.given_name,
       lastName: profile._json.family_name,
@@ -65,7 +65,10 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
       refreshToken,
     };
 
-    const user = await this.authService.authAccordingToStrategy(idP, userProfile, idPTokens);
+    const user = await this.authService.authAccordingToStrategy(idP, userInfo, idPTokens);
+    if (!user) {
+      return done(new NotFoundException("Authentication failed. User not found."), false);
+    }
 
     done(null, user);
   }

@@ -11,9 +11,12 @@ import JwtStrategy from "./strategies/jwt.strategy.js";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import UserEntity from "@server/user/user.entity";
+import UserModule from "../user/user.module.js";
+// import LocalStrategy from "./strategies/local.strategy.js";
 
 @Module({
   imports: [
+    UserModule,
     PassportModule,
     TypeOrmModule.forFeature([AuthenticationEntity, UserEntity]),
     JwtModule.registerAsync({
@@ -26,7 +29,13 @@ import UserEntity from "@server/user/user.entity";
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, TokenService, GoogleOAuth2Strategy, JwtStrategy],
+  providers: [
+    AuthService,
+    TokenService,
+    GoogleOAuth2Strategy,
+    JwtStrategy,
+    // LocalStrategy
+  ],
   exports: [],
 })
-export class AuthModule {}
+export default class AuthModule {}

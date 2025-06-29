@@ -10,4 +10,4 @@ import UserService from "./user.service.js";
   providers: [UserService],
   exports: [UserService],
 })
-export class UserModule {}
+export default class UserModule {}
