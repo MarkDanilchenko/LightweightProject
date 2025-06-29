@@ -1,17 +1,20 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
-import { JwtPayload, UserInfoAfterJwtAuthGuard } from "../interfaces/auth.interface.js";
+import { JwtPayload, JwtAuthGuardResponse } from "../interfaces/auth.interface.js";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interface.js";
 import { Request } from "express";
-import UserEntity from "@server/user/user.entity";
-import { IsNull, Not } from "typeorm";
+import UserService from "@server/user/user.service";
 
 @Injectable()
 export default class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
-  constructor(private readonly configService: ConfigService) {
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly userService: UserService,
+  ) {
     super({
+      // Extract accessToken firstly from cookies and secondly from headers;
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: Request) => {
           return request.signedCookies?.accessToken;
@@ -23,20 +26,30 @@ export default class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     });
   }
 
-  async validate(payload: JwtPayload): Promise<UserInfoAfterJwtAuthGuard> {
+  async validate(payload: JwtPayload): Promise<JwtAuthGuardResponse> {
     if (!payload) {
-      throw new UnauthorizedException("Authentication failed. Token payload is not valid or not provided.");
+      throw new UnauthorizedException("Authentication failed. Token payload is not provided.");
     }
 
-    const user = await UserEntity.findOne({
-      where: {
-        id: payload.userId,
+    const { jwti, userId, provider } = payload;
+
+    // TODO: need to check jwti for presence in Redis
+
+    const user = await this.userService.findByPk(userId, {
+      relations: ["authentications"],
+      select: {
+        id: true,
+        username: true,
+        email: true,
         authentications: {
-          provider: payload.provider,
-          refreshToken: Not(IsNull()),
+          provider: true,
         },
       },
-      relations: ["authentications"],
+      where: {
+        authentications: {
+          provider,
+        },
+      },
     });
 
     if (!user) {
@@ -44,9 +57,10 @@ export default class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     }
 
     return {
+      userId: user.id,
       username: user.username,
       email: user.email,
-      provider: payload.provider,
+      provider: user.authentications[0].provider,
     };
   }
 }
