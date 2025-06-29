@@ -3,7 +3,7 @@ import {
   Inject,
   Injectable,
   LoggerService,
-  NotAcceptableException,
+  NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
@@ -15,6 +15,7 @@ import { AuthenticationProvider, signInCredentials } from "./types/auth.types.js
 import TokenService from "./token.service.js";
 import { decrypt, encrypt } from "../utils/encrypter.js";
 import { idPTokens, JwtPayload } from "./interfaces/auth.interface.js";
+import { v4 as uuidv4 } from "uuid";
 
 @Injectable()
 export default class AuthService {
@@ -31,24 +32,24 @@ export default class AuthService {
   ) {}
 
   /**
-   * Authenticate a user according to the given strategy.
+   * Authenticate or register a new user, according to the given strategy.
    *
-   * @param idP The authentication provider to use.
-   * @param profile The user profile to authenticate.
-   * @param idPTokens The tokens for the given authentication provider.
+   * @param idP The authentication provider.
+   * @param userInfo The user information for authentication.
+   * @param idPTokens The tokens from the given authentication provider.
    *
-   * @returns A promise that resolves to the authenticated user.
+   * @returns A promise that resolves with the authenticated user.
    */
   async authAccordingToStrategy(
     idP: AuthenticationProvider,
-    profile: Partial<UserEntity>,
+    userInfo: Partial<UserEntity>,
     idPTokens?: idPTokens,
   ): Promise<UserEntity> {
-    const { username, firstName, lastName, email, avatarUrl } = profile;
     // NOTE: Both idPTokens are not used for authentication, so also not stored in database;
     // NOTE: Inner access token and refresh token are configured by the web application itself
     // for further access to the protected API routes.
     const { accessToken, refreshToken } = idPTokens ?? {};
+    const { username, email, firstName, lastName, avatarUrl } = userInfo;
 
     if (!username && !email) {
       throw new BadRequestException("Username or email are required to proceed authentication.");
@@ -57,7 +58,17 @@ export default class AuthService {
     switch (idP) {
       case "google": {
         const user = await this.userRepository.findOne({
-          where: [{ username }, { email }, { username, email }],
+          relations: ["authentications"],
+          select: {
+            id: true,
+            authentications: {
+              provider: true,
+            },
+          },
+          where: {
+            username,
+            email,
+          },
         });
 
         await this.dataSource.transaction(async (transactionalEntityManager: EntityManager) => {
@@ -80,11 +91,9 @@ export default class AuthService {
               });
               await transactionalEntityManager.save(authentication);
             } else {
-              this.logger.log(`User "${username ?? email}" already exists. Checking authentication ...`);
+              this.logger.log(`User "${username ?? email}" already exists. Checking related authentication ...`);
 
-              let authentication = await transactionalEntityManager.findOne(AuthenticationEntity, {
-                where: { userId: user.id, provider: idP },
-              });
+              let authentication = user.authentications.find((auth) => auth.provider === idP);
 
               if (!authentication) {
                 authentication = transactionalEntityManager.create(AuthenticationEntity, {
@@ -112,11 +121,26 @@ export default class AuthService {
       }
 
       default: {
-        throw new NotAcceptableException(`Authentication provider is not supported.`);
+        throw new BadRequestException(`Authentication provider is not supported.`);
       }
     }
 
     const reloadUser = await this.userRepository.findOne({
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        avatarUrl: true,
+        createdAt: true,
+        updatedAt: true,
+        authentications: {
+          id: true,
+          provider: true,
+          lastAccessedAt: true,
+        },
+      },
       where: { email, username, authentications: { provider: idP } },
       relations: ["authentications"],
     });
@@ -135,15 +159,25 @@ export default class AuthService {
     const { provider, username, email, password } = credentials;
 
     const user = await this.userRepository.findOne({
-      where: [
-        { username, email, authentications: { provider } },
-        { username, authentications: { provider } },
-        { email, authentications: { provider } },
-      ],
       relations: ["authentications"],
+      select: {
+        id: true,
+        authentications: {
+          provider: true,
+          password: true,
+        },
+      },
+      where: {
+        username,
+        email,
+        authentications: {
+          provider,
+        },
+      },
     });
+
     if (!user) {
-      throw new UnauthorizedException("Authentication failed. User not found.");
+      throw new NotFoundException("Authentication failed. User not found.");
     }
 
     if (provider === "local") {
@@ -161,6 +195,7 @@ export default class AuthService {
     const payload: JwtPayload = {
       userId: user.id,
       provider,
+      jwti: uuidv4(),
     };
 
     return this.dataSource.transaction(async (transactionalEntityManager: EntityManager) => {
@@ -185,7 +220,7 @@ export default class AuthService {
       } catch (error) {
         this.logger.error(error.message);
 
-        throw new UnauthorizedException("Authentication failed.");
+        throw new BadRequestException("Authentication failed.");
       }
     });
   }
