@@ -3,6 +3,9 @@ import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "../configs/interfaces/appConfiguration.interface.js";
 import { JwtPayload } from "./interfaces/auth.interface.js";
+import UserService from "../user/user.service.js";
+import { IsNull, Not } from "typeorm";
+import { decrypt } from "../utils/encrypter.js";
 
 @Injectable()
 export default class TokenService {
@@ -11,6 +14,7 @@ export default class TokenService {
 
   constructor(
     private readonly jwtService: JwtService,
+    private readonly userService: UserService,
     private readonly configService: ConfigService,
   ) {
     this.jwtAccessTokenExpirationTime = configService.get<AppConfiguration["jwtConfiguration"]["accessTokenExpiresIn"]>(
@@ -64,9 +68,72 @@ export default class TokenService {
     return refreshToken;
   }
 
-  async verifyRefreshToken(token: string): Promise<Record<string, any>> {
-    const payload = await this.jwtService.verifyAsync<Record<string, any>>(token);
+  /**
+   * Refreshes an access token.
+   *
+   * @param accessToken The access token to refresh.
+   *
+   * @returns A promise that resolves with an object containing the new access token.
+   *
+   * @throws UnauthorizedException If the access token is invalid or the related user or authentication are not found.
+   */
+  async refreshAccessToken(accessToken: string): Promise<{ accessToken: string }> {
+    const payload: JwtPayload = await this.jwtService.verifyAsync<JwtPayload>(accessToken, {
+      ignoreExpiration: true,
+    });
 
-    return payload;
+    if (!payload) {
+      throw new UnauthorizedException("Authentication failed. Token payload is not provided.");
+    }
+
+    const { jwti, userId, provider } = payload;
+
+    const user = await this.userService.findByPk(userId, {
+      relations: ["authentications"],
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        authentications: {
+          provider: true,
+          refreshToken: true,
+        },
+      },
+      where: {
+        authentications: {
+          provider,
+          refreshToken: Not(IsNull()),
+        },
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException("Authentication failed. User or related authentication are not found.");
+    }
+
+    const { refreshToken } = user.authentications[0];
+
+    const decryptedRefreshToken = decrypt(refreshToken!);
+
+    await this.verifyRefreshToken(decryptedRefreshToken);
+
+    const newAccessToken = await this.generateAccessToken({
+      jwti,
+      userId,
+      provider,
+    });
+
+    return { accessToken: newAccessToken };
+  }
+
+  /**
+   * Verifies the given refresh token.
+   *
+   * @param refreshToken The refresh token to verify.
+   *
+   * @throws UnauthorizedException If the refresh token is invalid.
+   */
+  async verifyRefreshToken(refreshToken: string): Promise<void> {
+    await this.jwtService.verifyAsync<JwtPayload>(refreshToken);
   }
 }
