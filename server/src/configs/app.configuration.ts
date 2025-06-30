@@ -25,6 +25,9 @@ export default (): AppConfiguration => {
     GOOGLE_CLIENT_SECRET,
     GOOGLE_CALLBACK_URL,
     ENCODER_SECRET,
+    TLS_STATUS,
+    TLS_CERT_PATH,
+    TLS_KEY_PATH,
   } = process.env;
 
   return {

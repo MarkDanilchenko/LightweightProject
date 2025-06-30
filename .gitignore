@@ -105,3 +105,6 @@ lib-cov
 
 # Vim swap files
 *.swp
+
+# Certs
+/certs

@@ -61,9 +61,7 @@ export default class AuthService {
           relations: ["authentications"],
           select: {
             id: true,
-            authentications: {
-              provider: true,
-            },
+            authentications: true,
           },
           where: {
             username,

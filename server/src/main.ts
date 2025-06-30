@@ -7,11 +7,23 @@ import AppModule from "./app.module.js";
 import AppConfiguration from "./configs/interfaces/appConfiguration.interface.js";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import { ValidationPipe } from "@nestjs/common";
+import { InternalServerErrorException, ValidationPipe } from "@nestjs/common";
 
 async function bootstrap(): Promise<void> {
+  const tls = process.env.TLS_STATUS === "true";
+  const httpsOptions: { key?: any; cert?: any } = {};
+  if (tls) {
+    if (!process.env.TLS_CERT_PATH || !process.env.TLS_KEY_PATH) {
+      throw new InternalServerErrorException("TLS_CERT_PATH and TLS_KEY_PATH environment variables must be set!");
+    }
+
+    httpsOptions.key = fs.readFileSync(process.env.TLS_KEY_PATH);
+    httpsOptions.cert = fs.readFileSync(process.env.TLS_CERT_PATH);
+  }
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     cors: true,
+    httpsOptions,
   });
 
   const configService = app.get(ConfigService);
@@ -54,8 +66,10 @@ async function bootstrap(): Promise<void> {
   }
 
   await app.listen(port, host, () => {
-    app.get(WINSTON_MODULE_NEST_PROVIDER).log(`Server is running on http://${host}:${port}`, "SimpleAuth3");
+    app
+      .get(WINSTON_MODULE_NEST_PROVIDER)
+      .log(`Server is running on http${tls ? "s" : ""}://${host}:${port}`, "SimpleAuth3");
   });
 }
 
-bootstrap();
+void bootstrap();
