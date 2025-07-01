@@ -8,15 +8,22 @@ import { requestWithUser, signInCredentials } from "./types/auth.types.js";
 import UserService from "../user/user.service.js";
 import { setCookie } from "../utils/cookie.js";
 import TokenService from "./token.service.js";
+import { ConfigService } from "@nestjs/config";
+import AppConfiguration from "../configs/interfaces/appConfiguration.interface.js";
 
 @ApiTags("auth")
 @Controller("auth")
 export default class AuthController {
+  private readonly https: boolean;
+
   constructor(
     private readonly authService: AuthService,
     private readonly userService: UserService,
     private readonly tokenService: TokenService,
-  ) {}
+    private readonly configService: ConfigService,
+  ) {
+    this.https = configService.get<AppConfiguration["serverConfiguration"]["https"]>("serverConfiguration.https")!;
+  }
 
   @Get("google/signin")
   @ApiOperation({
@@ -46,7 +53,7 @@ export default class AuthController {
 
     const { accessToken } = await this.authService.signIn(credentials);
 
-    setCookie(res, "accessToken", accessToken);
+    setCookie(res, "accessToken", accessToken, this.https);
 
     res.redirect("/");
   }
@@ -100,7 +107,7 @@ export default class AuthController {
 
     const { accessToken: newAccessToken } = await this.tokenService.refreshAccessToken(accessToken);
 
-    setCookie(res, "accessToken", newAccessToken);
+    setCookie(res, "accessToken", newAccessToken, this.https);
   }
 
   // @Get("local/signin")

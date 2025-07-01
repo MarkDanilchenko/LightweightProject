@@ -25,7 +25,7 @@ export default (): AppConfiguration => {
     GOOGLE_CLIENT_SECRET,
     GOOGLE_CALLBACK_URL,
     ENCODER_SECRET,
-    TLS_STATUS,
+    HTTPS,
     TLS_CERT_PATH,
     TLS_KEY_PATH,
   } = process.env;
@@ -37,6 +37,7 @@ export default (): AppConfiguration => {
       cookieSecret: COOKIE_SECRET!,
       swaggerEnabled: SWAGGER_ENABLED === "true",
       encoderSecret: ENCODER_SECRET!,
+      https: HTTPS === "true",
     },
     loggerConfiguration: {
       transports: [

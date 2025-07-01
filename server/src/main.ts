@@ -10,9 +10,9 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { InternalServerErrorException, ValidationPipe } from "@nestjs/common";
 
 async function bootstrap(): Promise<void> {
-  const tls = process.env.TLS_STATUS === "true";
+  const https = process.env.HTTPS === "true";
   const httpsOptions: { key?: any; cert?: any } = {};
-  if (tls) {
+  if (https) {
     if (!process.env.TLS_CERT_PATH || !process.env.TLS_KEY_PATH) {
       throw new InternalServerErrorException("TLS_CERT_PATH and TLS_KEY_PATH environment variables must be set!");
     }
@@ -68,7 +68,7 @@ async function bootstrap(): Promise<void> {
   await app.listen(port, host, () => {
     app
       .get(WINSTON_MODULE_NEST_PROVIDER)
-      .log(`Server is running on http${tls ? "s" : ""}://${host}:${port}`, "SimpleAuth3");
+      .log(`Server is running on http${https ? "s" : ""}://${host}:${port}`, "SimpleAuth3");
   });
 }
 

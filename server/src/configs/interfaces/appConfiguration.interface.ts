@@ -9,6 +9,7 @@ export default interface AppConfiguration {
     cookieSecret: string;
     swaggerEnabled: boolean;
     encoderSecret: string;
+    https: boolean;
   };
   loggerConfiguration: WinstonModuleOptions;
   dbConfiguration: TypeOrmModuleOptions | DataSourceOptions;
