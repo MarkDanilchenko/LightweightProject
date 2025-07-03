@@ -108,3 +108,6 @@ lib-cov
 
 # Certs
 /certs
+
+#routes
+/insomnia

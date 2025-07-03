@@ -44,7 +44,7 @@ export default (): AppConfiguration => {
         new winston.transports.Console({
           format: winston.format.combine(
             winston.format.timestamp({
-              format: " - DD/MM/YYYY HH:mm:ss",
+              format: " - MM/DD/YYYY, hh:mm:ss A",
             }),
             nestWinstonModuleUtilities.format.nestLike("Nest", {
               prettyPrint: true,
