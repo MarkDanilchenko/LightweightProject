@@ -8,7 +8,7 @@ export default interface AppConfiguration {
     port: number;
     cookieSecret: string;
     swaggerEnabled: boolean;
-    encoderSecret: string;
+    commonSecret: string;
     https: boolean;
   };
   loggerConfiguration: WinstonModuleOptions;

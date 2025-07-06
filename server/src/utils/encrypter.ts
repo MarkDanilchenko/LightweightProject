@@ -6,12 +6,13 @@ const algorithm = "aes-256-cbc";
 /**
  * Encrypts the given string applying AES-256-CBC with a secret key.
  *
- * @param {string} strToEncrypt The string to be encrypted.
- * @returns {string} The encrypted string.
+ * @param strToEncrypt The string to be encrypted.
+ *
+ * @returns The encrypted string.
  */
 function encrypt(strToEncrypt: string): string {
   const iv = crypto.randomBytes(16);
-  const secretKey = Buffer.from(AppConfiguration().serverConfiguration.encoderSecret, "hex");
+  const secretKey = Buffer.from(AppConfiguration().serverConfiguration.commonSecret, "hex");
 
   const cipher = crypto.createCipheriv(algorithm, secretKey, iv);
   let encrypted = cipher.update(strToEncrypt, "utf8", "hex");
@@ -21,14 +22,14 @@ function encrypt(strToEncrypt: string): string {
 }
 
 /**
- * Decrypts a string that was encrypted using the
- * `encrypt` function.
+ * Decrypts a string that was encrypted using the `encrypt` function.
  *
- * @param {string} strToDecrypt The string to be decrypted.
- * @returns {string} The decrypted string.
+ * @param strToDecrypt The string to be decrypted.
+ *
+ * @returns The decrypted string.
  */
 function decrypt(strToDecrypt: string): string {
-  const secretKey = Buffer.from(AppConfiguration().serverConfiguration.encoderSecret, "hex");
+  const secretKey = Buffer.from(AppConfiguration().serverConfiguration.commonSecret, "hex");
 
   const [ivHex, encryptedHex] = strToDecrypt.split(":");
   const decipher = crypto.createDecipheriv(algorithm, secretKey, Buffer.from(ivHex, "hex"));

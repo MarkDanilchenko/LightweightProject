@@ -24,7 +24,7 @@ export default (): AppConfiguration => {
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
     GOOGLE_CALLBACK_URL,
-    ENCODER_SECRET,
+    COMMON_SECRET,
     HTTPS,
     TLS_CERT_PATH,
     TLS_KEY_PATH,
@@ -36,7 +36,7 @@ export default (): AppConfiguration => {
       port: Number(SERVER_PORT) || 3000,
       cookieSecret: COOKIE_SECRET!,
       swaggerEnabled: SWAGGER_ENABLED === "true",
-      encoderSecret: ENCODER_SECRET!,
+      commonSecret: COMMON_SECRET!,
       https: HTTPS === "true",
     },
     loggerConfiguration: {
