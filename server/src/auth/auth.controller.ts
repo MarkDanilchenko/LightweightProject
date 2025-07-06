@@ -1,15 +1,19 @@
-import { Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards } from "@nestjs/common";
-import { ApiTags, ApiOperation } from "@nestjs/swagger";
+import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards, UsePipes } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiBody } from "@nestjs/swagger";
 import AuthService from "./auth.service.js";
-import { AuthGuard } from "@nestjs/passport";
 import { Request, Response } from "express";
-import { Profile } from "./interfaces/auth.interface.js";
-import { requestWithUser, signInCredentials } from "./types/auth.types.js";
+import { AuthCredentials, Profile } from "./interfaces/auth.interface.js";
+import { requestWithUser } from "./types/auth.types.js";
 import UserService from "../user/user.service.js";
 import { setCookie } from "../utils/cookie.js";
 import TokenService from "./token.service.js";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "../configs/interfaces/appConfiguration.interface.js";
+import { ZodValidationPipe } from "@anatine/zod-nestjs";
+import JwtGuard from "./guards/jwt.guard.js";
+import LocalAuthGuard from "./guards/local-auth.guard.js";
+import GoogleAuthGuard from "./guards/google-auth.guard.js";
+import { SignInLocalDto, SignUpLocalDto } from "./dto/auth.dto.js";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -30,7 +34,7 @@ export default class AuthController {
     summary: "Google authentication via OAuth2",
     description: "The user will be redirected to Google for further authentication.",
   })
-  @UseGuards(AuthGuard("google"))
+  @UseGuards(GoogleAuthGuard)
   async googleSignIn(): Promise<void> {
     // The request will be redirected to Google for further authentication;
     // Nothing more to do here;
@@ -41,13 +45,12 @@ export default class AuthController {
     summary: "Google authentication via OAuth2 (redirect)",
     description: "The user will be redirected to the home page of the web application after successful authentication.",
   })
-  @UseGuards(AuthGuard("google"))
+  @UseGuards(GoogleAuthGuard)
   async googleSignInRedirect(@Req() req: requestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
     const user = req.user;
 
-    const credentials: signInCredentials = {
+    const credentials: AuthCredentials = {
       provider: "google",
-      username: user.username,
       email: user.email,
     };
 
@@ -60,7 +63,7 @@ export default class AuthController {
 
   @Get("profile")
   @ApiOperation({ summary: "User profile", description: "Get the user profile" })
-  @UseGuards(AuthGuard("jwt"))
+  @UseGuards(JwtGuard)
   async getProfile(@Req() req: requestWithUser): Promise<Profile> {
     const { userId, username, email, provider } = req.user;
 
@@ -110,11 +113,42 @@ export default class AuthController {
     setCookie(res, "accessToken", newAccessToken, this.https);
   }
 
-  // @Get("local/signin")
-  // @ApiOperation({
-  //   summary: "Local authentication",
-  //   description: "The user will be authenticated locally with a username and password.",
-  // })
-  // @UseGuards(AuthGuard("local"))
-  // async localSignIn(@Req() req: Request & { user: }): Promise<void> {}
+  @Post("local/signup")
+  @ApiOperation({
+    summary: "Sign up with local authentication",
+    description: "Create a new user with local authentication strategy.",
+  })
+  @UsePipes(ZodValidationPipe)
+  @ApiBody({ type: SignUpLocalDto })
+  async localSignUp(@Body() signUpLocalDto: SignUpLocalDto): Promise<void> {
+    await this.authService.authAccordingToStrategy("local", signUpLocalDto);
+  }
+
+  @Get("local/signin")
+  @ApiOperation({
+    summary: "Local authentication",
+    description: "The user will be authenticated locally with a username and password.",
+  })
+  @ApiBody({ type: SignInLocalDto })
+  @UseGuards(LocalAuthGuard)
+  async localSignIn(
+    @Req() req: requestWithUser,
+    @Res({ passthrough: true })
+    res: Response,
+    @Body() signInLocalDto: SignInLocalDto,
+  ): Promise<void> {
+    const user = req.user;
+
+    const credentials: AuthCredentials = {
+      provider: "local",
+      email: user.email,
+      password: signInLocalDto.password,
+    };
+
+    const { accessToken } = await this.authService.signIn(credentials);
+
+    setCookie(res, "accessToken", accessToken, this.https);
+
+    res.redirect("/");
+  }
 }

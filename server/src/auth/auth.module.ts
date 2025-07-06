@@ -12,7 +12,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import UserEntity from "@server/user/user.entity";
 import UserModule from "../user/user.module.js";
-// import LocalStrategy from "./strategies/local.strategy.js";
+import LocalAuthStrategy from "./strategies/local.strategy.js";
 
 @Module({
   imports: [
@@ -29,13 +29,7 @@ import UserModule from "../user/user.module.js";
     }),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    TokenService,
-    GoogleOAuth2Strategy,
-    JwtStrategy,
-    // LocalStrategy
-  ],
+  providers: [AuthService, TokenService, GoogleOAuth2Strategy, JwtStrategy, LocalAuthStrategy],
   exports: [],
 })
 export default class AuthModule {}

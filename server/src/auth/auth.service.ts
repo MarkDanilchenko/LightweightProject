@@ -11,11 +11,12 @@ import AuthenticationEntity from "@server/auth/auth.entity";
 import UserEntity from "@server/user/user.entity";
 import { DataSource, EntityManager, Not, Repository } from "typeorm";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
-import { AuthenticationProvider, signInCredentials } from "./types/auth.types.js";
+import { AuthenticationProvider } from "./types/auth.types.js";
 import TokenService from "./token.service.js";
-import { decrypt, encrypt } from "../utils/encrypter.js";
-import { idPTokens, JwtPayload } from "./interfaces/auth.interface.js";
+import { encrypt } from "../utils/encrypter.js";
+import { AuthAccordingToStrategyOptions, AuthCredentials, JwtPayload } from "./interfaces/auth.interface.js";
 import { v4 as uuidv4 } from "uuid";
+import { hash, verifyHash } from "../utils/hasher.js";
 
 @Injectable()
 export default class AuthService {
@@ -32,50 +33,53 @@ export default class AuthService {
   ) {}
 
   /**
-   * Authenticate or register a new user, according to the given strategy.
+   * Authenticates a user using the provided strategy.
    *
-   * @param idP The authentication provider.
-   * @param userInfo The user information for authentication.
-   * @param idPTokens The tokens from the given authentication provider.
+   * @param idP - The authentication provider to use.
+   * @param userInfo - The user information to authenticate.
+   * @param options - Additional options for the authentication process.
    *
-   * @returns A promise that resolves with the authenticated user.
+   * @returns The authenticated user if successful, otherwise throws an error.
    */
   async authAccordingToStrategy(
     idP: AuthenticationProvider,
-    userInfo: Partial<UserEntity>,
-    idPTokens?: idPTokens,
-  ): Promise<UserEntity> {
-    // NOTE: Both idPTokens are not used for authentication, so also not stored in database;
+    userInfo: Partial<UserEntity> & {
+      password?: string;
+    },
+    options?: AuthAccordingToStrategyOptions,
+  ): Promise<UserEntity | void> {
+    // NOTE: Both idPTokens (accessToken and refreshToken) are not used for authentication, so also not stored in database;
     // NOTE: Inner access token and refresh token are configured by the web application itself
-    // for further access to the protected API routes.
-    const { accessToken, refreshToken } = idPTokens ?? {};
-    const { username, email, firstName, lastName, avatarUrl } = userInfo;
+    // NOTE: for further access to the protected API routes.
+    const { accessToken, refreshToken, routeUrl } = options ?? {};
+    const { username, firstName, lastName, avatarUrl, password } = userInfo;
+    let { email } = userInfo;
 
-    if (!username && !email) {
-      throw new BadRequestException("Username or email are required to proceed authentication.");
+    if (!email) {
+      throw new BadRequestException("Email is required to proceed authentication.");
     }
+
+    const user = await this.userRepository.findOne({
+      relations: ["authentications"],
+      select: {
+        id: true,
+        authentications: {
+          provider: true,
+        },
+      },
+      where: {
+        email,
+      },
+    });
 
     switch (idP) {
       case "google": {
-        const user = await this.userRepository.findOne({
-          relations: ["authentications"],
-          select: {
-            id: true,
-            authentications: true,
-          },
-          where: {
-            username,
-            email,
-          },
-        });
-
         await this.dataSource.transaction(async (transactionalEntityManager: EntityManager) => {
           try {
             if (!user) {
-              this.logger.log(`User "${username ?? email}" does not exist. Creating ...`);
+              this.logger.log(`User with email "${email}" does not exist. Creating ...`);
 
               const user = transactionalEntityManager.create(UserEntity, {
-                username,
                 firstName,
                 lastName,
                 email,
@@ -89,7 +93,9 @@ export default class AuthService {
               });
               await transactionalEntityManager.save(authentication);
             } else {
-              this.logger.log(`User "${username ?? email}" already exists. Checking related authentication ...`);
+              this.logger.log(
+                `User with email "${email}" already exists. Update profile partially and check related authentication ...`,
+              );
 
               let authentication = user.authentications.find((auth) => auth.provider === idP);
 
@@ -100,8 +106,14 @@ export default class AuthService {
                 });
               }
 
+              await transactionalEntityManager.update(UserEntity, user.id, {
+                firstName,
+                lastName,
+                avatarUrl,
+              });
+
               // NOTE: Save is both to already existing and new authentication instance is needed
-              // for properly setting the lastAuthenticatedAt field;
+              // NOTE: for updating the lastAuthenticatedAt field;
               await transactionalEntityManager.save(authentication);
             }
           } catch (error) {
@@ -115,6 +127,116 @@ export default class AuthService {
       }
 
       case "local": {
+        // TODO: Add email confirmation is a must
+        if (!password) {
+          throw new BadRequestException("Password is required to proceed local authentication.");
+        }
+
+        // NOTE: This case is the local signup;
+        if (!(routeUrl && routeUrl.includes("local/signin"))) {
+          return this.dataSource.transaction(async (transactionalEntityManager: EntityManager) => {
+            try {
+              if (username) {
+                const isUsernameTaken = await transactionalEntityManager.findOne(UserEntity, {
+                  where: {
+                    username: username!,
+                    email: Not(email!),
+                  },
+                });
+
+                if (isUsernameTaken) {
+                  throw new BadRequestException(`Username: "${username}" is already taken. Please choose another one.`);
+                }
+              }
+
+              if (!user) {
+                this.logger.log(`User with email "${email}" does not exist. Creating ...`);
+
+                const user = transactionalEntityManager.create(UserEntity, {
+                  username,
+                  firstName,
+                  lastName,
+                  email,
+                  avatarUrl,
+                });
+                await transactionalEntityManager.save(user);
+
+                const hashedPassword = await hash(password);
+
+                const authentication = transactionalEntityManager.create(AuthenticationEntity, {
+                  userId: user.id,
+                  provider: idP,
+                  password: hashedPassword,
+                });
+                await transactionalEntityManager.save(authentication);
+              } else {
+                this.logger.log(
+                  `User with email: "${email}" already exists. Update profile partially and check related authentication ...`,
+                );
+
+                let authentication = user.authentications.find((auth) => auth.provider === idP);
+
+                if (!authentication) {
+                  const hashedPassword = await hash(password);
+
+                  authentication = transactionalEntityManager.create(AuthenticationEntity, {
+                    userId: user.id,
+                    provider: idP,
+                    password: hashedPassword,
+                  });
+
+                  await transactionalEntityManager.update(UserEntity, user.id, {
+                    username,
+                    firstName,
+                    lastName,
+                    avatarUrl,
+                  });
+
+                  await transactionalEntityManager.save(authentication);
+                } else {
+                  throw new BadRequestException(
+                    `User with email: "${email}" has already been signed up. Please, sign in using your local authentication credentials.`,
+                  );
+                }
+              }
+            } catch (error) {
+              this.logger.error(error.message);
+
+              throw new UnauthorizedException(`SignUp user with "${username ?? email}" failed.`);
+            }
+          });
+        }
+
+        // NOTE: This case is the local signin;
+        try {
+          if (!user) {
+            if (!username) {
+              throw new BadRequestException(
+                "Username or email are required to proceed authentication with local provider.",
+              );
+            }
+
+            const isUserExistsWithUsername = await this.dataSource.getRepository(UserEntity).findOne({
+              select: {
+                id: true,
+              },
+              where: {
+                username,
+              },
+            });
+
+            if (!isUserExistsWithUsername) {
+              throw new BadRequestException(`User with: "${username ?? email}" does not exist. Please sign up first.`);
+            }
+
+            email = isUserExistsWithUsername.email;
+          }
+        } catch (error) {
+          this.logger.error(error.message);
+
+          throw new UnauthorizedException(`SignIn user with "${username ?? email}" failed.`);
+        }
+
         break;
       }
 
@@ -124,6 +246,7 @@ export default class AuthService {
     }
 
     const reloadUser = await this.userRepository.findOne({
+      relations: ["authentications"],
       select: {
         id: true,
         username: true,
@@ -139,8 +262,10 @@ export default class AuthService {
           lastAccessedAt: true,
         },
       },
-      where: { email, username, authentications: { provider: idP } },
-      relations: ["authentications"],
+      where: {
+        email,
+        authentications: { provider: idP },
+      },
     });
 
     return reloadUser!;
@@ -149,12 +274,12 @@ export default class AuthService {
   /**
    * Signs in a user based on the provided credentials and returns an access token.
    *
-   * @param credentials - The sign-in credentials including provider, username, email, and password.
+   * @param credentials - The authentication credentials for the user.
    *
    * @returns A promise that resolves with an object containing the access token.
    */
-  async signIn(credentials: signInCredentials): Promise<{ accessToken: string }> {
-    const { provider, username, email, password } = credentials;
+  async signIn(credentials: AuthCredentials): Promise<{ accessToken: string }> {
+    const { provider, email, password } = credentials;
 
     const user = await this.userRepository.findOne({
       relations: ["authentications"],
@@ -166,7 +291,6 @@ export default class AuthService {
         },
       },
       where: {
-        username,
         email,
         authentications: {
           provider,
@@ -183,10 +307,10 @@ export default class AuthService {
         throw new BadRequestException("Authentication failed. Password is required.");
       }
 
-      const decryptedPassword = decrypt(user.authentications[0].password!);
+      const isPasswordValid = await verifyHash(password, user.authentications[0].password!);
 
-      if (decryptedPassword !== password) {
-        throw new UnauthorizedException("Authentication failed. Wrong password.");
+      if (!isPasswordValid) {
+        throw new UnauthorizedException("Authentication failed. Invalid password.");
       }
     }
 
