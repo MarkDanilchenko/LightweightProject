@@ -1,3 +1,5 @@
+import { AuthenticationProvider } from "../types/auth.types.js";
+
 interface JwtPayload {
   jwti: string;
   userId: string;
@@ -27,9 +29,10 @@ interface Profile {
   };
 }
 
-interface idPTokens {
-  accessToken: string;
+interface AuthAccordingToStrategyOptions {
+  accessToken?: string;
   refreshToken?: string;
+  routeUrl?: string;
 }
 
 interface GoogleOAuth2 {
@@ -46,4 +49,11 @@ interface GoogleOAuth2 {
   };
 }
 
-export { JwtPayload, JwtAuthGuardResponse, Profile, GoogleOAuth2, idPTokens };
+interface AuthCredentials {
+  provider: AuthenticationProvider;
+  email: string;
+  username?: string;
+  password?: string;
+}
+
+export { JwtPayload, JwtAuthGuardResponse, Profile, GoogleOAuth2, AuthAccordingToStrategyOptions, AuthCredentials };
