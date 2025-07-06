@@ -57,6 +57,37 @@ async function bootstrap(): Promise<void> {
         scheme: "bearer",
         bearerFormat: "JWT",
       })
+      .addOAuth2(
+        {
+          type: "oauth2",
+          description: "Google OAuth2",
+          name: "googleOAuth2",
+          scheme: "oauth2",
+          flows: {
+            authorizationCode: {
+              authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+              tokenUrl: "https://oauth2.googleapis.com/token",
+              scopes: {
+                email: "User's email",
+                profile: "User's basic profile information",
+              },
+            },
+          },
+        },
+        "googleOAuth2",
+      )
+      .addCookieAuth(
+        "accessToken",
+        {
+          type: "apiKey",
+          description: "Access token in cookie",
+          name: "accessToken",
+          in: "cookie",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+        "accessToken",
+      )
       .build();
 
     patchNestjsSwagger();
@@ -67,6 +98,14 @@ async function bootstrap(): Promise<void> {
     SwaggerModule.setup("docs", app, documentFactory, {
       jsonDocumentUrl: "docs/json",
       yamlDocumentUrl: "docs/yaml",
+      swaggerOptions: {
+        initOAuth: {
+          clientId: configService.get<AppConfiguration["authConfiguration"]["google"]["clientID"]>(
+            "authConfiguration.google.clientID",
+          )!,
+          scopes: ["email", "profile"],
+        },
+      },
     });
   }
 

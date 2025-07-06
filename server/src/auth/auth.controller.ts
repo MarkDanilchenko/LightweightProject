@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards, UsePipes } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiBody, ApiResponse } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiOAuth2, ApiCookieAuth } from "@nestjs/swagger";
 import AuthService from "./auth.service.js";
 import { Request, Response } from "express";
 import { AuthCredentials } from "./interfaces/auth.interface.js";
@@ -34,6 +34,7 @@ export default class AuthController {
     summary: "Google authentication via OAuth2",
     description: "The user will be redirected to Google for further authentication.",
   })
+  @ApiOAuth2(["email", "profile"], "googleOAuth2")
   @ApiResponse({
     status: 302,
     description: "The user will be redirected to Google authentication form.",
@@ -49,6 +50,7 @@ export default class AuthController {
     summary: "Google authentication via OAuth2 (redirect)",
     description: "The user will be redirected to the home page of the web application after successful authentication.",
   })
+  @ApiOAuth2(["email", "profile"], "googleOAuth2")
   @ApiResponse({
     status: 302,
     description: "The user will be redirected to the home page of the web application.",
@@ -83,6 +85,7 @@ export default class AuthController {
 
   @Get("profile")
   @ApiOperation({ summary: "User profile", description: "Get the user profile" })
+  @ApiCookieAuth("accessToken")
   @ApiResponse({
     status: 200,
     description: "User profile",
@@ -138,6 +141,7 @@ export default class AuthController {
     status: 401,
     description: "Authentication failed. Token is not provided, not valid or user is not authenticated.",
   })
+  @ApiCookieAuth("accessToken")
   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
     const accessToken = (req.signedCookies?.accessToken || req.headers.authorization?.split(" ")[1]) as string;
 
