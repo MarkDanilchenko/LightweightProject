@@ -17,6 +17,7 @@ export class CreateUserEntity1750368795727 implements MigrationInterface {
             name: "username",
             type: "varchar",
             isUnique: true,
+            isNullable: true,
           },
           {
             name: "firstName",
