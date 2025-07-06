@@ -7,7 +7,8 @@ import AppModule from "./app.module.js";
 import AppConfiguration from "./configs/interfaces/appConfiguration.interface.js";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import { InternalServerErrorException, ValidationPipe } from "@nestjs/common";
+import { InternalServerErrorException } from "@nestjs/common";
+import { patchNestjsSwagger } from "@anatine/zod-nestjs";
 
 async function bootstrap(): Promise<void> {
   const https = process.env.HTTPS === "true";
@@ -36,11 +37,12 @@ async function bootstrap(): Promise<void> {
 
   app.use(cookieParser(cookieSecret));
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      whitelist: true,
-    }),
-  );
+  // NOTE: new ValidationPipe does not work with zod validation;
+  // app.useGlobalPipes(
+  //   new ValidationPipe({
+  //     whitelist: true,
+  //   }),
+  // );
 
   if (swaggerEnabled) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
@@ -56,6 +58,9 @@ async function bootstrap(): Promise<void> {
         bearerFormat: "JWT",
       })
       .build();
+
+    patchNestjsSwagger();
+
     const documentFactory = () => {
       return SwaggerModule.createDocument(app, swaggerConfiguration);
     };
