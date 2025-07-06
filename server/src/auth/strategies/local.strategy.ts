@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy } from "passport-local";
 import AuthService from "../auth.service.js";
@@ -28,10 +28,6 @@ export default class LocalAuthStrategy extends PassportStrategy(Strategy, "local
     };
 
     const user = await this.authService.authAccordingToStrategy(credentials.provider, credentials, options);
-
-    if (!user) {
-      return done(new UnauthorizedException("Authentication failed. User not found or not authenticated."), false);
-    }
 
     done(null, user);
   }

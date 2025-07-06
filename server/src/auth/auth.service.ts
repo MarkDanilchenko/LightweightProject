@@ -119,7 +119,7 @@ export default class AuthService {
           } catch (error) {
             this.logger.error(error.message);
 
-            throw new BadRequestException(`Authentication user "${username ?? email}" failed.`);
+            throw new UnauthorizedException(`Authentication for "${username ?? email}" failed.`);
           }
         });
 
@@ -226,7 +226,7 @@ export default class AuthService {
             });
 
             if (!isUserExistsWithUsername) {
-              throw new BadRequestException(`User with: "${username ?? email}" does not exist. Please sign up first.`);
+              throw new NotFoundException(`User with: "${username ?? email}" does not exist. Please sign up first.`);
             }
 
             email = isUserExistsWithUsername.email;
@@ -342,7 +342,7 @@ export default class AuthService {
       } catch (error) {
         this.logger.error(error.message);
 
-        throw new BadRequestException("Authentication failed.");
+        throw new UnauthorizedException("Authentication failed.");
       }
     });
   }

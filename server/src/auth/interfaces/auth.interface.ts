@@ -13,22 +13,6 @@ interface JwtAuthGuardResponse {
   provider: string;
 }
 
-interface Profile {
-  id: string;
-  username: string;
-  firstName: string | null;
-  lastName: string | null;
-  email: string;
-  avatarUrl: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  authentications: {
-    id: string;
-    provider: string;
-    lastAccessedAt: Date;
-  };
-}
-
 interface AuthAccordingToStrategyOptions {
   accessToken?: string;
   refreshToken?: string;
@@ -56,4 +40,4 @@ interface AuthCredentials {
   password?: string;
 }
 
-export { JwtPayload, JwtAuthGuardResponse, Profile, GoogleOAuth2, AuthAccordingToStrategyOptions, AuthCredentials };
+export { JwtPayload, JwtAuthGuardResponse, GoogleOAuth2, AuthAccordingToStrategyOptions, AuthCredentials };

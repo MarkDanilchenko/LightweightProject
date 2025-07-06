@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Profile, Strategy, VerifyCallback } from "passport-google-oauth20";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interface";
@@ -66,10 +66,7 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
     };
 
     const user = await this.authService.authAccordingToStrategy(idP, userInfo, idPTokens);
-    if (!user) {
-      return done(new NotFoundException("Authentication failed. User not found."), false);
-    }
 
-    done(null, user);
+    done(null, user!);
   }
 }
