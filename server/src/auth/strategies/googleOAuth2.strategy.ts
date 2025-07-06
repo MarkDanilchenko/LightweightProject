@@ -4,7 +4,7 @@ import { Profile, Strategy, VerifyCallback } from "passport-google-oauth20";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interface";
 import { ConfigService } from "@nestjs/config";
 import AuthService from "../auth.service.js";
-import { GoogleOAuth2, idPTokens } from "../interfaces/auth.interface.js";
+import { GoogleOAuth2, AuthAccordingToStrategyOptions } from "../interfaces/auth.interface.js";
 
 @Injectable()
 export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "google") {
@@ -60,7 +60,7 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
       email: profile._json.email!,
       avatarUrl: profile._json.picture,
     };
-    const idPTokens: idPTokens = {
+    const idPTokens: AuthAccordingToStrategyOptions = {
       accessToken,
       refreshToken,
     };

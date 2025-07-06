@@ -1,21 +1,38 @@
-// import { Injectable, UnauthorizedException } from "@nestjs/common";
-// import { PassportStrategy } from "@nestjs/passport";
-// import { Strategy } from "passport-local";
-// import AuthService from "../auth.service.js";
-// import UserEntity from "@server/user/user.entity";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { PassportStrategy } from "@nestjs/passport";
+import { Strategy } from "passport-local";
+import AuthService from "../auth.service.js";
+import { AuthAccordingToStrategyOptions, AuthCredentials } from "../interfaces/auth.interface.js";
 
-// @Injectable()
-// export default class LocalStrategy extends PassportStrategy(Strategy, "local") {
-//   constructor(private readonly authService: AuthService) {
-//     super({
-//       usernameField: "login",
-//       passwordField: "password",
-//     });
-//   }
+@Injectable()
+export default class LocalAuthStrategy extends PassportStrategy(Strategy, "local") {
+  constructor(private readonly authService: AuthService) {
+    super({
+      usernameField: "login",
+      passwordField: "password",
+      passReqToCallback: true,
+    });
+  }
 
-//   async validate(login: string, password: string): Promise<UserEntity> {
-//     if (!login || !password) {
-//       throw new UnauthorizedException("Authentication failed. Login and password are required.");
-//     }
-//   }
-// }
+  async validate(req: Request, login: string, password: string, done: (...args: unknown[]) => void): Promise<void> {
+    // It is unknown whether login is email or username in local strategy.
+    const credentials: AuthCredentials = {
+      username: login,
+      email: login,
+      password: password,
+      provider: "local",
+    };
+
+    const options: AuthAccordingToStrategyOptions = {
+      routeUrl: req.url,
+    };
+
+    const user = await this.authService.authAccordingToStrategy(credentials.provider, credentials, options);
+
+    if (!user) {
+      return done(new UnauthorizedException("Authentication failed. User not found or not authenticated."), false);
+    }
+
+    done(null, user);
+  }
+}
