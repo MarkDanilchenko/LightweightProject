@@ -11,7 +11,7 @@ import { InternalServerErrorException } from "@nestjs/common";
 import { patchNestjsSwagger } from "@anatine/zod-nestjs";
 
 async function bootstrap(): Promise<void> {
-  const https = process.env.HTTPS === "true";
+  const https = process.env.HTTPS;
   const httpsOptions: { key?: any; cert?: any } = {};
   if (https) {
     if (!process.env.TLS_CERT_PATH || !process.env.TLS_KEY_PATH) {
