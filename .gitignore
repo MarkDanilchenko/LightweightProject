@@ -10,6 +10,7 @@ compose.development.yaml
 **/*.local
 **/dumps/
 client_secret_*.json
+!/server/init/**
 
 # compiled output
 **/dist
