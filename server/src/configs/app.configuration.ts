@@ -28,6 +28,11 @@ export default (): AppConfiguration => {
     HTTPS,
     TLS_CERT_PATH,
     TLS_KEY_PATH,
+    KEYCLOAK_AUTH_URL,
+    KEYCLOAK_IDTOKEN_URL,
+    KEYCLOAK_CLIENT_ID,
+    KEYCLOAK_CLIENT_SECRET,
+    KEYCLOAK_CALLBACK_URL,
   } = process.env;
 
   return {
@@ -79,6 +84,13 @@ export default (): AppConfiguration => {
         clientID: GOOGLE_CLIENT_ID!,
         clientSecret: GOOGLE_CLIENT_SECRET!,
         callbackURL: GOOGLE_CALLBACK_URL!,
+      },
+      keycloak: {
+        authUrl: KEYCLOAK_AUTH_URL!,
+        idTokenUrl: KEYCLOAK_IDTOKEN_URL!,
+        clientID: KEYCLOAK_CLIENT_ID!,
+        clientSecret: KEYCLOAK_CLIENT_SECRET!,
+        callbackURL: KEYCLOAK_CALLBACK_URL!,
       },
     },
   };

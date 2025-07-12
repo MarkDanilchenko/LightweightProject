@@ -7,7 +7,7 @@ import AuthService from "../auth.service.js";
 import { GoogleOAuth2, AuthAccordingToStrategyOptions } from "../interfaces/auth.interface.js";
 
 @Injectable()
-export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "google") {
+export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "googleOAuth2") {
   constructor(
     private readonly configService: ConfigService,
     private readonly authService: AuthService,

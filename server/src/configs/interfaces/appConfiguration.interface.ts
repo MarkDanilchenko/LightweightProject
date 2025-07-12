@@ -24,5 +24,12 @@ export default interface AppConfiguration {
       clientSecret: string;
       callbackURL: string;
     };
+    keycloak: {
+      authUrl: string;
+      idTokenUrl: string;
+      clientID: string;
+      clientSecret: string;
+      callbackURL: string;
+    };
   };
 }
