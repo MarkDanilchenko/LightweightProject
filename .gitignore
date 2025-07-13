@@ -5,12 +5,11 @@ package-lock.json
 **/*.sql
 **/db_data*/
 compose.development.yaml
-**/Insomnia*
 **/uploads/
 **/*.local
 **/dumps/
 client_secret_*.json
-!/server/init/**
+!/init/**
 
 # compiled output
 **/dist

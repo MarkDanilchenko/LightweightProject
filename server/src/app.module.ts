@@ -1,3 +1,4 @@
+import * as fs from "fs";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import appConfiguration from "./configs/app.configuration.js";
@@ -11,7 +12,7 @@ import UserModule from "@server/user/user.module";
 @Module({
   imports: [
     ConfigModule.forRoot({
-      envFilePath: "../.env.development",
+      envFilePath: fs.existsSync("../.env.development") ? ["../.env.development"] : ["../.env.public"],
       isGlobal: true,
       load: [appConfiguration],
     }),

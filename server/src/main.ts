@@ -11,7 +11,7 @@ import { InternalServerErrorException } from "@nestjs/common";
 import { patchNestjsSwagger } from "@anatine/zod-nestjs";
 
 async function bootstrap(): Promise<void> {
-  const https = process.env.HTTPS;
+  const https = process.env.HTTPS === "true";
   const httpsOptions: { key?: any; cert?: any } = {};
   if (https) {
     if (!process.env.TLS_CERT_PATH || !process.env.TLS_KEY_PATH) {
@@ -62,7 +62,7 @@ async function bootstrap(): Promise<void> {
           type: "oauth2",
           description: "Google OAuth2",
           name: "googleOAuth2",
-          scheme: "oauth2",
+          scheme: "googleOAuth2",
           flows: {
             authorizationCode: {
               authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
@@ -75,6 +75,32 @@ async function bootstrap(): Promise<void> {
           },
         },
         "googleOAuth2",
+      )
+      .addOAuth2(
+        {
+          type: "oauth2",
+          description: "Keycloak OpenID Connect",
+          name: "keycloakOAuth2OIDC",
+          scheme: "keycloakOAuth2OIDC",
+          flows: {
+            authorizationCode: {
+              authorizationUrl: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["authUrl"]>(
+                "authConfiguration.keycloak.authUrl",
+              ),
+              tokenUrl: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["idTokenUrl"]>(
+                "authConfiguration.keycloak.idTokenUrl",
+              ),
+              scopes: {
+                email: "User's email",
+                profile: "User's basic profile information",
+              },
+            },
+          },
+          openIdConnectUrl: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["discoveryUrl"]>(
+            "authConfiguration.keycloak.discoveryUrl",
+          )!,
+        },
+        "keycloakOAuth2OIDC",
       )
       .addCookieAuth(
         "accessToken",
@@ -98,20 +124,14 @@ async function bootstrap(): Promise<void> {
     SwaggerModule.setup("docs", app, documentFactory, {
       jsonDocumentUrl: "docs/json",
       yamlDocumentUrl: "docs/yaml",
-      swaggerOptions: {
-        initOAuth: {
-          clientId: configService.get<AppConfiguration["authConfiguration"]["google"]["clientID"]>(
-            "authConfiguration.google.clientID",
-          )!,
-          scopes: ["email", "profile"],
-        },
-      },
     });
   }
 
   await app.listen(port, host, () => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     app
       .get(WINSTON_MODULE_NEST_PROVIDER)
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       .log(`Server is running on http${https ? "s" : ""}://${host}:${port}`, "SimpleAuth3");
   });
 }

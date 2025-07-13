@@ -13,6 +13,7 @@ import AuthenticationEntity from "@server/auth/auth.entity";
 import UserEntity from "@server/user/user.entity";
 import UserModule from "../user/user.module.js";
 import LocalAuthStrategy from "./strategies/local.strategy.js";
+import KeycloakOAuth2OIDCStrategy from "./strategies/keycloakOIDC.strategy.js";
 
 @Module({
   imports: [
@@ -29,7 +30,14 @@ import LocalAuthStrategy from "./strategies/local.strategy.js";
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, TokenService, GoogleOAuth2Strategy, JwtStrategy, LocalAuthStrategy],
+  providers: [
+    AuthService,
+    TokenService,
+    GoogleOAuth2Strategy,
+    JwtStrategy,
+    LocalAuthStrategy,
+    KeycloakOAuth2OIDCStrategy,
+  ],
   exports: [],
 })
 export default class AuthModule {}
