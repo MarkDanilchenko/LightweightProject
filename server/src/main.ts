@@ -15,7 +15,7 @@ async function bootstrap(): Promise<void> {
   const httpsOptions: { key?: any; cert?: any } = {};
   if (https) {
     if (!process.env.TLS_CERT_PATH || !process.env.TLS_KEY_PATH) {
-      throw new InternalServerErrorException("TLS_CERT_PATH and TLS_KEY_PATH environment variables must be set!");
+      throw new InternalServerErrorException("TLS_CERT_PATH and TLS_KEY_PATH env variables must be set!");
     }
 
     httpsOptions.key = fs.readFileSync(process.env.TLS_KEY_PATH);

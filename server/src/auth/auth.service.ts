@@ -1,7 +1,7 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
+  Logger,
   LoggerService,
   NotFoundException,
   UnauthorizedException,
@@ -10,7 +10,6 @@ import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import UserEntity from "@server/user/user.entity";
 import { DataSource, EntityManager, Not, Repository } from "typeorm";
-import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { AuthenticationProvider } from "./types/auth.types.js";
 import TokenService from "./token.service.js";
 import { encrypt } from "../utils/encrypter.js";
@@ -20,17 +19,19 @@ import { hash, verifyHash } from "../utils/hasher.js";
 
 @Injectable()
 export default class AuthService {
+  private readonly logger: LoggerService;
+
   constructor(
     private readonly tokenService: TokenService,
     @InjectDataSource()
     private readonly dataSource: DataSource,
-    @Inject(WINSTON_MODULE_NEST_PROVIDER)
-    private readonly logger: LoggerService,
     @InjectRepository(AuthenticationEntity)
     private readonly authenticationRepository: Repository<AuthenticationEntity>,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-  ) {}
+  ) {
+    this.logger = new Logger(AuthService.name);
+  }
 
   /**
    * Authenticates a user using the provided strategy.
@@ -64,6 +65,8 @@ export default class AuthService {
       select: {
         id: true,
         authentications: {
+          id: true,
+          userId: true,
           provider: true,
         },
       },
