@@ -9,7 +9,7 @@ type SignUpLocal = z.infer<typeof signUpLocalSchema>;
 
 type Profile = z.infer<typeof profileSchema>;
 
-type AuthenticationProvider = "google" | "local";
+type AuthenticationProvider = "google" | "keycloak" | "local";
 
 type requestWithUser = Request & { user: UserEntity & JwtAuthGuardResponse };
 

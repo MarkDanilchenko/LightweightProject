@@ -93,6 +93,7 @@ async function bootstrap(): Promise<void> {
               scopes: {
                 email: "User's email",
                 profile: "User's basic profile information",
+                openid: "User's identity provider",
               },
             },
           },

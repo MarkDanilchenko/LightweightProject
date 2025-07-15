@@ -33,6 +33,15 @@ interface GoogleOAuth2 {
   };
 }
 
+interface KeycloakOAuth2OIDC {
+  userInfo: {
+    given_name?: string;
+    family_name?: string;
+    email: string;
+    avatarUrl?: string;
+  };
+}
+
 interface AuthCredentials {
   provider: AuthenticationProvider;
   email: string;
@@ -40,4 +49,11 @@ interface AuthCredentials {
   password?: string;
 }
 
-export { JwtPayload, JwtAuthGuardResponse, GoogleOAuth2, AuthAccordingToStrategyOptions, AuthCredentials };
+export {
+  JwtPayload,
+  JwtAuthGuardResponse,
+  GoogleOAuth2,
+  KeycloakOAuth2OIDC,
+  AuthAccordingToStrategyOptions,
+  AuthCredentials,
+};
