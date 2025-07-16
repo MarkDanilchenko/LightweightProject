@@ -60,7 +60,6 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
       email: profile._json.email!,
       avatarUrl: profile._json.picture,
     };
-
     const idPTokens: AuthAccordingToStrategyOptions = {
       accessToken,
       refreshToken,
