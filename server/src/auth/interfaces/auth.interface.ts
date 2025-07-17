@@ -34,9 +34,24 @@ interface GoogleOAuth2 {
 }
 
 interface KeycloakOAuth2OIDC {
+  defaultScope: {
+    sub: string;
+  };
+  emailScope: {
+    email: string;
+    email_verified: boolean;
+  };
+  profileScope: {
+    name: string;
+    preferred_username: string;
+    locale: string;
+    given_name: string;
+    family_name: string;
+    avatarUrl?: string;
+  };
   userInfo: {
-    given_name?: string;
-    family_name?: string;
+    firstName?: string;
+    lastName?: string;
     email: string;
     avatarUrl?: string;
   };
@@ -45,8 +60,9 @@ interface KeycloakOAuth2OIDC {
 interface AuthCredentials {
   provider: AuthenticationProvider;
   email: string;
-  username?: string;
   password?: string;
+  // NOTE: "username" is used only in local strategy where user can signIn with either an email or username;
+  username?: string;
 }
 
 export {
