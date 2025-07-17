@@ -37,8 +37,7 @@ export default class KeycloakOAuth2OIDCStrategy extends PassportStrategy(Strateg
         "authConfiguration.keycloak.idTokenUrl",
       )!,
 
-      // scope: ["email", "openid"],
-      // scope: ["profile", "email", "openid"],
+      scope: ["profile", "email", "openid"],
     });
 
     this.logger = new Logger(KeycloakOAuth2OIDCStrategy.name);
@@ -63,6 +62,12 @@ export default class KeycloakOAuth2OIDCStrategy extends PassportStrategy(Strateg
     // LEARN: passport-oauth2 is not capable of getting the user profile;
     // LEARN: so we will call the axios request to the user profile separately;
     try {
+      const idP: AuthenticationProvider = "keycloak";
+      const idPTokens: AuthAccordingToStrategyOptions = {
+        accessToken,
+        refreshToken,
+      };
+
       const {
         data: response,
       }: {
@@ -75,25 +80,17 @@ export default class KeycloakOAuth2OIDCStrategy extends PassportStrategy(Strateg
         },
         httpsAgent: this.httpsAgent,
       });
-      console.log("🚀 ~ KeycloakOAuth2OIDCStrategy ~ validate ~ response:", response);
 
-      // const idP: AuthenticationProvider = (response.provider as AuthenticationProvider) ?? "keycloak";
       const userInfo: KeycloakOAuth2OIDC["userInfo"] = {
         firstName: response.given_name,
         lastName: response.family_name,
         email: response.email,
         avatarUrl: response.avatarUrl,
       };
-      const idPTokens: AuthAccordingToStrategyOptions = {
-        accessToken,
-        refreshToken,
-      };
 
-      return;
+      const user = await this.authService.authAccordingToStrategy(idP, userInfo, idPTokens);
 
-      // const user = await this.authService.authAccordingToStrategy(idP, userInfo, idPTokens);
-
-      // done(null, user!);
+      done(null, user!);
     } catch (error) {
       this.logger.error("🚀 ~ KeycloakOIDCStrategy ~ validate ~ error:", error);
 
