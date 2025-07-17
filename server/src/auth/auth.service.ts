@@ -76,6 +76,7 @@ export default class AuthService {
     });
 
     switch (idP) {
+      case "keycloak":
       case "google": {
         await this.dataSource.transaction(async (transactionalEntityManager: EntityManager) => {
           try {

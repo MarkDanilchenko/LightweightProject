@@ -14,6 +14,7 @@ import JwtGuard from "./guards/jwt.guard.js";
 import LocalAuthGuard from "./guards/local-auth.guard.js";
 import GoogleAuthGuard from "./guards/google-auth.guard.js";
 import { ProfileDto, SignInLocalDto, SignUpLocalDto } from "./dto/auth.dto.js";
+import KeycloakAuthGuard from "./guards/keycloak-auth.guard.js";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -27,6 +28,72 @@ export default class AuthController {
     private readonly configService: ConfigService,
   ) {
     this.https = configService.get<AppConfiguration["serverConfiguration"]["https"]>("serverConfiguration.https")!;
+  }
+
+  @Post("local/signup")
+  @ApiOperation({
+    summary: "Sign up with local authentication",
+    description: "Create a new user with local authentication strategy.",
+  })
+  @ApiResponse({
+    status: 201,
+    description: "User created successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid credentials or user already exists.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Sign up failed.",
+  })
+  @ApiBody({ type: SignUpLocalDto })
+  @UsePipes(ZodValidationPipe)
+  async localSignUp(@Body() signUpLocalDto: SignUpLocalDto): Promise<void> {
+    await this.authService.authAccordingToStrategy("local", signUpLocalDto);
+  }
+
+  @Get("local/signin")
+  @ApiOperation({
+    summary: "Local authentication",
+    description: "The user will be authenticated locally with a username and password.",
+  })
+  @ApiResponse({
+    status: 302,
+    description: "The user will be redirected to the home page of the web application after successful authentication.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Authentication failed. Invalid credentials.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Authentication failed.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Authentication failed. User not found.",
+  })
+  @ApiBody({ type: SignInLocalDto })
+  @UseGuards(LocalAuthGuard)
+  async localSignIn(
+    @Req() req: requestWithUser,
+    @Res({ passthrough: true }) res: Response,
+    @Body() signInLocalDto: SignInLocalDto,
+  ): Promise<void> {
+    const user = req.user;
+
+    const credentials: AuthCredentials = {
+      provider: "local",
+      email: user.email,
+      password: signInLocalDto.password,
+    };
+
+    const { accessToken } = await this.authService.signIn(credentials);
+
+    setCookie(res, "accessToken", accessToken, this.https);
+
+    res.redirect("/");
   }
 
   @Get("google/signin")
@@ -73,6 +140,60 @@ export default class AuthController {
 
     const credentials: AuthCredentials = {
       provider: "google",
+      email: user.email,
+    };
+
+    const { accessToken } = await this.authService.signIn(credentials);
+
+    setCookie(res, "accessToken", accessToken, this.https);
+
+    res.redirect("/");
+  }
+
+  @Get("keycloak/signin")
+  @ApiOperation({
+    summary: "Keycloak authentication via OAuth2(OIDC)",
+    description: "The user will be redirected to Keycloak for further authentication.",
+  })
+  @ApiOAuth2(["profile", "email"], "keycloakOAuth2OIDC")
+  @ApiResponse({
+    status: 302,
+    description: "The user will be redirected to Keycloak authentication form.",
+  })
+  @UseGuards(KeycloakAuthGuard)
+  async keycloakSignIn(): Promise<void> {
+    // The request will be redirected to Keycloak for further authentication;
+    // Nothing more to do here;
+  }
+
+  @Get("keycloak/redirect")
+  @ApiOperation({
+    summary: "Keycloak authentication via OAuth2(OIDC) (redirect)",
+    description: "The user will be redirected to the home page of the web application after successful authentication.",
+  })
+  @ApiOAuth2(["profile", "email"], "keycloakOAuth2OIDC")
+  @ApiResponse({
+    status: 302,
+    description: "The user will be redirected to the home page of the web application.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Authentication failed. Invalid request.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Authentication failed.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Authentication failed. User not found.",
+  })
+  @UseGuards(KeycloakAuthGuard)
+  async keycloakSignInRedirect(@Req() req: requestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
+    const user = req.user;
+
+    const credentials: AuthCredentials = {
+      provider: "keycloak",
       email: user.email,
     };
 
@@ -152,71 +273,5 @@ export default class AuthController {
     const { accessToken: newAccessToken } = await this.tokenService.refreshAccessToken(accessToken);
 
     setCookie(res, "accessToken", newAccessToken, this.https);
-  }
-
-  @Post("local/signup")
-  @ApiOperation({
-    summary: "Sign up with local authentication",
-    description: "Create a new user with local authentication strategy.",
-  })
-  @ApiResponse({
-    status: 201,
-    description: "User created successfully.",
-  })
-  @ApiResponse({
-    status: 400,
-    description: "Invalid credentials or user already exists.",
-  })
-  @ApiResponse({
-    status: 401,
-    description: "Sign up failed.",
-  })
-  @ApiBody({ type: SignUpLocalDto })
-  @UsePipes(ZodValidationPipe)
-  async localSignUp(@Body() signUpLocalDto: SignUpLocalDto): Promise<void> {
-    await this.authService.authAccordingToStrategy("local", signUpLocalDto);
-  }
-
-  @Get("local/signin")
-  @ApiOperation({
-    summary: "Local authentication",
-    description: "The user will be authenticated locally with a username and password.",
-  })
-  @ApiResponse({
-    status: 302,
-    description: "The user will be redirected to the home page of the web application after successful authentication.",
-  })
-  @ApiResponse({
-    status: 400,
-    description: "Authentication failed. Invalid credentials.",
-  })
-  @ApiResponse({
-    status: 401,
-    description: "Authentication failed.",
-  })
-  @ApiResponse({
-    status: 404,
-    description: "Authentication failed. User not found.",
-  })
-  @ApiBody({ type: SignInLocalDto })
-  @UseGuards(LocalAuthGuard)
-  async localSignIn(
-    @Req() req: requestWithUser,
-    @Res({ passthrough: true }) res: Response,
-    @Body() signInLocalDto: SignInLocalDto,
-  ): Promise<void> {
-    const user = req.user;
-
-    const credentials: AuthCredentials = {
-      provider: "local",
-      email: user.email,
-      password: signInLocalDto.password,
-    };
-
-    const { accessToken } = await this.authService.signIn(credentials);
-
-    setCookie(res, "accessToken", accessToken, this.https);
-
-    res.redirect("/");
   }
 }
