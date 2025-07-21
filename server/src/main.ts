@@ -84,11 +84,11 @@ async function bootstrap(): Promise<void> {
           scheme: "keycloakOAuth2OIDC",
           flows: {
             authorizationCode: {
-              authorizationUrl: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["authUrl"]>(
-                "authConfiguration.keycloak.authUrl",
+              authorizationUrl: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["oidc"]["authUrl"]>(
+                "authConfiguration.keycloak.oidc.authUrl",
               ),
-              tokenUrl: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["idTokenUrl"]>(
-                "authConfiguration.keycloak.idTokenUrl",
+              tokenUrl: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["oidc"]["idTokenUrl"]>(
+                "authConfiguration.keycloak.oidc.idTokenUrl",
               ),
               scopes: {
                 email: "User's email",
@@ -97,9 +97,9 @@ async function bootstrap(): Promise<void> {
               },
             },
           },
-          openIdConnectUrl: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["discoveryUrl"]>(
-            "authConfiguration.keycloak.discoveryUrl",
-          )!,
+          openIdConnectUrl: configService.get<
+            AppConfiguration["authConfiguration"]["keycloak"]["oidc"]["discoveryUrl"]
+          >("authConfiguration.keycloak.oidc.discoveryUrl")!,
         },
         "keycloakOAuth2OIDC",
       )

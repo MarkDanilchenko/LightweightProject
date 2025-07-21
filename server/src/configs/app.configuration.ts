@@ -88,13 +88,21 @@ export default (): AppConfiguration => {
       callbackURL: `${serverConfiguration.https ? "https" : "http"}://${serverConfiguration.host}:${serverConfiguration.port}/api/v1/auth/google/redirect`,
     },
     keycloak: {
-      discoveryUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/.well-known/openid-configuration`,
-      clientID: KC_CLIENT_ID!,
-      clientSecret: KC_CLIENT_SECRET!,
-      callbackURL: `${serverConfiguration.https ? "https" : "http"}://${serverConfiguration.host}:${serverConfiguration.port}/api/v1/auth/keycloak/redirect`,
-      authUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/openid-connect/auth`,
-      idTokenUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/openid-connect/token`,
-      userInfoUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/openid-connect/userinfo`,
+      oidc: {
+        discoveryUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/.well-known/openid-configuration`,
+        clientID: KC_CLIENT_ID!,
+        clientSecret: KC_CLIENT_SECRET!,
+        callbackURL: `${serverConfiguration.https ? "https" : "http"}://${serverConfiguration.host}:${serverConfiguration.port}/api/v1/auth/keycloak/redirect`,
+        authUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/openid-connect/auth`,
+        idTokenUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/openid-connect/token`,
+        userInfoUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/openid-connect/userinfo`,
+      },
+      saml: {
+        descriptorUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/saml/descriptor`,
+        // samlIdpUrl: ``,
+        // samlIdpEntityID: ``,
+        // samlIdpCertificate: ``,
+      },
     },
   };
 

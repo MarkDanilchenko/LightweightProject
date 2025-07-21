@@ -21,28 +21,28 @@ export default class KeycloakOAuth2OIDCStrategy extends PassportStrategy(Strateg
     private readonly authService: AuthService,
   ) {
     super({
-      clientID: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["clientID"]>(
-        "authConfiguration.keycloak.clientID",
+      clientID: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["oidc"]["clientID"]>(
+        "authConfiguration.keycloak.oidc.clientID",
       )!,
-      clientSecret: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["clientSecret"]>(
-        "authConfiguration.keycloak.clientSecret",
+      clientSecret: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["oidc"]["clientSecret"]>(
+        "authConfiguration.keycloak.oidc.clientSecret",
       )!,
-      callbackURL: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["callbackURL"]>(
-        "authConfiguration.keycloak.callbackURL",
+      callbackURL: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["oidc"]["callbackURL"]>(
+        "authConfiguration.keycloak.oidc.callbackURL",
       )!,
-      authorizationURL: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["authUrl"]>(
-        "authConfiguration.keycloak.authUrl",
+      authorizationURL: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["oidc"]["authUrl"]>(
+        "authConfiguration.keycloak.oidc.authUrl",
       )!,
-      tokenURL: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["idTokenUrl"]>(
-        "authConfiguration.keycloak.idTokenUrl",
+      tokenURL: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["oidc"]["idTokenUrl"]>(
+        "authConfiguration.keycloak.oidc.idTokenUrl",
       )!,
 
       scope: ["profile", "email", "openid"],
     });
 
     this.logger = new Logger(KeycloakOAuth2OIDCStrategy.name);
-    this.userInfoUrl = configService.get<AppConfiguration["authConfiguration"]["keycloak"]["userInfoUrl"]>(
-      "authConfiguration.keycloak.userInfoUrl",
+    this.userInfoUrl = configService.get<AppConfiguration["authConfiguration"]["keycloak"]["oidc"]["userInfoUrl"]>(
+      "authConfiguration.keycloak.oidc.userInfoUrl",
     )!;
 
     // LEARN: for https we need to set the CA in https.Agent directly,
