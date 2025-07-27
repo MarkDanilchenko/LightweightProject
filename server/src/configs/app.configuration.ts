@@ -32,6 +32,8 @@ export default (): AppConfiguration => {
     KC_REALM_NAME,
     KC_CLIENT_ID,
     KC_CLIENT_SECRET,
+    KC_SAML_IDP_CERT,
+    KC_SAML_ISSUER,
   } = process.env;
 
   const serverConfiguration: AppConfiguration["serverConfiguration"] = {
@@ -85,23 +87,25 @@ export default (): AppConfiguration => {
     google: {
       clientID: GOOGLE_CLIENT_ID!,
       clientSecret: GOOGLE_CLIENT_SECRET!,
-      callbackURL: `${serverConfiguration.https ? "https" : "http"}://${serverConfiguration.host}:${serverConfiguration.port}/api/v1/auth/google/redirect`,
+      callbackUrl: `${serverConfiguration.https ? "https" : "http"}://${serverConfiguration.host}:${serverConfiguration.port}/api/v1/auth/google/redirect`,
     },
     keycloak: {
       oidc: {
         discoveryUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/.well-known/openid-configuration`,
         clientID: KC_CLIENT_ID!,
         clientSecret: KC_CLIENT_SECRET!,
-        callbackURL: `${serverConfiguration.https ? "https" : "http"}://${serverConfiguration.host}:${serverConfiguration.port}/api/v1/auth/keycloak/redirect`,
+        callbackUrl: `${serverConfiguration.https ? "https" : "http"}://${serverConfiguration.host}:${serverConfiguration.port}/api/v1/auth/keycloak/redirect`,
         authUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/openid-connect/auth`,
         idTokenUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/openid-connect/token`,
         userInfoUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/openid-connect/userinfo`,
       },
       saml: {
         descriptorUrl: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/saml/descriptor`,
-        // samlIdpUrl: ``,
-        // samlIdpEntityID: ``,
-        // samlIdpCertificate: ``,
+        idpCert: KC_SAML_IDP_CERT!,
+        issuer: KC_SAML_ISSUER!,
+        callbackUrl: `${serverConfiguration.https ? "https" : "http"}://${serverConfiguration.host}:${serverConfiguration.port}/api/v1/auth/saml/keycloak/redirect`,
+        entryPoint: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/saml`,
+        idpIssuer: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}`,
       },
     },
   };

@@ -22,13 +22,13 @@ export default interface AppConfiguration {
     google: {
       clientID: string;
       clientSecret: string;
-      callbackURL: string;
+      callbackUrl: string;
     };
     keycloak: {
       oidc: {
         clientID: string;
         clientSecret: string;
-        callbackURL: string;
+        callbackUrl: string;
         authUrl: string;
         idTokenUrl: string;
         userInfoUrl: string;
@@ -36,6 +36,11 @@ export default interface AppConfiguration {
       };
       saml: {
         descriptorUrl: string;
+        idpCert: string;
+        issuer: string;
+        callbackUrl: string;
+        entryPoint: string;
+        idpIssuer: string;
       };
     };
   };

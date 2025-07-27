@@ -14,7 +14,7 @@ import JwtGuard from "./guards/jwt.guard.js";
 import LocalAuthGuard from "./guards/local-auth.guard.js";
 import GoogleAuthGuard from "./guards/google-auth.guard.js";
 import { ProfileDto, SignInLocalDto, SignUpLocalDto } from "./dto/auth.dto.js";
-import KeycloakAuthGuard from "./guards/keycloak-auth.guard.js";
+import { KeycloakAuthGuard } from "./guards/keycloak-auth.guard.js";
 
 @ApiTags("auth")
 @Controller("auth")

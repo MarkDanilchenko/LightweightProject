@@ -14,6 +14,7 @@ import UserEntity from "@server/user/user.entity";
 import UserModule from "../user/user.module.js";
 import LocalAuthStrategy from "./strategies/local.strategy.js";
 import KeycloakOAuth2OIDCStrategy from "./strategies/keycloakOIDC.strategy.js";
+import KeycloakSAMLStrategy from "./strategies/keycloakSAML.strategy.js";
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import KeycloakOAuth2OIDCStrategy from "./strategies/keycloakOIDC.strategy.js";
     JwtStrategy,
     LocalAuthStrategy,
     KeycloakOAuth2OIDCStrategy,
+    KeycloakSAMLStrategy,
   ],
   exports: [],
 })
