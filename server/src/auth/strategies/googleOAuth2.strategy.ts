@@ -19,8 +19,8 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
       clientSecret: configService.get<AppConfiguration["authConfiguration"]["google"]["clientSecret"]>(
         "authConfiguration.google.clientSecret",
       )!,
-      callbackUrl: configService.get<AppConfiguration["authConfiguration"]["google"]["callbackUrl"]>(
-        "authConfiguration.google.callbackUrl",
+      callbackURL: configService.get<AppConfiguration["authConfiguration"]["google"]["callbackURL"]>(
+        "authConfiguration.google.callbackURL",
       )!,
       // LEARN For OAuth 2.0, the scope does not contain the `openid` scope !!!
       // LEARN For OIDC the scope looks like: scope: ['openid', 'email', 'profile'];

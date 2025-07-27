@@ -14,7 +14,7 @@ import JwtGuard from "./guards/jwt.guard.js";
 import LocalAuthGuard from "./guards/local-auth.guard.js";
 import GoogleAuthGuard from "./guards/google-auth.guard.js";
 import { ProfileDto, SignInLocalDto, SignUpLocalDto } from "./dto/auth.dto.js";
-import { KeycloakAuthGuard } from "./guards/keycloak-auth.guard.js";
+import { KeycloakAuthGuard, KeycloakSAMLAuthGuard } from "./guards/keycloak-auth.guard.js";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -202,6 +202,52 @@ export default class AuthController {
     setCookie(res, "accessToken", accessToken, this.https);
 
     res.redirect("/");
+  }
+
+  @Get("keycloak/saml/signin")
+  @ApiOperation({
+    summary: "Keycloak authentication via SAML",
+    description: "The user will be redirected to Keycloak for further authentication.",
+  })
+  @ApiResponse({
+    status: 302,
+    description: "The user will be redirected to Keycloak authentication form.",
+  })
+  @UseGuards(KeycloakSAMLAuthGuard)
+  async keycloakSamlSignIn(): Promise<void> {
+    // The request will be redirected to Keycloak for further authentication;
+    // Nothing more to do here;
+  }
+
+  @Get("keycloak/saml/redirect")
+  @ApiOperation({
+    summary: "Keycloak authentication via SAML (redirect)",
+    description: "The user will be redirected to the home page of the web application after successful authentication.",
+  })
+  @ApiResponse({
+    status: 302,
+    description: "The user will be redirected to the home page of the web application.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Authentication failed. Invalid request.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Authentication failed.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Authentication failed. User not found.",
+  })
+  @UseGuards(KeycloakSAMLAuthGuard)
+  async keycloakSamlSignInRedirect(
+    @Req() req: requestWithUser,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    console.log("🚀 ~ AuthController ~ keycloakSamlSignInRedirect:");
+
+    return;
   }
 
   @Get("profile")

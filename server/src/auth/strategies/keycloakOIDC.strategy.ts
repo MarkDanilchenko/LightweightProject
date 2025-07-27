@@ -27,8 +27,8 @@ export default class KeycloakOAuth2OIDCStrategy extends PassportStrategy(Strateg
       clientSecret: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["oidc"]["clientSecret"]>(
         "authConfiguration.keycloak.oidc.clientSecret",
       )!,
-      callbackUrl: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["oidc"]["callbackUrl"]>(
-        "authConfiguration.keycloak.oidc.callbackUrl",
+      callbackURL: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["oidc"]["callbackURL"]>(
+        "authConfiguration.keycloak.oidc.callbackURL",
       )!,
       authorizationURL: configService.get<AppConfiguration["authConfiguration"]["keycloak"]["oidc"]["authUrl"]>(
         "authConfiguration.keycloak.oidc.authUrl",
