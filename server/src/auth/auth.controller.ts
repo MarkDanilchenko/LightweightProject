@@ -219,7 +219,7 @@ export default class AuthController {
     // Nothing more to do here;
   }
 
-  @Get("keycloak/saml/redirect")
+  @Post("keycloak/saml/redirect")
   @ApiOperation({
     summary: "Keycloak authentication via SAML (redirect)",
     description: "The user will be redirected to the home page of the web application after successful authentication.",

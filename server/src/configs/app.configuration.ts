@@ -105,7 +105,6 @@ export default (): AppConfiguration => {
         issuer: KC_SAML_ISSUER!,
         callbackUrl: `${serverConfiguration.https ? "https" : "http"}://${serverConfiguration.host}:${serverConfiguration.port}/api/v1/auth/keycloak/saml/redirect`,
         entryPoint: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}/protocol/saml`,
-        idpIssuer: `${serverConfiguration.https ? "https" : "http"}://${KC_HOSTNAME}:${KC_PORT}/realms/${KC_REALM_NAME}`,
       },
     },
   };

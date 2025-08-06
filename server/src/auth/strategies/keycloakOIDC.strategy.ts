@@ -48,7 +48,11 @@ export default class KeycloakOAuth2OIDCStrategy extends PassportStrategy(Strateg
     // LEARN: for https we need to set the CA in https.Agent directly,
     // LEARN: because nodejs can not recognize leaf authority from self-signed mkcert certificate from keycloak;
     fs.readFile("../certs/rootCA.pem", (err, ca) => {
-      if (err) throw err;
+      if (err) {
+        this.logger.error(err);
+
+        throw err;
+      }
 
       this.httpsAgent = new https.Agent({
         ca,

@@ -40,7 +40,6 @@ export default interface AppConfiguration {
         issuer: string;
         callbackUrl: string;
         entryPoint: string;
-        idpIssuer: string;
       };
     };
   };
