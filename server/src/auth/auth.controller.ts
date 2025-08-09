@@ -245,9 +245,18 @@ export default class AuthController {
     @Req() req: requestWithUser,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    console.log("🚀 ~ AuthController ~ keycloakSamlSignInRedirect:");
+    const user = req.user;
 
-    return;
+    const credentials: AuthCredentials = {
+      provider: "keycloak",
+      email: user.email,
+    };
+
+    const { accessToken } = await this.authService.signIn(credentials);
+
+    setCookie(res, "accessToken", accessToken, this.https);
+
+    res.redirect("/");
   }
 
   @Get("profile")

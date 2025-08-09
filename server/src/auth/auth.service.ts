@@ -116,7 +116,7 @@ export default class AuthService {
                 avatarUrl,
               });
 
-              // NOTE: Save is both to already existing and new authentication instance is needed
+              // NOTE: Saving to already existing and new authentication instance is needed
               // NOTE: for updating the lastAuthenticatedAt field;
               await transactionalEntityManager.save(authentication);
             }

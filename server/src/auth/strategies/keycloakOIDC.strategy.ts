@@ -96,7 +96,7 @@ export default class KeycloakOAuth2OIDCStrategy extends PassportStrategy(Strateg
 
       done(null, user!);
     } catch (error) {
-      this.logger.error("🚀 ~ KeycloakOIDCStrategy ~ validate ~ error:", error);
+      this.logger.error("🚀 ~ KeycloakOAuth2OIDCStrategy ~ validate ~ error:", error);
 
       done(error, false);
     }

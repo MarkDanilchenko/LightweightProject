@@ -25,7 +25,7 @@ interface GoogleOAuth2 {
     prompt: string;
   };
   userInfo: {
-    userName: string;
+    userName?: string;
     firstName?: string;
     lastName?: string;
     email: string;
@@ -57,6 +57,14 @@ interface KeycloakOAuth2OIDC {
   };
 }
 
+interface KeycloakSAML {
+  userName?: string;
+  firstName?: string;
+  lastName?: string;
+  email: string;
+  avatarUrl?: string;
+}
+
 interface AuthCredentials {
   provider: AuthenticationProvider;
   email: string;
@@ -72,4 +80,5 @@ export {
   KeycloakOAuth2OIDC,
   AuthAccordingToStrategyOptions,
   AuthCredentials,
+  KeycloakSAML,
 };
