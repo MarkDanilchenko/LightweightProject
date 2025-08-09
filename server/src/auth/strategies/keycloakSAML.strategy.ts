@@ -19,15 +19,14 @@ export default class KeycloakSAMLStrategy extends PassportStrategy(Strategy, "ke
   ) {
     super(
       {
-        // privateKey: fs.readFileSync("../certs/kc-signin-key.key", {
-        //   encoding: "utf-8",
-        //   flag: "r",
-        // }),
+        privateKey: fs.readFileSync("../certs/kc-signin-key.key", {
+          encoding: "utf-8",
+          flag: "r",
+        }),
         // decryptionPvk: fs.readFileSync("../certs/kc-encrypt-key.key", {
         //   encoding: "utf-8",
         //   flag: "r",
         // }),
-
         signatureAlgorithm: "sha256",
         digestAlgorithm: "sha256",
         acceptedClockSkewMs: 10000,
