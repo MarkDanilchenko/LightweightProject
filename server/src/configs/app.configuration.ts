@@ -74,7 +74,7 @@ export default (): AppConfiguration => {
     migrationsRun: TYPEORM_MIGRATIONS_RUN === "true",
     entities: ["**/*.entity.js"],
     migrations: ["**/migrations/*.js"],
-    applicationName: "SimpleAuth3",
+    applicationName: "LightweightProject",
   };
 
   const jwtConfiguration: AppConfiguration["jwtConfiguration"] = {

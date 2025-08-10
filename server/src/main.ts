@@ -133,7 +133,7 @@ async function bootstrap(): Promise<void> {
     app
       .get(WINSTON_MODULE_NEST_PROVIDER)
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      .log(`Server is running on http${https ? "s" : ""}://${host}:${port}`, "SimpleAuth3");
+      .log(`Server is running on http${https ? "s" : ""}://${host}:${port}`, "LightweightProject");
   });
 }
 
