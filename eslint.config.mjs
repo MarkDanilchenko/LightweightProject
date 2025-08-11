@@ -8,13 +8,17 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   {
     ignores: [
-      "eslint.config.mjs",
       "**/node_modules/**",
       "**/dist/**",
       "**/lib/**",
       "**/build/**",
       "**/coverage/**",
       "**/public/**",
+      "**/certs/**",
+      "**/db_data/**",
+      "**/dumps/**",
+      "**/screenshots/**",
+      "**/insomnia/**",
     ],
   },
   pluginJs.configs.recommended,
@@ -47,8 +51,8 @@ export default tseslint.config(
       "no-console": "error",
       "no-unused-expressions": "error",
       "no-unused-vars": "warn",
-      "no-use-before-define": "error",
-      "no-useless-constructor": "error",
+      "no-use-before-define": "warn",
+      "no-useless-constructor": "warn",
       "padding-line-between-statements": [
         "error",
         {

@@ -1,8 +1,8 @@
 {
   "name": "LightweightProject",
   "version": "1.0.0",
-  "description": "This API based on NodeJS (NestJS) implementing different strategies of authentication.",
-  "author": "",
+  "description": "This is a lightweight NodeJS project for training, learning and practicing.",
+  "author": "https://github.com/MarkDanilchenko/LightweightProject",
   "private": true,
   "license": "UNLICENSED",
   "type": "commonjs",

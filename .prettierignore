@@ -1,5 +1,12 @@
 # Ignore build output directories
 **/dist/
+**/build/
+
+# Ignore certs
+**/certs/
+
+# Ignore db related directories
+**/db_data/
 
 # Ignore node modules
 **/node_modules/
