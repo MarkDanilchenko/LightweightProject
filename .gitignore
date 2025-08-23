@@ -3,12 +3,13 @@ package-lock.json
 **/media
 **/*.pdf
 **/*.sql
-**/db_data*/
+**/db_data/
 compose.development.yaml
 **/uploads/
 **/*.local
 **/dumps/
 !/init/**
+./.codeiumignore
 
 # compiled output
 **/dist

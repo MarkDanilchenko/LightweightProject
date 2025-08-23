@@ -1,0 +1,10 @@
+# common
+**/*.pdf
+**/db_data/
+**/dumps/
+
+# dotenv environment variable files
+.env.development
+
+# Certs
+/certs

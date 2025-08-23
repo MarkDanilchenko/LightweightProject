@@ -1,6 +1,8 @@
 **/.DS_Store
 **/__pycache__
 **/.venv
+**/.idea
+**/dumps
 **/.classpath
 **/.dockerignore
 **/.git
@@ -16,7 +18,7 @@
 **/bin
 **/charts
 **/docker-compose*
-**/compose*
+**/compose.*
 **/Dockerfile*
 **/node_modules
 **/npm-debug.log
@@ -26,4 +28,3 @@
 **/error.log
 **/dist
 *.pdf
-client_secret_*.json
