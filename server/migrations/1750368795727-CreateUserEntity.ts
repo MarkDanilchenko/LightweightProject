@@ -33,6 +33,7 @@ export class CreateUserEntity1750368795727 implements MigrationInterface {
             name: "email",
             type: "varchar",
             isUnique: true,
+            isNullable: false,
           },
           {
             name: "avatarUrl",
@@ -42,11 +43,13 @@ export class CreateUserEntity1750368795727 implements MigrationInterface {
           {
             name: "createdAt",
             type: "timestamptz",
+            isNullable: false,
             default: "now()",
           },
           {
             name: "updatedAt",
             type: "timestamptz",
+            isNullable: false,
             default: "now()",
           },
           {
@@ -56,8 +59,7 @@ export class CreateUserEntity1750368795727 implements MigrationInterface {
           },
         ],
       }),
-      // "true" - create table, if not exists;
-      true,
+      true, // "true" - create table, if it does not exist;
     );
   }
 

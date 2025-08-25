@@ -1,11 +1,9 @@
-import { MigrationInterface, QueryRunner, Table, TableForeignKey, TableIndex } from "typeorm";
+import { MigrationInterface, QueryRunner, Table, TableForeignKey } from "typeorm";
 
 export class CreateAuthenticationEntity1750368815311 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.startTransaction();
-
-    try {
-      await queryRunner.createTable(
+    await queryRunner.connection.transaction(async (transactionEntityManager): Promise<void> => {
+      await transactionEntityManager.queryRunner?.createTable(
         new Table({
           name: "authentications",
           columns: [
@@ -19,10 +17,18 @@ export class CreateAuthenticationEntity1750368815311 implements MigrationInterfa
             {
               name: "userId",
               type: "uuid",
+              isNullable: false,
             },
             {
               name: "provider",
               type: "varchar",
+              isNullable: false,
+              default: "local",
+              comment: `the provider of the authentication (e.g.:
+              "local" for local user/password authentication,
+              "google" for Google OAuth2,
+              "keycloak" for Keycloak authentication flows
+            )`,
             },
             {
               name: "refreshToken",
@@ -33,21 +39,24 @@ export class CreateAuthenticationEntity1750368815311 implements MigrationInterfa
               name: "password",
               type: "varchar",
               isNullable: true,
+              comment: `the password of the authentication (only for local flow of authentication)`,
             },
             {
               name: "createdAt",
               type: "timestamptz",
+              isNullable: false,
               default: "now()",
             },
             {
               name: "lastAccessedAt",
               type: "timestamptz",
+              isNullable: false,
               default: "now()",
+              comment: `the last time the authentication was accessed, similar to "updatedAt"`,
             },
           ],
         }),
-        // "true" - create table, if not exists;
-        true,
+        true, // "true" - create table, if not exists;
       );
 
       await queryRunner.createForeignKey(
@@ -57,24 +66,10 @@ export class CreateAuthenticationEntity1750368815311 implements MigrationInterfa
           referencedColumnNames: ["id"],
           referencedTableName: "users",
           onDelete: "CASCADE",
+          onUpdate: "CASCADE",
         }),
       );
-
-      await queryRunner.createIndex(
-        "authentications",
-        new TableIndex({
-          name: "IDX_AUTHENTICATIONS_USER_ID_PROVIDER",
-          columnNames: ["userId", "provider"],
-          isUnique: true,
-        }),
-      );
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-
-      throw error;
-    }
+    });
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
