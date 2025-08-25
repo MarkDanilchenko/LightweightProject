@@ -10,6 +10,7 @@ export default interface AppConfiguration {
     swaggerEnabled: boolean;
     commonSecret: string;
     https: boolean;
+    protocol: "http" | "https";
   };
   loggerConfiguration: WinstonModuleOptions;
   dbConfiguration: TypeOrmModuleOptions | DataSourceOptions;
@@ -35,11 +36,11 @@ export default interface AppConfiguration {
         discoveryUrl: string;
       };
       saml: {
-        descriptorUrl: string;
-        idpCert: string;
         issuer: string;
+        idpCert: string;
         callbackUrl: string;
         entryPoint: string;
+        descriptorUrl: string;
       };
     };
   };

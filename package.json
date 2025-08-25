@@ -19,7 +19,7 @@
     "typeorm:generate": "npm run typeorm migration:generate -- -d ./server/src/configs/typeorm.configuration.ts",
     "typeorm:show": "npm run typeorm migration:show -- -d ./server/src/configs/typeorm.configuration.ts",
     "format:server": "prettier --write ./server/src/**/*.ts ./server/test/**/*.ts ./server/migrations/**/*.ts && eslint ./server/src/**/*.ts ./server/test/**/*.ts ./server/migrations/**/*.ts --fix",
-    "clear:server:data:": "rm -rf ./server/dist && rm -rf ./server/db_data",
+    "clear:server:data": "rm -rf ./server/dist",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",

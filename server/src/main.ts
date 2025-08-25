@@ -12,14 +12,16 @@ import { patchNestjsSwagger } from "@anatine/zod-nestjs";
 
 async function bootstrap(): Promise<void> {
   const https = process.env.HTTPS === "true";
-  const httpsOptions: { key?: any; cert?: any } = {};
+  const httpsOptions: { key?: Buffer; cert?: Buffer } = {};
   if (https) {
-    if (!process.env.TLS_CERT_PATH || !process.env.TLS_KEY_PATH) {
-      throw new InternalServerErrorException("TLS_CERT_PATH and TLS_KEY_PATH env variables must be set!");
+    if (!process.env.CERT_PATH || !process.env.KEY_PATH) {
+      throw new InternalServerErrorException(
+        "Both CERT_PATH and KEY_PATH env variables must be set when HTTPS is true!",
+      );
     }
 
-    httpsOptions.key = fs.readFileSync(process.env.TLS_KEY_PATH);
-    httpsOptions.cert = fs.readFileSync(process.env.TLS_CERT_PATH);
+    httpsOptions.key = fs.readFileSync(process.env.KEY_PATH);
+    httpsOptions.cert = fs.readFileSync(process.env.CERT_PATH);
   }
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
@@ -28,7 +30,7 @@ async function bootstrap(): Promise<void> {
   });
 
   const configService = app.get(ConfigService);
-  const { host, port, cookieSecret, swaggerEnabled } =
+  const { host, port, cookieSecret, swaggerEnabled, protocol } =
     configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration")!;
 
   app.setGlobalPrefix("api/v1");
@@ -37,7 +39,7 @@ async function bootstrap(): Promise<void> {
 
   app.use(cookieParser(cookieSecret));
 
-  // NOTE: new ValidationPipe does not work with zod validation;
+  // new ValidationPipe does not work with zod validation;
   // app.useGlobalPipes(
   //   new ValidationPipe({
   //     whitelist: true,
@@ -46,17 +48,30 @@ async function bootstrap(): Promise<void> {
 
   if (swaggerEnabled) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const packageJsonInfo: Record<string, any> = JSON.parse(fs.readFileSync("../package.json", "utf-8"));
+    const packageJsonInfo: Record<string, string> = JSON.parse(fs.readFileSync("../package.json", "utf-8"));
 
     const swaggerConfiguration = new DocumentBuilder()
       .setTitle(packageJsonInfo.name)
       .setDescription(packageJsonInfo.description)
+      .setContact("", packageJsonInfo.author, "")
       .setVersion(packageJsonInfo.version)
       .addBearerAuth({
         type: "http",
         scheme: "bearer",
         bearerFormat: "JWT",
       })
+      .addCookieAuth(
+        "accessToken",
+        {
+          type: "apiKey",
+          description: "API access token in cookie",
+          name: "accessToken",
+          in: "cookie",
+          scheme: "bearer",
+          bearerFormat: "JWT",
+        },
+        "accessToken",
+      )
       .addOAuth2(
         {
           type: "oauth2",
@@ -103,20 +118,9 @@ async function bootstrap(): Promise<void> {
         },
         "keycloakOAuth2OIDC",
       )
-      .addCookieAuth(
-        "accessToken",
-        {
-          type: "apiKey",
-          description: "Access token in cookie",
-          name: "accessToken",
-          in: "cookie",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
-        "accessToken",
-      )
       .build();
 
+    // patch nestjs swagger to support zod validation;
     patchNestjsSwagger();
 
     const documentFactory = () => {
@@ -128,12 +132,12 @@ async function bootstrap(): Promise<void> {
     });
   }
 
-  await app.listen(port, host, () => {
+  await app.listen(port, host, (): void => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     app
       .get(WINSTON_MODULE_NEST_PROVIDER)
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      .log(`Server is running on http${https ? "s" : ""}://${host}:${port}`, "LightweightProject");
+      .log(`Server is running on ${protocol}://${host}:${port}`, "LightweightProject");
   });
 }
 
