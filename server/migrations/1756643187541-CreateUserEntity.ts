@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner, Table } from "typeorm";
 
-export class CreateUserEntity1750368795727 implements MigrationInterface {
+export class CreateUserEntity1756643187541 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
@@ -59,11 +59,16 @@ export class CreateUserEntity1750368795727 implements MigrationInterface {
           },
         ],
       }),
-      true, // "true" - create table, if it does not exist;
+      true, // if true, the table will be created if it does not exist;
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable("users");
+    await queryRunner.dropTable(
+      new Table({
+        name: "users",
+      }),
+      true, // if true, the table will be dropped if it exists;
+    );
   }
 }

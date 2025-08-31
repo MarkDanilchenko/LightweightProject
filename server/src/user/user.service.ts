@@ -23,4 +23,15 @@ export default class UserService {
 
     return this.userRepository.findOne(options);
   }
+
+  /**
+   * Finds a single user entity.
+   *
+   * @param options - Additional find options to customize the query.
+   *
+   * @returns A promise that resolves with the user entity if found, otherwise null.
+   */
+  async find(options: FindOneOptions<UserEntity>): Promise<UserEntity | null> {
+    return this.userRepository.findOne(options);
+  }
 }

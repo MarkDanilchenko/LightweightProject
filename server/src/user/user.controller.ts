@@ -5,5 +5,9 @@ import { Controller } from "@nestjs/common";
 @ApiTags("users")
 @Controller("users")
 export default class UserController {
-  constructor(private readonly userService: UserService) {}
+  private readonly userService: UserService;
+
+  constructor(userService: UserService) {
+    this.userService = userService;
+  }
 }

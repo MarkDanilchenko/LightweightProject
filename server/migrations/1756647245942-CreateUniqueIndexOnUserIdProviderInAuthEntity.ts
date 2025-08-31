@@ -1,6 +1,6 @@
 import { MigrationInterface, QueryRunner, TableIndex } from "typeorm";
 
-export class CreateIndexOnAuthentications1756068948742 implements MigrationInterface {
+export class CreateUniqueIndexOnUserIdProviderInAuthEntity1756647245942 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createIndex(
       "authentications",
