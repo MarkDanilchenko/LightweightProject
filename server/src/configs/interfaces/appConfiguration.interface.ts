@@ -1,6 +1,5 @@
 import { TypeOrmModuleOptions } from "@nestjs/typeorm";
 import { WinstonModuleOptions } from "nest-winston";
-import { DataSourceOptions } from "typeorm";
 
 export default interface AppConfiguration {
   serverConfiguration: {
@@ -13,7 +12,7 @@ export default interface AppConfiguration {
     protocol: "http" | "https";
   };
   loggerConfiguration: WinstonModuleOptions;
-  dbConfiguration: TypeOrmModuleOptions | DataSourceOptions;
+  dbConfiguration: TypeOrmModuleOptions;
   jwtConfiguration: {
     secret: string;
     accessTokenExpiresIn: string;

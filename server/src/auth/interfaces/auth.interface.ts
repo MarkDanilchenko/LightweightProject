@@ -1,5 +1,11 @@
 import { AuthenticationProvider } from "../types/auth.types.js";
 
+interface AuthAccordingToStrategyOptions {
+  accessToken?: string;
+  refreshToken?: string;
+  [key: string]: any;
+}
+
 interface JwtPayload {
   jwti: string;
   userId: string;
@@ -11,12 +17,6 @@ interface JwtAuthGuardResponse {
   username: string;
   email: string;
   provider: string;
-}
-
-interface AuthAccordingToStrategyOptions {
-  accessToken?: string;
-  refreshToken?: string;
-  routeUrl?: string;
 }
 
 interface GoogleOAuth2 {

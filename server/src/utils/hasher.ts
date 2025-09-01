@@ -28,12 +28,11 @@ async function hash(toHash: string): Promise<string> {
  * @returns A promise that resolves to true if the string matches the stored hash, otherwise false.
  */
 async function verifyHash(toHash: string, hash: string): Promise<boolean> {
-  const salt: Buffer = Buffer.from(AppConfiguration().serverConfiguration.commonSecret, "hex");
-
   if (!hash) {
     return false;
   }
 
+  const salt: Buffer = Buffer.from(AppConfiguration().serverConfiguration.commonSecret, "hex");
   const hashToCompare = (await scryptAsync(toHash, salt, keylen)) as Buffer;
   const storedHash: Buffer = Buffer.from(hash, "hex");
 
