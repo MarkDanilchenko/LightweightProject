@@ -6,21 +6,20 @@ import AppConfiguration from "../configs/interfaces/appConfiguration.interface.j
 import AuthController from "./auth.controller.js";
 import TokenService from "./token.service.js";
 import AuthService from "./auth.service.js";
-import GoogleOAuth2Strategy from "./strategies/googleOAuth2.strategy.js";
+// import GoogleOAuth2Strategy from "./strategies/googleOAuth2.strategy.js";
 import JwtStrategy from "./strategies/jwt.strategy.js";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
-import UserEntity from "@server/user/user.entity";
 import UserModule from "../user/user.module.js";
-import LocalAuthStrategy from "./strategies/local.strategy.js";
-import KeycloakOAuth2OIDCStrategy from "./strategies/keycloakOIDC.strategy.js";
-import KeycloakSAMLStrategy from "./strategies/keycloakSAML.strategy.js";
+// import LocalAuthStrategy from "./strategies/local.strategy.js";
+// import KeycloakOAuth2OIDCStrategy from "./strategies/keycloakOIDC.strategy.js";
+// import KeycloakSAMLStrategy from "./strategies/keycloakSAML.strategy.js";
 
 @Module({
   imports: [
     UserModule,
     PassportModule,
-    TypeOrmModule.forFeature([AuthenticationEntity, UserEntity]),
+    TypeOrmModule.forFeature([AuthenticationEntity]),
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
@@ -34,11 +33,11 @@ import KeycloakSAMLStrategy from "./strategies/keycloakSAML.strategy.js";
   providers: [
     AuthService,
     TokenService,
-    GoogleOAuth2Strategy,
+    // GoogleOAuth2Strategy,
     JwtStrategy,
-    LocalAuthStrategy,
-    KeycloakOAuth2OIDCStrategy,
-    KeycloakSAMLStrategy,
+    // LocalAuthStrategy,
+    // KeycloakOAuth2OIDCStrategy,
+    // KeycloakSAMLStrategy,
   ],
   exports: [],
 })
