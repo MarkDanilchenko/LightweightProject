@@ -73,7 +73,23 @@ interface AuthCredentials {
   username?: string;
 }
 
+interface AuthMetadata {
+  local?: {
+    isEmailVerified: boolean;
+    password: string;
+    verificationCode?: string;
+    verificationSendAt?: Date;
+    verificationExpireAt?: Date;
+    verificationAcceptedAt?: Date;
+    verificationLink?: string;
+  };
+  google?: Record<string, any>;
+  keycloak?: Record<string, any>;
+  github?: Record<string, any>;
+}
+
 export {
+  AuthMetadata,
   JwtPayload,
   JwtAuthGuardResponse,
   GoogleOAuth2,
