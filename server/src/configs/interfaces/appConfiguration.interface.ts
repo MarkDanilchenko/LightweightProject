@@ -11,6 +11,12 @@ export default interface AppConfiguration {
     https: boolean;
     protocol: "http" | "https";
   };
+  smtpConfiguration: {
+    host: string;
+    port: number;
+    username: string;
+    password: string;
+  };
   loggerConfiguration: WinstonModuleOptions;
   dbConfiguration: TypeOrmModuleOptions;
   jwtConfiguration: {

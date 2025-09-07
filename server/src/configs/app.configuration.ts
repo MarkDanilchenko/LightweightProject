@@ -34,6 +34,10 @@ export default (): AppConfiguration => {
     KC_CLIENT_SECRET,
     KC_SAML_IDP_CERT,
     KC_SAML_ISSUER,
+    SMTP_HOST,
+    SMTP_PORT,
+    SMTP_USERNAME,
+    SMTP_PASSWORD,
   } = process.env;
 
   const serverConfiguration: AppConfiguration["serverConfiguration"] = {
@@ -44,6 +48,13 @@ export default (): AppConfiguration => {
     commonSecret: COMMON_SECRET!,
     https: HTTPS === "true",
     protocol: HTTPS === "true" ? "https" : "http",
+  };
+
+  const smtpConfiguration: AppConfiguration["smtpConfiguration"] = {
+    host: SMTP_HOST!,
+    port: Number(SMTP_PORT) || 587,
+    username: SMTP_USERNAME!,
+    password: SMTP_PASSWORD!,
   };
 
   const loggerConfiguration: AppConfiguration["loggerConfiguration"] = {
@@ -116,5 +127,6 @@ export default (): AppConfiguration => {
     dbConfiguration,
     jwtConfiguration,
     authConfiguration,
+    smtpConfiguration,
   };
 };

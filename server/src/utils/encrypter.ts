@@ -1,5 +1,5 @@
 import * as crypto from "crypto";
-import AppConfiguration from "../configs/app.configuration.js";
+import AppConfiguration from "@server/configs/app.configuration";
 
 const algorithm = "aes-256-cbc";
 

@@ -1,6 +1,6 @@
 import { scrypt, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import AppConfiguration from "../configs/app.configuration.js";
+import AppConfiguration from "@server/configs/app.configuration";
 
 const scryptAsync = promisify(scrypt);
 const keylen = 64;
