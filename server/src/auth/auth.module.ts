@@ -7,7 +7,7 @@ import AuthController from "./auth.controller.js";
 import TokenService from "./token.service.js";
 import AuthService from "./auth.service.js";
 // import GoogleOAuth2Strategy from "./strategies/googleOAuth2.strategy.js";
-import JwtStrategy from "./strategies/jwt.strategy.js";
+// import JwtStrategy from "./strategies/jwt.strategy.js";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import UserModule from "../user/user.module.js";
@@ -34,7 +34,7 @@ import UserModule from "../user/user.module.js";
     AuthService,
     TokenService,
     // GoogleOAuth2Strategy,
-    JwtStrategy,
+    // JwtStrategy,
     // LocalAuthStrategy,
     // KeycloakOAuth2OIDCStrategy,
     // KeycloakSAMLStrategy,

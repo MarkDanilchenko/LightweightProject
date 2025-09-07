@@ -1,5 +1,25 @@
-import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards, UsePipes } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiOAuth2, ApiCookieAuth } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+  UsePipes,
+} from "@nestjs/common";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
+  ApiOAuth2,
+  ApiCookieAuth,
+  ApiQuery,
+  ApiParam,
+} from "@nestjs/swagger";
 import AuthService from "./auth.service.js";
 import { Request, Response } from "express";
 import { AuthCredentials } from "./interfaces/auth.interface.js";
@@ -19,38 +39,42 @@ import { KeycloakAuthGuard, KeycloakSAMLAuthGuard } from "./guards/keycloak-auth
 @ApiTags("auth")
 @Controller("auth")
 export default class AuthController {
+  private readonly configService: ConfigService;
+  private readonly authService: AuthService;
+  private readonly userService: UserService;
+  private readonly tokenService: TokenService;
   private readonly https: boolean;
 
   constructor(
-    private readonly authService: AuthService,
-    private readonly userService: UserService,
-    private readonly tokenService: TokenService,
-    private readonly configService: ConfigService,
+    authService: AuthService,
+    userService: UserService,
+    tokenService: TokenService,
+    configService: ConfigService,
   ) {
+    this.configService = configService;
+    this.authService = authService;
+    this.userService = userService;
+    this.tokenService = tokenService;
     this.https = configService.get<AppConfiguration["serverConfiguration"]["https"]>("serverConfiguration.https")!;
   }
 
   @Post("local/signup")
   @ApiOperation({
     summary: "Sign up with local authentication",
-    description: "Create a new user with local authentication strategy.",
+    description: "Create a new user with local authentication strategy. Email verification is required to proceed.",
   })
   @ApiResponse({
     status: 201,
-    description: "User created successfully.",
+    description: "User created successfully. Email verification is required to proceed.",
   })
   @ApiResponse({
     status: 400,
     description: "Invalid credentials or user already exists.",
   })
-  @ApiResponse({
-    status: 401,
-    description: "Sign up failed.",
-  })
   @ApiBody({ type: SignUpLocalDto })
   @UsePipes(ZodValidationPipe)
   async localSignUp(@Body() signUpLocalDto: SignUpLocalDto): Promise<void> {
-    await this.authService.authAccordingToStrategy("local", signUpLocalDto);
+    await this.authService.authAccordingToStrategy("local", signUpLocalDto, { method: "signup" });
   }
 
   @Get("local/signin")
