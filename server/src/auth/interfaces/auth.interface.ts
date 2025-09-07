@@ -79,9 +79,15 @@ interface AuthMetadata {
     password: string;
     verificationCode?: string;
     verificationSendAt?: Date;
-    verificationExpireAt?: Date;
+    verificationExpiresAt?: Date;
     verificationAcceptedAt?: Date;
     verificationLink?: string;
+    temporaryInfo?: {
+      username?: string;
+      firstName?: string;
+      lastName?: string;
+      avatarUrl?: string;
+    };
   };
   google?: Record<string, any>;
   keycloak?: Record<string, any>;

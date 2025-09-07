@@ -3,21 +3,7 @@ import { extendZodWithOpenApi } from "@anatine/zod-openapi";
 
 extendZodWithOpenApi(z);
 
-export const signInLocalSchema = z
-  .object({
-    login: z.string().openapi({ title: "Login", description: "Email or username", example: "johndoe" }),
-    password: z
-      .string()
-      .describe("Password")
-      .openapi({ title: "Password", description: "Password", example: "12345678Aa_" }),
-  })
-  .openapi({
-    title: "Sign in schema",
-    description: "Sign in with local strategy",
-    example: { login: "johndoe", password: "password" },
-  });
-
-export const signUpLocalSchema = z
+const signUpLocalSchema = z
   .object({
     username: z.string().min(3).max(64).openapi({
       title: "Username",
@@ -56,7 +42,7 @@ export const signUpLocalSchema = z
   })
   .openapi({
     title: "Sign up schema",
-    description: "Sign up with local strategy",
+    description: "Sign up with local authentication strategy",
     example: {
       username: "johndoe",
       firstName: "John",
@@ -67,7 +53,21 @@ export const signUpLocalSchema = z
     },
   });
 
-export const profileSchema = z
+const signInLocalSchema = z
+  .object({
+    login: z.string().openapi({ title: "Login", description: "Email or username", example: "johndoe" }),
+    password: z
+      .string()
+      .describe("Password")
+      .openapi({ title: "Password", description: "Password", example: "12345678Aa_" }),
+  })
+  .openapi({
+    title: "Sign in schema",
+    description: "Sign in with local strategy",
+    example: { login: "johndoe", password: "password" },
+  });
+
+const profileSchema = z
   .object({
     id: z
       .string()
@@ -123,3 +123,5 @@ export const profileSchema = z
       ],
     },
   });
+
+export { signInLocalSchema, profileSchema, signUpLocalSchema };
