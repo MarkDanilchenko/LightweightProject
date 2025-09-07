@@ -8,6 +8,7 @@ import AppConfiguration from "./configs/interfaces/appConfiguration.interface.js
 import { TypeOrmModule } from "@nestjs/typeorm";
 import AuthModule from "@server/auth/auth.module";
 import UserModule from "@server/user/user.module";
+import EventModule from "@server/event/event.module";
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import UserModule from "@server/user/user.module";
         return configService.get<AppConfiguration["loggerConfiguration"]>("loggerConfiguration")!;
       },
     }),
+    EventModule,
     AuthModule,
     UserModule,
   ],

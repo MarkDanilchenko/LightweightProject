@@ -214,9 +214,9 @@ export default class AuthService {
 
               await manager.save(authentication);
             }
-
-            // TODO: send a message to the any queue service (Bull/RabbitMQ/Kafka) to implement email verification;
           });
+          // TODO: emit an event about user's signup;
+          // TODO: send a message to the any queue service (Bull/RabbitMQ/Kafka) to implement email verification;
         } else if (method === "signin") {
           // try {
           //   if (!user) {
