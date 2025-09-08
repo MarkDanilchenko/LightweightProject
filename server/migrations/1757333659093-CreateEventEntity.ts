@@ -1,10 +1,10 @@
 import { MigrationInterface, QueryRunner, Table, TableForeignKey } from "typeorm";
 
-export class CreateAuthEntity1756644068516 implements MigrationInterface {
+export class CreateEventEntity1757333659093 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.createTable(
       new Table({
-        name: "authentications",
+        name: "events",
         columns: [
           {
             name: "id",
@@ -14,27 +14,27 @@ export class CreateAuthEntity1756644068516 implements MigrationInterface {
             default: "uuid_generate_v4()",
           },
           {
+            name: "name",
+            type: "varchar",
+            isNullable: false,
+          },
+          {
             name: "userId",
             type: "uuid",
-            isNullable: false,
-          },
-          {
-            name: "provider",
-            type: "varchar",
-            isNullable: false,
-          },
-          {
-            name: "refreshToken",
-            type: "varchar",
             isNullable: true,
-            comment: "app generated refresh token",
+            comment: "set to null if related user is deleted",
+          },
+          {
+            name: "modelId",
+            type: "uuid",
+            isNullable: false,
           },
           {
             name: "metadata",
             type: "jsonb",
             isNullable: false,
             default: "'{}'::jsonb",
-            comment: "additional authentication metadata",
+            comment: "additional event metadata",
           },
           {
             name: "createdAt",
@@ -42,25 +42,18 @@ export class CreateAuthEntity1756644068516 implements MigrationInterface {
             isNullable: false,
             default: "now()",
           },
-          {
-            name: "lastAccessedAt",
-            type: "timestamptz",
-            isNullable: false,
-            default: "now()",
-            comment: `the last time the authentication was accessed, similar to "updatedAt"`,
-          },
         ],
       }),
       true, // if true, the table will be created if it does not exist;
     );
 
     await queryRunner.createForeignKey(
-      "authentications",
+      "events",
       new TableForeignKey({
         columnNames: ["userId"],
         referencedColumnNames: ["id"],
         referencedTableName: "users",
-        onDelete: "CASCADE",
+        onDelete: "SET NULL",
       }),
     );
   }
@@ -68,7 +61,7 @@ export class CreateAuthEntity1756644068516 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.dropTable(
       new Table({
-        name: "authentications",
+        name: "events",
       }),
       true, // if true, the table will be dropped if it exists;
     );

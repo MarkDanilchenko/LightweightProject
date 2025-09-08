@@ -28,23 +28,22 @@ export default class AuthenticationEntity extends BaseEntity {
     type: "varchar",
     nullable: true,
     default: null,
-    comment: `app generated refresh token`,
+    comment: "app generated refresh token",
   })
   refreshToken: string | null;
 
   @Column({
     type: "jsonb",
     default: "'{}'::jsonb",
-    comment: `additional authentication metadata`,
+    comment: "additional authentication metadata",
   })
   metadata: AuthMetadata;
 
-  @CreateDateColumn({ type: "timestamptz", default: "now()" })
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
   @UpdateDateColumn({
     type: "timestamptz",
-    default: "now()",
     comment: `the last time the authentication was accessed, similar to "updatedAt"`,
   })
   lastAccessedAt: Date;
