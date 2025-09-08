@@ -9,6 +9,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
+import EventEntity from "@server/event/event.entity";
 
 @Entity({ name: "users" })
 export default class UserEntity extends BaseEntity {
@@ -42,4 +43,7 @@ export default class UserEntity extends BaseEntity {
   // associations
   @OneToMany(() => AuthenticationEntity, (authentication) => authentication.user)
   authentications: AuthenticationEntity[];
+
+  @OneToMany(() => EventEntity, (event) => event.user)
+  events: EventEntity[];
 }

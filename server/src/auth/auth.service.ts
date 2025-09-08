@@ -23,16 +23,20 @@ import {
   JwtPayload,
 } from "./interfaces/auth.interfaces";
 import { SignUpLocalDto } from "@server/auth/dto/auth.dto";
+import { EventEmitter2 } from "@nestjs/event-emitter";
+import { AuthCreatedLocalEvent, EventName } from "@server/event/interfaces/event.interfaces";
 
 @Injectable()
 export default class AuthService {
   private readonly logger: LoggerService;
   private readonly tokenService: TokenService;
   private readonly userService: UserService;
+  private readonly eventEmitter: EventEmitter2;
 
   constructor(
     tokenService: TokenService,
     userService: UserService,
+    eventEmitter: EventEmitter2,
     @InjectDataSource()
     private readonly dataSource: DataSource,
     @InjectRepository(AuthenticationEntity)
@@ -41,6 +45,7 @@ export default class AuthService {
     this.logger = new Logger(AuthService.name);
     this.tokenService = tokenService;
     this.userService = userService;
+    this.eventEmitter = eventEmitter;
   }
 
   /**
@@ -144,7 +149,7 @@ export default class AuthService {
         const { method } = options;
 
         if (method === "signup") {
-          await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
+          return this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
             if (!user) {
               const isUsernameTaken: UserEntity | null = await manager.findOne(UserEntity, {
                 select: { id: true },
@@ -178,6 +183,16 @@ export default class AuthService {
 
               await manager.save(user);
               await manager.save(authentication);
+
+              this.eventEmitter.emit(EventName.AUTH_CREATED_LOCAL, {
+                name: EventName.AUTH_CREATED_LOCAL,
+                userId: user.id,
+                modelId: authentication.id,
+                metadata: {
+                  email,
+                  ...authentication.metadata.local?.temporaryInfo,
+                },
+              } as AuthCreatedLocalEvent);
             } else {
               let authentication: AuthenticationEntity | undefined = user.authentications.find(
                 (auth: AuthenticationEntity): boolean => auth.provider === idP,
@@ -213,9 +228,19 @@ export default class AuthService {
               });
 
               await manager.save(authentication);
+
+              this.eventEmitter.emit(EventName.AUTH_CREATED_LOCAL, {
+                name: EventName.AUTH_CREATED_LOCAL,
+                userId: user.id,
+                modelId: authentication.id,
+                metadata: {
+                  email,
+                  ...authentication.metadata.local?.temporaryInfo,
+                },
+              } as AuthCreatedLocalEvent);
             }
           });
-          // TODO: emit an event about user's signup;
+
           // TODO: send a message to the any queue service (Bull/RabbitMQ/Kafka) to implement email verification;
         } else if (method === "signin") {
           // try {
@@ -360,9 +385,9 @@ export default class AuthService {
     // }
   }
 
-  async emailVerification(emailOrUsername: string): Promise<void> {
-    if (!emailOrUsername) {
-      throw new BadRequestException("Email or username is required.");
-    }
-  }
+  // async emailVerification(emailOrUsername: string): Promise<void> {
+  //   if (!emailOrUsername) {
+  //     throw new BadRequestException("Email or username is required.");
+  //   }
+  // }
 }
