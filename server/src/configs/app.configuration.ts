@@ -1,6 +1,6 @@
 import * as dotenv from "dotenv";
 import * as winston from "winston";
-import AppConfiguration from "./interfaces/appConfiguration.interface.js";
+import AppConfiguration from "./interfaces/appConfiguration.interfaces";
 import { utilities as nestWinstonModuleUtilities } from "nest-winston";
 
 dotenv.config({ path: "./.env.development" });

@@ -10,7 +10,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import UserEntity from "@server/user/user.entity";
-import { AuthMetadata } from "@server/auth/interfaces/auth.interface";
+import { AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
 
 @Entity({ name: "authentications" })
 @Index(["userId", "provider"], { unique: true })

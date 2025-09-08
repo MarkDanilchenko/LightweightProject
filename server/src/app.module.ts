@@ -4,7 +4,7 @@ import { ConfigModule } from "@nestjs/config";
 import appConfiguration from "./configs/app.configuration.js";
 import { WinstonModule } from "nest-winston";
 import { ConfigService } from "@nestjs/config";
-import AppConfiguration from "./configs/interfaces/appConfiguration.interface.js";
+import AppConfiguration from "./configs/interfaces/appConfiguration.interfaces";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import AuthModule from "@server/auth/auth.module";
 import UserModule from "@server/user/user.module";

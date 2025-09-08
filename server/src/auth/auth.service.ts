@@ -21,7 +21,7 @@ import {
   AuthCredentials,
   AuthMetadata,
   JwtPayload,
-} from "./interfaces/auth.interface.js";
+} from "./interfaces/auth.interfaces";
 import { SignUpLocalDto } from "@server/auth/dto/auth.dto";
 
 @Injectable()

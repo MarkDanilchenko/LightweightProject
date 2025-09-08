@@ -1,8 +1,8 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
-import AppConfiguration from "../configs/interfaces/appConfiguration.interface.js";
-import { JwtPayload } from "./interfaces/auth.interface.js";
+import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces";
+import { JwtPayload } from "./interfaces/auth.interfaces";
 import UserService from "../user/user.service.js";
 import { IsNull, Not } from "typeorm";
 import { decrypt } from "../utils/encrypter.js";

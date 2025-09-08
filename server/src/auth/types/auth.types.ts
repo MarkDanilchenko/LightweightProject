@@ -1,6 +1,6 @@
 import { z } from "zod";
 import UserEntity from "@server/user/user.entity";
-import { JwtAuthGuardResponse } from "@server/auth/interfaces/auth.interface.js";
+import { JwtAuthGuardResponse } from "@server/auth/interfaces/auth.interfaces";
 import { profileSchema, signInLocalSchema, signUpLocalSchema } from "../schemas/auth.schema.js";
 
 type SignInLocal = z.infer<typeof signInLocalSchema>;

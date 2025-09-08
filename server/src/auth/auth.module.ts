@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
-import AppConfiguration from "../configs/interfaces/appConfiguration.interface.js";
+import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces";
 import AuthController from "./auth.controller.js";
 import TokenService from "./token.service.js";
 import AuthService from "./auth.service.js";

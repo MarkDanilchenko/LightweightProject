@@ -83,7 +83,7 @@ interface AuthMetadata {
     verificationAcceptedAt?: Date;
     verificationLink?: string;
     temporaryInfo?: {
-      username?: string;
+      username: string;
       firstName?: string;
       lastName?: string;
       avatarUrl?: string;

@@ -1,9 +1,9 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy, VerifiedCallback } from "passport-jwt";
-import { JwtPayload } from "../interfaces/auth.interface.js";
+import { JwtPayload } from "../interfaces/auth.interfaces";
 import { ConfigService } from "@nestjs/config";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interface.js";
+import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
 import { Request } from "express";
 import UserService from "@server/user/user.service";
 

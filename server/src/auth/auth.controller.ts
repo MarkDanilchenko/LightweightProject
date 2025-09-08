@@ -22,13 +22,13 @@ import {
 } from "@nestjs/swagger";
 import AuthService from "./auth.service.js";
 import { Request, Response } from "express";
-import { AuthCredentials } from "./interfaces/auth.interface.js";
+import { AuthCredentials } from "./interfaces/auth.interfaces";
 import { Profile, requestWithUser } from "./types/auth.types.js";
 import UserService from "../user/user.service.js";
 import { setCookie } from "../utils/cookie.js";
 import TokenService from "./token.service.js";
 import { ConfigService } from "@nestjs/config";
-import AppConfiguration from "../configs/interfaces/appConfiguration.interface.js";
+import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces";
 import { ZodValidationPipe } from "@anatine/zod-nestjs";
 import JwtGuard from "./guards/jwt.guard.js";
 import LocalAuthGuard from "./guards/local-auth.guard.js";
