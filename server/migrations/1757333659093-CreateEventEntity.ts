@@ -22,12 +22,13 @@ export class CreateEventEntity1757333659093 implements MigrationInterface {
             name: "userId",
             type: "uuid",
             isNullable: true,
-            comment: "set to null if related user is deleted",
+            comment: "also can be null if related user is deleted",
           },
           {
             name: "modelId",
             type: "uuid",
             isNullable: false,
+            comment: "model, related to the event",
           },
           {
             name: "metadata",

@@ -5,6 +5,8 @@
 
 # dotenv environment variable files
 .env.development
+.env.production
+.env.public
 
 # Certs
 /certs
