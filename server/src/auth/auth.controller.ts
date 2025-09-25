@@ -1,25 +1,5 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Req,
-  Res,
-  UnauthorizedException,
-  UseGuards,
-  UsePipes,
-} from "@nestjs/common";
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBody,
-  ApiResponse,
-  ApiOAuth2,
-  ApiCookieAuth,
-  ApiQuery,
-  ApiParam,
-} from "@nestjs/swagger";
+import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards, UsePipes } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiOAuth2, ApiCookieAuth } from "@nestjs/swagger";
 import AuthService from "./auth.service.js";
 import { Request, Response } from "express";
 import { AuthCredentials } from "./interfaces/auth.interfaces";
@@ -74,7 +54,7 @@ export default class AuthController {
   @ApiBody({ type: SignUpLocalDto })
   @UsePipes(ZodValidationPipe)
   async localSignUp(@Body() signUpLocalDto: SignUpLocalDto): Promise<void> {
-    await this.authService.authAccordingToStrategy("local", signUpLocalDto, { method: "signup" });
+    await this.authService.localSignUp(signUpLocalDto);
   }
 
   @Get("local/signin")

@@ -48,6 +48,8 @@ export default class AuthService {
     this.eventEmitter = eventEmitter;
   }
 
+  async localSignUp(signUpLocalDto: SignUpLocalDto): Promise<void> {}
+
   /**
    * Authenticates user during the provided strategy.
    *

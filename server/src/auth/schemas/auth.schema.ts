@@ -36,20 +36,23 @@ const signUpLocalSchema = z
       .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/)
       .openapi({
         title: "Password",
-        description: "Password",
-        example: "12345678Aa_",
+        description: `Password must contain at least one uppercase letter, one lowercase letter, one digit
+        and be at least 8 characters long.`,
+        example: "********",
       }),
   })
   .openapi({
     title: "Sign up schema",
-    description: "Sign up with local authentication strategy",
+    description: `Sign up with local authentication strategy.
+      Password must contain at least one uppercase letter, one lowercase letter, one digit
+      and be at least 8 characters long.`,
     example: {
       username: "johndoe",
       firstName: "John",
       lastName: "Doe",
       email: "johndoe@me.com",
       avatarUrl: "https://example.com/avatar.jpg",
-      password: "12345678Aa_",
+      password: "********",
     },
   });
 
