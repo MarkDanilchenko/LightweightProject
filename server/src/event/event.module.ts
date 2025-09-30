@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { EventEmitterModule } from "@nestjs/event-emitter";
+import EventService from "@server/event/event.service";
 
 @Module({
   imports: [
@@ -7,8 +8,8 @@ import { EventEmitterModule } from "@nestjs/event-emitter";
       verboseMemoryLeak: true,
     }),
   ],
-  exports: [],
   controllers: [],
-  providers: [],
+  providers: [EventService],
+  exports: [],
 })
 export default class EventModule {}
