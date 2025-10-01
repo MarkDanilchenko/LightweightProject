@@ -7,15 +7,15 @@ export default class EventService {
   private readonly eventRegistry: EventRegistry = eventRegistry;
 
   /**
-   * Creates a new event instance according to the provided event name.
+   * Build a new event instance according to the provided event name.
    *
    * @template K - The type of the event name.
    * @param {K} eventName - The name of the event to create.
    * @param {...ConstructorParameters<EventRegistry[K]> extends [any, ...infer Rest] ? Rest : never} payload - The payload for the event.
    *
-   * @returns {InstanceType<EventRegistry[K]>} The created event instance.
+   * @returns {InstanceType<EventRegistry[K]>} The event instance.
    */
-  create<K extends keyof EventRegistry>(
+  build<K extends keyof EventRegistry>(
     eventName: K,
     ...payload: ConstructorParameters<EventRegistry[K]> extends [any, ...infer Rest] ? Rest : never
   ): InstanceType<EventRegistry[K]> {

@@ -1,41 +1,29 @@
-import { v4 as uuidv4 } from "uuid";
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  LoggerService,
-  NotFoundException,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { BadRequestException, Injectable, Logger, LoggerService, UnauthorizedException } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
-import { DataSource, EntityManager, Repository, Not } from "typeorm";
+import { DataSource, EntityManager, Repository } from "typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import TokenService from "./token.service.js";
 import UserService from "@server/user/user.service";
 import UserEntity from "@server/user/user.entity";
-import { AuthenticationProvider } from "./types/auth.types.js";
-import { encrypt } from "../utils/encrypter.js";
-import { hash, verifyHash } from "../utils/hasher.js";
-import {
-  AuthAccordingToStrategyOptions,
-  AuthCredentials,
-  AuthMetadata,
-  JwtPayload,
-} from "./interfaces/auth.interfaces";
+import { hash } from "../utils/hasher.js";
 import { SignUpLocalDto } from "@server/auth/dto/auth.dto";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { AuthCreatedLocalEvent, EventName } from "@server/event/interfaces/event.interfaces";
+import { EventName } from "@server/event/interfaces/event.interfaces";
+import EventService from "@server/event/event.service";
+import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
 
 @Injectable()
 export default class AuthService {
   private readonly logger: LoggerService;
   private readonly tokenService: TokenService;
   private readonly userService: UserService;
+  private readonly eventService: EventService;
   private readonly eventEmitter: EventEmitter2;
 
   constructor(
     tokenService: TokenService,
     userService: UserService,
+    eventService: EventService,
     eventEmitter: EventEmitter2,
     @InjectDataSource()
     private readonly dataSource: DataSource,
@@ -45,10 +33,124 @@ export default class AuthService {
     this.logger = new Logger(AuthService.name);
     this.tokenService = tokenService;
     this.userService = userService;
+    this.eventService = eventService;
     this.eventEmitter = eventEmitter;
   }
 
-  async localSignUp(signUpLocalDto: SignUpLocalDto): Promise<void> {}
+  async localSignUp(signUpLocalDto: SignUpLocalDto): Promise<void> {
+    const { username, firstName, lastName, email, avatarUrl, password } = signUpLocalDto;
+
+    const user: UserEntity | null = await this.userService.find({
+      relations: ["authentications"],
+      select: {
+        id: true,
+        email: true,
+        authentications: {
+          id: true,
+          userId: true,
+          provider: true,
+          metadata: true,
+        },
+      },
+      where: {
+        email,
+      },
+    });
+
+    await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
+      if (!user) {
+        const isUsernameTaken: UserEntity | null = await manager.findOne(UserEntity, {
+          select: { id: true },
+          where: { username },
+        });
+
+        if (isUsernameTaken) {
+          throw new BadRequestException("Username is already taken.");
+        }
+
+        const user: UserEntity = manager.create(UserEntity, { email });
+
+        const hashedPassword: string = await hash(password);
+
+        const authentication: AuthenticationEntity = manager.create(AuthenticationEntity, {
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+          metadata: {
+            local: {
+              isEmailVerified: false,
+              password: hashedPassword,
+              temporaryInfo: {
+                username,
+                firstName,
+                lastName,
+                avatarUrl,
+              },
+            },
+          },
+        });
+
+        await manager.save(user);
+        await manager.save(authentication);
+
+        this.eventEmitter.emit(
+          EventName.AUTH_CREATED_LOCAL,
+          this.eventService.build(EventName.AUTH_CREATED_LOCAL, user.id, authentication.id, {
+            username,
+            firstName,
+            lastName,
+            avatarUrl,
+            email,
+          }),
+        );
+      } else {
+        const existingAuthentication: AuthenticationEntity | undefined = user.authentications.find(
+          (auth: AuthenticationEntity): boolean => auth.provider === AuthenticationProvider.LOCAL,
+        );
+
+        if (existingAuthentication) {
+          if (existingAuthentication.metadata.local?.isEmailVerified) {
+            throw new BadRequestException(
+              "Already signed up." + " Please, sign in with local authentication credentials.",
+            );
+          }
+
+          throw new BadRequestException("Already signed up." + " Email verification is required to proceed.");
+        }
+
+        const hashedPassword: string = await hash(password);
+
+        const authentication: AuthenticationEntity = manager.create(AuthenticationEntity, {
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+          metadata: {
+            local: {
+              isEmailVerified: false,
+              password: hashedPassword,
+              temporaryInfo: {
+                username,
+                firstName,
+                lastName,
+                avatarUrl,
+              },
+            },
+          },
+        });
+
+        await manager.save(authentication);
+
+        this.eventEmitter.emit(
+          EventName.AUTH_CREATED_LOCAL,
+          this.eventService.build(EventName.AUTH_CREATED_LOCAL, user.id, authentication.id, {
+            username,
+            firstName,
+            lastName,
+            avatarUrl,
+            email,
+          }),
+        );
+      }
+    });
+  }
 
   /**
    * Authenticates user during the provided strategy.
@@ -185,16 +287,6 @@ export default class AuthService {
 
               await manager.save(user);
               await manager.save(authentication);
-
-              this.eventEmitter.emit(EventName.AUTH_CREATED_LOCAL, {
-                name: EventName.AUTH_CREATED_LOCAL,
-                userId: user.id,
-                modelId: authentication.id,
-                metadata: {
-                  email,
-                  ...authentication.metadata.local?.temporaryInfo,
-                },
-              } as AuthCreatedLocalEvent);
             } else {
               let authentication: AuthenticationEntity | undefined = user.authentications.find(
                 (auth: AuthenticationEntity): boolean => auth.provider === idP,
@@ -230,16 +322,6 @@ export default class AuthService {
               });
 
               await manager.save(authentication);
-
-              this.eventEmitter.emit(EventName.AUTH_CREATED_LOCAL, {
-                name: EventName.AUTH_CREATED_LOCAL,
-                userId: user.id,
-                modelId: authentication.id,
-                metadata: {
-                  email,
-                  ...authentication.metadata.local?.temporaryInfo,
-                },
-              } as AuthCreatedLocalEvent);
             }
           });
 

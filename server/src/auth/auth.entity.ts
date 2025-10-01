@@ -11,6 +11,7 @@ import {
 } from "typeorm";
 import UserEntity from "@server/user/user.entity";
 import { AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider } from "@server/auth/types/auth.types";
 
 @Entity({ name: "authentications" })
 @Index(["userId", "provider"], { unique: true })
@@ -22,7 +23,7 @@ export default class AuthenticationEntity extends BaseEntity {
   userId: string;
 
   @Column({ type: "varchar" })
-  provider: string;
+  provider: AuthenticationProvider;
 
   @Column({
     type: "varchar",
