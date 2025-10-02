@@ -1,7 +1,7 @@
 import { AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
 import { AuthCreatedLocalEventClass } from "@server/event/event.events";
 
-enum EventName {
+const enum EventName {
   AUTH_CREATED_LOCAL = "auth.created.local",
 }
 
