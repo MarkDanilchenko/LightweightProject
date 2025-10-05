@@ -21,14 +21,14 @@ export class CreateEventEntity1757333659093 implements MigrationInterface {
           {
             name: "userId",
             type: "uuid",
-            isNullable: true,
-            comment: "actor who performed the event, also can be null if related user is deleted",
+            isNullable: false,
+            comment: "actor who performed the event",
           },
           {
             name: "modelId",
             type: "uuid",
             isNullable: false,
-            comment: "related to the event model",
+            comment: "event related model, e.g. user, organization, etc., so FK is not set",
           },
           {
             name: "metadata",
@@ -54,7 +54,7 @@ export class CreateEventEntity1757333659093 implements MigrationInterface {
         columnNames: ["userId"],
         referencedColumnNames: ["id"],
         referencedTableName: "users",
-        onDelete: "SET NULL",
+        onDelete: "CASCADE",
       }),
     );
   }

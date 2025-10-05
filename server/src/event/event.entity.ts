@@ -23,13 +23,11 @@ export default class EventEntity extends BaseEntity {
 
   @Column({
     type: "uuid",
-    nullable: true,
-    default: null,
-    comment: "set to null if related user is deleted",
+    comment: "actor who performed the event",
   })
-  userId: string | null;
+  userId: string;
 
-  @Column({ type: "uuid" })
+  @Column({ type: "uuid", comment: "event related model, e.g. user, organization, etc., so FK is not set" })
   modelId: string;
 
   @Column({
