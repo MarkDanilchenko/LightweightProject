@@ -11,3 +11,5 @@ const transporter = createTransport({
     pass: smtpConfiguration.password,
   },
 });
+
+export default transporter;

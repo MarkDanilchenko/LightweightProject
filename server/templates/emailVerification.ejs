@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible"
+          content="ie=edge">
+    <meta name="description"
+          content="LightweightProject - Email Verification" />
+    <meta name="keywords"
+          content="LightweightProject, email, verification, authentication, signup" />
+    <meta name="author"
+          content="" />
+    <link rel="icon"
+          href="../../shared/img/Brackets_logo.png" />
+    <title>LightweightProject - Email Verification</title>
+    <style>
+        body, footer {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h3>Welcome, <%= username; %>!</h3>
+    <p>
+        Thank you for signing up to LightweightProject.<br>
+        To continue, please verify your email address by clicking the link below:
+    </p>
+    <p>
+        <a href="<%= verificationLink; %>"
+           title="Verify Email Address"
+           target="_blank"><%= verificationLink; %></a>
+    </p>
+    <p>
+        <i>If you did not sign up for LightweightProject, please, ignore this email.<br>
+           Best regards,<br>
+           LightweightProject Team</i>
+    </p>
+</div>
+</body>
+<footer>
+    <div class="container">
+        <p>LightweightProject, <span><%= new Date().getFullYear(); %></span></p>
+    </div>
+</footer>
+</html>

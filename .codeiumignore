@@ -3,7 +3,7 @@
 **/db_data/
 **/dumps/
 
-# dotenv environment variable files
+# environment files
 .env.development
 .env.production
 .env.public
