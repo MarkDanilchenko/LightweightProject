@@ -16,6 +16,7 @@ export default interface AppConfiguration {
     port: number;
     username: string;
     password: string;
+    from: string;
   };
   loggerConfiguration: WinstonModuleOptions;
   dbConfiguration: TypeOrmModuleOptions;

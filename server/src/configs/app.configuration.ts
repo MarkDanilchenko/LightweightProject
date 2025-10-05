@@ -38,6 +38,7 @@ export default (): AppConfiguration => {
     SMTP_PORT,
     SMTP_USERNAME,
     SMTP_PASSWORD,
+    SMTP_FROM,
   } = process.env;
 
   const serverConfiguration: AppConfiguration["serverConfiguration"] = {
@@ -55,6 +56,7 @@ export default (): AppConfiguration => {
     port: Number(SMTP_PORT) || 587,
     username: SMTP_USERNAME!,
     password: SMTP_PASSWORD!,
+    from: SMTP_FROM!,
   };
 
   const loggerConfiguration: AppConfiguration["loggerConfiguration"] = {
