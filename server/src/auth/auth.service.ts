@@ -76,6 +76,7 @@ export default class AuthService {
         }
 
         const user: UserEntity = manager.create(UserEntity, { email });
+        await manager.save(user);
 
         const hashedPassword: string = await hash(password);
 
@@ -95,8 +96,6 @@ export default class AuthService {
             },
           },
         });
-
-        await manager.save(user);
         await manager.save(authentication);
 
         this.eventEmitter.emit(
@@ -108,6 +107,7 @@ export default class AuthService {
             avatarUrl,
             email,
           }),
+          manager,
         );
       } else {
         const existingAuthentication: AuthenticationEntity | undefined = user.authentications.find(
@@ -142,7 +142,6 @@ export default class AuthService {
             },
           },
         });
-
         await manager.save(authentication);
 
         this.eventEmitter.emit(
@@ -154,6 +153,7 @@ export default class AuthService {
             avatarUrl,
             email,
           }),
+          manager,
         );
       }
     });
