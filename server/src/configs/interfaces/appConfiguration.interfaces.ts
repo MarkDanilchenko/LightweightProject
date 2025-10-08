@@ -50,4 +50,17 @@ export default interface AppConfiguration {
       };
     };
   };
+  rabbitmqConfiguration: {
+    host: string;
+    port: number;
+    webclientPort: number;
+    username: string;
+    password: string;
+    emailQueue: string;
+    prefetchCount: number;
+    noAck: boolean;
+    persistent: boolean;
+    heartbeatIntervalInSeconds: number;
+    reconnectTimeInSeconds: number;
+  };
 }

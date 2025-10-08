@@ -1,6 +1,6 @@
 import { ApiTags } from "@nestjs/swagger";
-import UserService from "./user.service.js";
 import { Controller } from "@nestjs/common";
+import UserService from "@server/user/user.service";
 
 @ApiTags("users")
 @Controller("users")

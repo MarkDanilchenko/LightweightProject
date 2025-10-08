@@ -1,19 +1,19 @@
 import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards, UsePipes } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiOAuth2, ApiCookieAuth } from "@nestjs/swagger";
-import AuthService from "./auth.service.js";
 import { Request, Response } from "express";
 // import { Profile, requestWithUser } from "./types/auth.types.js";
-import UserService from "../user/user.service.js";
 import { setCookie } from "../utils/cookie.js";
-import TokenService from "./token.service.js";
+// import TokenService from "./token.service.js";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces";
 import { ZodValidationPipe } from "@anatine/zod-nestjs";
 import JwtGuard from "./guards/jwt.guard.js";
 import LocalAuthGuard from "./guards/local-auth.guard.js";
 import GoogleAuthGuard from "./guards/google-auth.guard.js";
-import { ProfileDto, SignInLocalDto, SignUpLocalDto } from "./dto/auth.dto.js";
 import { KeycloakAuthGuard, KeycloakSAMLAuthGuard } from "./guards/keycloak-auth.guard.js";
+import UserService from "@server/user/user.service";
+import AuthService from "@server/auth/auth.service";
+import { SignUpLocalDto } from "@server/auth/dto/auth.dto";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -21,19 +21,19 @@ export default class AuthController {
   private readonly configService: ConfigService;
   private readonly authService: AuthService;
   private readonly userService: UserService;
-  private readonly tokenService: TokenService;
+  // private readonly tokenService: TokenService;
   private readonly https: boolean;
 
   constructor(
+    configService: ConfigService,
     authService: AuthService,
     userService: UserService,
-    tokenService: TokenService,
-    configService: ConfigService,
+    // tokenService: TokenService,
   ) {
     this.configService = configService;
     this.authService = authService;
     this.userService = userService;
-    this.tokenService = tokenService;
+    // this.tokenService = tokenService;
     this.https = configService.get<AppConfiguration["serverConfiguration"]["https"]>("serverConfiguration.https")!;
   }
 

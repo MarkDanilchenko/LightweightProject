@@ -1,7 +1,6 @@
 import * as fs from "fs";
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
-import appConfiguration from "./configs/app.configuration.js";
 import { WinstonModule } from "nest-winston";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "./configs/interfaces/appConfiguration.interfaces";
@@ -9,6 +8,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import AuthModule from "@server/auth/auth.module";
 import UserModule from "@server/user/user.module";
 import EventModule from "@server/event/event.module";
+import appConfiguration from "@server/configs/app.configuration";
 
 @Module({
   imports: [

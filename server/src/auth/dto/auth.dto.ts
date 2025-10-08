@@ -1,5 +1,5 @@
 import { createZodDto } from "@anatine/zod-nestjs";
-import { profileSchema, signInLocalSchema, signUpLocalSchema } from "../schemas/auth.schema.js";
+import { profileSchema, signInLocalSchema, signUpLocalSchema } from "@server/auth/schemas/auth.schema";
 
 class SignUpLocalDto extends createZodDto(signUpLocalSchema) {}
 

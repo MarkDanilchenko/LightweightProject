@@ -2,39 +2,39 @@ import { BadRequestException, Injectable, Logger, LoggerService, UnauthorizedExc
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, EntityManager, Repository } from "typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
-import TokenService from "./token.service.js";
+// import TokenService from "./token.service.js";
 import UserService from "@server/user/user.service";
 import UserEntity from "@server/user/user.entity";
-import { hash } from "../utils/hasher.js";
 import { SignUpLocalDto } from "@server/auth/dto/auth.dto";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { EventName } from "@server/event/interfaces/event.interfaces";
 import EventService from "@server/event/event.service";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import { hash } from "@server/utils/hasher";
 
 @Injectable()
 export default class AuthService {
   private readonly logger: LoggerService;
-  private readonly tokenService: TokenService;
-  private readonly userService: UserService;
   private readonly eventService: EventService;
   private readonly eventEmitter: EventEmitter2;
+  // private readonly tokenService: TokenService;
+  private readonly userService: UserService;
 
   constructor(
-    tokenService: TokenService,
-    userService: UserService,
     eventService: EventService,
     eventEmitter: EventEmitter2,
     @InjectDataSource()
     private readonly dataSource: DataSource,
     @InjectRepository(AuthenticationEntity)
     private readonly authenticationRepository: Repository<AuthenticationEntity>,
+    // tokenService: TokenService,
+    userService: UserService,
   ) {
     this.logger = new Logger(AuthService.name);
-    this.tokenService = tokenService;
-    this.userService = userService;
     this.eventService = eventService;
     this.eventEmitter = eventEmitter;
+    // this.tokenService = tokenService;
+    this.userService = userService;
   }
 
   /**

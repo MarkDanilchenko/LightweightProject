@@ -3,12 +3,13 @@ import * as cookieParser from "cookie-parser";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@nestjs/config";
-import AppModule from "./app.module.js";
+
 import AppConfiguration from "./configs/interfaces/appConfiguration.interfaces";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { InternalServerErrorException } from "@nestjs/common";
 import { patchNestjsSwagger } from "@anatine/zod-nestjs";
+import AppModule from "@server/app.module";
 
 async function bootstrap(): Promise<void> {
   const https = process.env.HTTPS === "true";

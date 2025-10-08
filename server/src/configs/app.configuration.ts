@@ -39,6 +39,17 @@ export default (): AppConfiguration => {
     SMTP_USERNAME,
     SMTP_PASSWORD,
     SMTP_FROM,
+    RABBITMQ_HOST,
+    RABBITMQ_PORT,
+    RABBITMQ_WEBCLIENT_PORT,
+    RABBITMQ_DEFAULT_USER,
+    RABBITMQ_DEFAULT_PASS,
+    RABBITMQ_EMAIL_QUEUE,
+    RABBITMQ_PREFETCH_COUNT,
+    RABBITMQ_NO_ACK,
+    RABBITMQ_PERSISTENT,
+    RABBITMQ_HEARTBEAT_INTERVAL,
+    RABBITMQ_RECONNECT_TIME,
   } = process.env;
 
   const serverConfiguration: AppConfiguration["serverConfiguration"] = {
@@ -123,6 +134,20 @@ export default (): AppConfiguration => {
     },
   };
 
+  const rabbitmqConfiguration: AppConfiguration["rabbitmqConfiguration"] = {
+    host: RABBITMQ_HOST! || "127.0.0.1",
+    port: parseInt(RABBITMQ_PORT!) || 5672,
+    webclientPort: parseInt(RABBITMQ_WEBCLIENT_PORT!) || 15672,
+    username: RABBITMQ_DEFAULT_USER!,
+    password: RABBITMQ_DEFAULT_PASS!,
+    emailQueue: RABBITMQ_EMAIL_QUEUE!,
+    prefetchCount: parseInt(RABBITMQ_PREFETCH_COUNT!) || 1,
+    noAck: RABBITMQ_NO_ACK === "true",
+    persistent: RABBITMQ_PERSISTENT === "true",
+    heartbeatIntervalInSeconds: parseInt(RABBITMQ_HEARTBEAT_INTERVAL!) || 60,
+    reconnectTimeInSeconds: parseInt(RABBITMQ_RECONNECT_TIME!) || 10,
+  };
+
   return {
     serverConfiguration,
     loggerConfiguration,
@@ -130,5 +155,6 @@ export default (): AppConfiguration => {
     jwtConfiguration,
     authConfiguration,
     smtpConfiguration,
+    rabbitmqConfiguration,
   };
 };
