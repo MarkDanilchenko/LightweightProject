@@ -3,7 +3,6 @@ import * as cookieParser from "cookie-parser";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@nestjs/config";
-
 import AppConfiguration from "./configs/interfaces/appConfiguration.interfaces";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
