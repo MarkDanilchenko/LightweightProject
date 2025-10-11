@@ -8,7 +8,6 @@ import AuthModule from "@server/auth/auth.module";
 import UserModule from "@server/user/user.module";
 import EventModule from "@server/event/event.module";
 import appConfiguration from "@server/configs/app.configuration";
-import { ClientsModule, Transport } from "@nestjs/microservices";
 
 @Module({
   imports: [
@@ -29,41 +28,6 @@ import { ClientsModule, Transport } from "@nestjs/microservices";
         return configService.get<AppConfiguration["loggerConfiguration"]>("loggerConfiguration")!;
       },
     }),
-    ClientsModule.registerAsync([
-      {
-        name: "RMQ_EMAIL_MICROSERVICE",
-        inject: [ConfigService],
-        useFactory: (configService: ConfigService) => {
-          const {
-            host,
-            port,
-            emailQueue,
-            username,
-            password,
-            prefetchCount,
-            heartbeatIntervalInSeconds,
-            reconnectTimeInSeconds,
-            noAck,
-            persistent,
-          } = configService.get<AppConfiguration["rabbitmqConfiguration"]>("rabbitmqConfiguration")!;
-
-          return {
-            transport: Transport.RMQ,
-            options: {
-              urls: [`amqp://${username}:${password}@${host}:${port}`],
-              queue: emailQueue,
-              prefetchCount,
-              socketOptions: {
-                heartbeatIntervalInSeconds,
-                reconnectTimeInSeconds,
-              },
-              noAck,
-              persistent,
-            },
-          };
-        },
-      },
-    ]),
     EventModule,
     AuthModule,
     UserModule,

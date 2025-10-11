@@ -1,16 +1,19 @@
-import { Injectable, Logger, LoggerService } from "@nestjs/common";
+import { Inject, Injectable, Logger, LoggerService } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import { EventName } from "@server/event/interfaces/event.interfaces";
 import { AuthCreatedLocalEventClass } from "@server/event/event.events";
 import { InjectDataSource } from "@nestjs/typeorm";
 import { DataSource, EntityManager } from "typeorm";
 import EventEntity from "@server/event/event.entity";
+import { ClientProxy } from "@nestjs/microservices";
 
 @Injectable()
 export default class EventConsumer {
   private readonly logger: LoggerService;
 
   constructor(
+    @Inject("RMQ_EMAIL_MICROSERVICE")
+    private readonly rmqEmailMicroserviceClient: ClientProxy,
     @InjectDataSource()
     private readonly dataSource: DataSource,
   ) {
@@ -24,6 +27,10 @@ export default class EventConsumer {
         ...payload,
       });
       await manager.save(event);
+
+      // Use `.emit()` for events that do not require a response (fire-and-forget).
+      // If needed a response from a microservice - use `.send()'.
+      this.rmqEmailMicroserviceClient.emit(EventName.AUTH_CREATED_LOCAL, payload);
     };
 
     if (!manager) {
