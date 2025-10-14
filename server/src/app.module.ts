@@ -8,7 +8,7 @@ import AuthModule from "@server/auth/auth.module";
 import UserModule from "@server/user/user.module";
 import EventModule from "@server/event/event.module";
 import appConfiguration from "@server/configs/app.configuration";
-import { RmqEmailModule } from "@server/email/email.module";
+import { RmqEmailModule } from "@server/consumers/rmq/email/email.module";
 
 @Module({
   imports: [
