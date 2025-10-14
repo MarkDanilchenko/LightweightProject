@@ -2,6 +2,7 @@ import * as dotenv from "dotenv";
 import * as winston from "winston";
 import AppConfiguration from "./interfaces/appConfiguration.interfaces";
 import { utilities as nestWinstonModuleUtilities } from "nest-winston";
+import { Transport } from "@nestjs/microservices";
 
 dotenv.config({ path: "./.env.development" });
 
@@ -44,9 +45,10 @@ export default (): AppConfiguration => {
     RABBITMQ_WEBCLIENT_PORT,
     RABBITMQ_DEFAULT_USER,
     RABBITMQ_DEFAULT_PASS,
-    RABBITMQ_EMAIL_QUEUE,
+    RABBITMQ_MAIN_QUEUE,
     RABBITMQ_PREFETCH_COUNT,
     RABBITMQ_NO_ACK,
+    RABBITMQ_DURABLE,
     RABBITMQ_PERSISTENT,
     RABBITMQ_HEARTBEAT_INTERVAL,
     RABBITMQ_RECONNECT_TIME,
@@ -135,17 +137,20 @@ export default (): AppConfiguration => {
   };
 
   const rabbitmqConfiguration: AppConfiguration["rabbitmqConfiguration"] = {
-    host: RABBITMQ_HOST! || "127.0.0.1",
-    port: parseInt(RABBITMQ_PORT!) || 5672,
-    webclientPort: parseInt(RABBITMQ_WEBCLIENT_PORT!) || 15672,
-    username: RABBITMQ_DEFAULT_USER!,
-    password: RABBITMQ_DEFAULT_PASS!,
-    emailQueue: RABBITMQ_EMAIL_QUEUE!,
-    prefetchCount: parseInt(RABBITMQ_PREFETCH_COUNT!) || 1,
-    noAck: RABBITMQ_NO_ACK === "true",
-    persistent: RABBITMQ_PERSISTENT === "true",
-    heartbeatIntervalInSeconds: parseInt(RABBITMQ_HEARTBEAT_INTERVAL!) || 60,
-    reconnectTimeInSeconds: parseInt(RABBITMQ_RECONNECT_TIME!) || 10,
+    transport: Transport.RMQ,
+    options: {
+      urls: [`amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@${RABBITMQ_HOST}:${RABBITMQ_PORT}`],
+      queue: RABBITMQ_MAIN_QUEUE,
+      prefetchCount: parseInt(RABBITMQ_PREFETCH_COUNT!) || 1,
+      persistent: RABBITMQ_PERSISTENT === "true",
+      socketOptions: {
+        heartbeatIntervalInSeconds: parseInt(RABBITMQ_HEARTBEAT_INTERVAL!) || 60,
+        reconnectTimeInSeconds: parseInt(RABBITMQ_RECONNECT_TIME!) || 10,
+      },
+      queueOptions: {
+        durable: RABBITMQ_DURABLE === "true",
+      },
+    },
   };
 
   return {

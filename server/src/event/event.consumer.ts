@@ -12,8 +12,8 @@ export default class EventConsumer {
   private readonly logger: LoggerService;
 
   constructor(
-    @Inject("RMQ_EMAIL_MICROSERVICE")
-    private readonly rmqEmailMicroserviceClient: ClientProxy,
+    @Inject("MICROSERVICE_RMQ")
+    private readonly rmqMicroserviceClient: ClientProxy,
     @InjectDataSource()
     private readonly dataSource: DataSource,
   ) {
@@ -30,7 +30,7 @@ export default class EventConsumer {
 
       // Use `.emit()` for events that do not require a response (fire-and-forget).
       // If needed a response from a microservice - use `.send()'.
-      this.rmqEmailMicroserviceClient.emit(EventName.AUTH_CREATED_LOCAL, payload);
+      this.rmqMicroserviceClient.emit(EventName.AUTH_CREATED_LOCAL, payload);
     };
 
     if (!manager) {

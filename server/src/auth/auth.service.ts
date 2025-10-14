@@ -23,18 +23,18 @@ export default class AuthService {
   constructor(
     eventService: EventService,
     eventEmitter: EventEmitter2,
+    userService: UserService,
     @InjectDataSource()
     private readonly dataSource: DataSource,
     @InjectRepository(AuthenticationEntity)
     private readonly authenticationRepository: Repository<AuthenticationEntity>,
     // tokenService: TokenService,
-    userService: UserService,
   ) {
     this.logger = new Logger(AuthService.name);
     this.eventService = eventService;
     this.eventEmitter = eventEmitter;
-    // this.tokenService = tokenService;
     this.userService = userService;
+    // this.tokenService = tokenService;
   }
 
   /**

@@ -6,7 +6,7 @@ const enum EventName {
 }
 
 interface BaseEvent {
-  eventName: EventName;
+  name: EventName;
   userId: string;
   modelId: string;
 }

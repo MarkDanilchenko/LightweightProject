@@ -8,6 +8,7 @@ import AuthModule from "@server/auth/auth.module";
 import UserModule from "@server/user/user.module";
 import EventModule from "@server/event/event.module";
 import appConfiguration from "@server/configs/app.configuration";
+import { RmqEmailModule } from "@server/email/email.module";
 
 @Module({
   imports: [
@@ -28,12 +29,13 @@ import appConfiguration from "@server/configs/app.configuration";
         return configService.get<AppConfiguration["loggerConfiguration"]>("loggerConfiguration")!;
       },
     }),
+    RmqEmailModule,
     EventModule,
     AuthModule,
     UserModule,
   ],
-  exports: [],
   controllers: [],
   providers: [],
+  exports: [],
 })
 export default class AppModule {}

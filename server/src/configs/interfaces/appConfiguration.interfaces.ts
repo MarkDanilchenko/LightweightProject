@@ -1,5 +1,6 @@
 import { TypeOrmModuleOptions } from "@nestjs/typeorm";
 import { WinstonModuleOptions } from "nest-winston";
+import { RmqOptions } from "@nestjs/microservices";
 
 export default interface AppConfiguration {
   serverConfiguration: {
@@ -50,17 +51,5 @@ export default interface AppConfiguration {
       };
     };
   };
-  rabbitmqConfiguration: {
-    host: string;
-    port: number;
-    webclientPort: number;
-    username: string;
-    password: string;
-    emailQueue: string;
-    prefetchCount: number;
-    noAck: boolean;
-    persistent: boolean;
-    heartbeatIntervalInSeconds: number;
-    reconnectTimeInSeconds: number;
-  };
+  rabbitmqConfiguration: RmqOptions;
 }
