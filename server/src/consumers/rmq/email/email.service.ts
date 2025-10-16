@@ -1,5 +1,5 @@
 import { Injectable, Logger, LoggerService } from "@nestjs/common";
-import { AuthCreatedLocalEventClass } from "@server/event/event.events";
+import { AuthCreatedLocalEvent } from "@server/event/interfaces/event.interfaces";
 
 @Injectable()
 export class RmqEmailService {
@@ -8,5 +8,5 @@ export class RmqEmailService {
     this.logger = new Logger(RmqEmailService.name);
   }
 
-  async sendWelcomeVerificationEmail(payload: AuthCreatedLocalEventClass): Promise<void> {}
+  async sendWelcomeVerificationEmail(payload: AuthCreatedLocalEvent): Promise<void> {}
 }

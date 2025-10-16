@@ -1,6 +1,6 @@
 import { Module } from "@nestjs/common";
 import { RmqEmailService } from "@server/consumers/rmq/email/email.service";
-import { RmqEmailController } from "@server/consumers/rmq/email/email.controller";
+import { RmqEmailController } from "@server/consumers/rmq/email/email.consumer";
 
 @Module({
   imports: [],

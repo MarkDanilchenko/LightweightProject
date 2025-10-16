@@ -1,7 +1,6 @@
 import { Inject, Injectable, Logger, LoggerService } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
-import { EventName } from "@server/event/interfaces/event.interfaces";
-import { AuthCreatedLocalEventClass } from "@server/event/event.events";
+import { AuthCreatedLocalEvent, EventName } from "@server/event/interfaces/event.interfaces";
 import { EntityManager } from "typeorm";
 import { ClientProxy } from "@nestjs/microservices";
 import EventService from "@server/event/event.service";
@@ -21,7 +20,7 @@ export default class EventConsumer {
   }
 
   @OnEvent(EventName.AUTH_CREATED_LOCAL)
-  async handleAuthCreatedLocal(payload: AuthCreatedLocalEventClass, manager?: EntityManager): Promise<void> {
+  async handleAuthCreatedLocal(payload: AuthCreatedLocalEvent, manager?: EntityManager): Promise<void> {
     await this.eventService.createEvent(payload, manager);
 
     // Use `.emit()` for events that do not require a response (fire-and-forget).
