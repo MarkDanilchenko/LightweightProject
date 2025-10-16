@@ -1,5 +1,5 @@
-import { AuthCreatedLocalEvent } from "@server/event/interfaces/event.interfaces";
+import { AuthLocalCreatedEvent } from "@server/event/interfaces/event.interfaces";
 
-type EventType = AuthCreatedLocalEvent;
+type EventType = AuthLocalCreatedEvent;
 
 export { EventType };

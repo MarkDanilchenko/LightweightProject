@@ -1,8 +1,8 @@
 import { AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
-import { AuthCreatedLocalEventClass } from "@server/event/event.events";
+import { AuthLocalCreatedEventClass } from "@server/event/event.events";
 
 const enum EventName {
-  AUTH_CREATED_LOCAL = "auth.created.local",
+  AUTH_LOCAL_CREATED = "auth.local.created",
 }
 
 interface BaseEvent {
@@ -11,12 +11,12 @@ interface BaseEvent {
   modelId: string;
 }
 
-interface AuthCreatedLocalEvent extends BaseEvent {
+interface AuthLocalCreatedEvent extends BaseEvent {
   metadata: NonNullable<NonNullable<AuthMetadata["local"]>["temporaryInfo"]> & { email: string };
 }
 
 interface EventRegistry {
-  [EventName.AUTH_CREATED_LOCAL]: typeof AuthCreatedLocalEventClass;
+  [EventName.AUTH_LOCAL_CREATED]: typeof AuthLocalCreatedEventClass;
 }
 
-export { EventName, EventRegistry, AuthCreatedLocalEvent, BaseEvent };
+export { EventName, EventRegistry, AuthLocalCreatedEvent, BaseEvent };

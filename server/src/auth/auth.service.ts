@@ -99,8 +99,8 @@ export default class AuthService {
         await manager.save(authentication);
 
         this.eventEmitter.emit(
-          EventName.AUTH_CREATED_LOCAL,
-          this.eventService.buildInstance(EventName.AUTH_CREATED_LOCAL, user.id, authentication.id, {
+          EventName.AUTH_LOCAL_CREATED,
+          this.eventService.buildInstance(EventName.AUTH_LOCAL_CREATED, user.id, authentication.id, {
             username,
             firstName,
             lastName,
@@ -145,8 +145,8 @@ export default class AuthService {
         await manager.save(authentication);
 
         this.eventEmitter.emit(
-          EventName.AUTH_CREATED_LOCAL,
-          this.eventService.buildInstance(EventName.AUTH_CREATED_LOCAL, user.id, authentication.id, {
+          EventName.AUTH_LOCAL_CREATED,
+          this.eventService.buildInstance(EventName.AUTH_LOCAL_CREATED, user.id, authentication.id, {
             username,
             firstName,
             lastName,

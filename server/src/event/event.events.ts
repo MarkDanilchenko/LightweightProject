@@ -1,4 +1,4 @@
-import { AuthCreatedLocalEvent, BaseEvent, EventRegistry, EventName } from "@server/event/interfaces/event.interfaces";
+import { AuthLocalCreatedEvent, BaseEvent, EventRegistry, EventName } from "@server/event/interfaces/event.interfaces";
 
 class BaseEventClass implements BaseEvent {
   public readonly name: BaseEvent["name"];
@@ -12,14 +12,14 @@ class BaseEventClass implements BaseEvent {
   }
 }
 
-class AuthCreatedLocalEventClass extends BaseEventClass implements AuthCreatedLocalEvent {
-  public readonly metadata: AuthCreatedLocalEvent["metadata"];
+class AuthLocalCreatedEventClass extends BaseEventClass implements AuthLocalCreatedEvent {
+  public readonly metadata: AuthLocalCreatedEvent["metadata"];
 
   constructor(
     name: BaseEvent["name"],
     userId: BaseEvent["userId"],
     modelId: BaseEvent["modelId"],
-    metadata: AuthCreatedLocalEvent["metadata"],
+    metadata: AuthLocalCreatedEvent["metadata"],
   ) {
     super(name, userId, modelId);
 
@@ -28,7 +28,7 @@ class AuthCreatedLocalEventClass extends BaseEventClass implements AuthCreatedLo
 }
 
 const eventRegistry: EventRegistry = {
-  [EventName.AUTH_CREATED_LOCAL]: AuthCreatedLocalEventClass,
+  [EventName.AUTH_LOCAL_CREATED]: AuthLocalCreatedEventClass,
 };
 
-export { AuthCreatedLocalEventClass, eventRegistry };
+export { AuthLocalCreatedEventClass, eventRegistry };
