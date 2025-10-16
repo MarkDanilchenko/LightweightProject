@@ -1,9 +1,10 @@
 import { Injectable, Logger, LoggerService } from "@nestjs/common";
 import { EventRegistry } from "@server/event/interfaces/event.interfaces";
 import { eventRegistry } from "@server/event/event.events";
-import { InjectRepository } from "@nestjs/typeorm";
+import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import EventEntity from "@server/event/event.entity";
-import { Repository } from "typeorm";
+import { DataSource, EntityManager, Repository } from "typeorm";
+import { EventType } from "@server/event/types/event.types";
 
 @Injectable()
 export default class EventService {
@@ -11,6 +12,8 @@ export default class EventService {
   private readonly eventRegistry: EventRegistry = eventRegistry;
 
   constructor(
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
     @InjectRepository(EventEntity)
     private readonly eventRepository: Repository<EventEntity>,
   ) {
@@ -26,7 +29,7 @@ export default class EventService {
    *
    * @returns {InstanceType<EventRegistry[K]>} The event instance.
    */
-  build<K extends keyof EventRegistry>(
+  buildInstance<K extends keyof EventRegistry>(
     eventName: K,
     ...payload: ConstructorParameters<EventRegistry[K]> extends [any, ...infer Rest] ? Rest : never
   ): InstanceType<EventRegistry[K]> {
@@ -37,5 +40,28 @@ export default class EventService {
       eventName,
       ...payload,
     );
+  }
+
+  /**
+   * Create a new event in the database.
+   *
+   * @param {EventType} payload - The payload for the event.
+   * @param {EntityManager} [manager] - The entity manager to use. If not provided, a new transaction will be started.
+   *
+   * @returns {Promise<void>} A promise that resolves when the event has been created.
+   */
+  async createEvent(payload: EventType, manager?: EntityManager): Promise<void> {
+    const callback = async (manager: EntityManager): Promise<void> => {
+      const event: EventEntity = manager.create(EventEntity, {
+        ...payload,
+      });
+      await manager.save(event);
+    };
+
+    if (!manager) {
+      return this.dataSource.transaction(callback);
+    }
+
+    return callback(manager);
   }
 }

@@ -100,7 +100,7 @@ export default class AuthService {
 
         this.eventEmitter.emit(
           EventName.AUTH_CREATED_LOCAL,
-          this.eventService.build(EventName.AUTH_CREATED_LOCAL, user.id, authentication.id, {
+          this.eventService.buildInstance(EventName.AUTH_CREATED_LOCAL, user.id, authentication.id, {
             username,
             firstName,
             lastName,
@@ -146,7 +146,7 @@ export default class AuthService {
 
         this.eventEmitter.emit(
           EventName.AUTH_CREATED_LOCAL,
-          this.eventService.build(EventName.AUTH_CREATED_LOCAL, user.id, authentication.id, {
+          this.eventService.buildInstance(EventName.AUTH_CREATED_LOCAL, user.id, authentication.id, {
             username,
             firstName,
             lastName,
