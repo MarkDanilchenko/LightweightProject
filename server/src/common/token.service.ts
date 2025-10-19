@@ -1,23 +1,30 @@
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { JwtService } from "@nestjs/jwt";
 
 @Injectable()
 export default class TokenService {
-  //   private readonly jwtAccessTokenExpirationTime: string;
-  //   private readonly jwtRefreshTokenExpirationTime: string;
-  //
-  //   constructor(
-  //     private readonly jwtService: JwtService,
-  //     private readonly userService: UserService,
-  //     private readonly configService: ConfigService,
-  //   ) {
-  //     this.jwtAccessTokenExpirationTime = configService.get<AppConfiguration["jwtConfiguration"]["accessTokenExpiresIn"]>(
-  //       "jwtConfiguration.accessTokenExpiresIn",
-  //     )!;
-  //     this.jwtRefreshTokenExpirationTime = configService.get<
-  //       AppConfiguration["jwtConfiguration"]["refreshTokenExpiresIn"]
-  //     >("jwtConfiguration.refreshTokenExpiresIn")!;
-  //   }
-  //
+  private readonly configService: ConfigService;
+  private readonly jwtService: JwtService;
+
+  constructor(configService: ConfigService, jwtService: JwtService) {
+    this.configService = configService;
+    this.jwtService = jwtService;
+  }
+
+  /**
+   * Generates a JWT token that can be used to verify a local user's email address.
+   * The token will contain the user's ID and will expire after the given TTL or 1 day if no TTL is given.
+   *
+   * @param userId The ID of the user to generate the token for.
+   * @param [ttl] The TTL of the token in seconds. If not given, the token will expire after 1 day.
+   *
+   * @returns A promise that resolves with the generated JWT token.
+   */
+  async generateLocalEmailVerificationToken(userId: string, ttl?: string): Promise<string> {
+    return this.jwtService.signAsync({ userId }, { expiresIn: ttl || "1d" });
+  }
+
   //   /**
   //    * Generates both an access token and a refresh token given a payload.
   //    * @param payload The payload to sign.

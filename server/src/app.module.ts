@@ -9,6 +9,7 @@ import UserModule from "@server/user/user.module";
 import EventModule from "@server/event/event.module";
 import appConfiguration from "@server/configs/app.configuration";
 import { RmqEmailModule } from "@server/consumers/rmq/email/email.module";
+import { JwtModule } from "@nestjs/jwt";
 
 @Module({
   imports: [
@@ -27,6 +28,15 @@ import { RmqEmailModule } from "@server/consumers/rmq/email/email.module";
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         return configService.get<AppConfiguration["loggerConfiguration"]>("loggerConfiguration")!;
+      },
+    }),
+    JwtModule.registerAsync({
+      global: true,
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        return {
+          secret: configService.get<AppConfiguration["jwtConfiguration"]["secret"]>("jwtConfiguration.secret")!,
+        };
       },
     }),
     RmqEmailModule,

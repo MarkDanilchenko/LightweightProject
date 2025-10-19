@@ -20,19 +20,19 @@ import { SignUpLocalDto } from "@server/auth/dto/auth.dto";
 export default class AuthController {
   private readonly configService: ConfigService;
   private readonly authService: AuthService;
-  private readonly userService: UserService;
+  // private readonly userService: UserService;
   // private readonly tokenService: TokenService;
   private readonly https: boolean;
 
   constructor(
     configService: ConfigService,
     authService: AuthService,
-    userService: UserService,
+    // userService: UserService,
     // tokenService: TokenService,
   ) {
     this.configService = configService;
     this.authService = authService;
-    this.userService = userService;
+    // this.userService = userService;
     // this.tokenService = tokenService;
     this.https = configService.get<AppConfiguration["serverConfiguration"]["https"]>("serverConfiguration.https")!;
   }

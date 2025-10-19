@@ -17,8 +17,8 @@ export default class AuthService {
   private readonly logger: LoggerService;
   private readonly eventService: EventService;
   private readonly eventEmitter: EventEmitter2;
-  // private readonly tokenService: TokenService;
   private readonly userService: UserService;
+  // private readonly tokenService: TokenService;
 
   constructor(
     eventService: EventService,

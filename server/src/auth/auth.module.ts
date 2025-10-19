@@ -18,18 +18,18 @@ import AuthService from "@server/auth/auth.service";
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([AuthenticationEntity]),
+    PassportModule,
     UserModule,
     EventModule,
-    PassportModule,
-    TypeOrmModule.forFeature([AuthenticationEntity]),
-    JwtModule.registerAsync({
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => {
-        return {
-          secret: configService.get<AppConfiguration["jwtConfiguration"]["secret"]>("jwtConfiguration.secret")!,
-        };
-      },
-    }),
+    // JwtModule.registerAsync({
+    //   inject: [ConfigService],
+    //   useFactory: (configService: ConfigService) => {
+    //     return {
+    //       secret: configService.get<AppConfiguration["jwtConfiguration"]["secret"]>("jwtConfiguration.secret")!,
+    //     };
+    //   },
+    // }),
   ],
   controllers: [AuthController],
   providers: [

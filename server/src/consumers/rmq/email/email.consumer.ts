@@ -4,12 +4,12 @@ import { Ctx, MessagePattern, Payload, RmqContext } from "@nestjs/microservices"
 import { AuthLocalCreatedEvent, EventName } from "@server/event/interfaces/event.interfaces";
 
 @Controller()
-export class RmqEmailController {
+export class RmqEmailConsumer {
   private readonly logger: LoggerService;
   private readonly rmqEmailService: RmqEmailService;
 
   constructor(rmqEmailService: RmqEmailService) {
-    this.logger = new Logger(RmqEmailController.name);
+    this.logger = new Logger(RmqEmailConsumer.name);
     this.rmqEmailService = rmqEmailService;
   }
 
