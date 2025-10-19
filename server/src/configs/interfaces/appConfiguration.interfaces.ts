@@ -11,6 +11,7 @@ export default interface AppConfiguration {
     commonSecret: string;
     https: boolean;
     protocol: "http" | "https";
+    baseUrl: string;
   };
   smtpConfiguration: {
     host: string;

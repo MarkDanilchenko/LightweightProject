@@ -55,7 +55,10 @@ export default class AuthController {
   async localSignUp(@Body() signUpLocalDto: SignUpLocalDto): Promise<void> {
     await this.authService.localSignUp(signUpLocalDto);
   }
-  //
+
+  @Get("local/email-verification")
+  async localEmailVerification(): Promise<void> {}
+
   //   @Get("local/signin")
   //   @ApiOperation({
   //     summary: "Local authentication",

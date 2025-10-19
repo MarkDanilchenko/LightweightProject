@@ -62,7 +62,10 @@ export default (): AppConfiguration => {
     commonSecret: COMMON_SECRET!,
     https: HTTPS === "true",
     protocol: HTTPS === "true" ? "https" : "http",
+    baseUrl: "",
   };
+
+  serverConfiguration.baseUrl = `${serverConfiguration.protocol}://${serverConfiguration.host}:${serverConfiguration.port}`;
 
   const smtpConfiguration: AppConfiguration["smtpConfiguration"] = {
     host: SMTP_HOST!,
