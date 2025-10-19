@@ -17,7 +17,12 @@
     "noFallthroughCasesInSwitch": false,
     "baseUrl": "./",
     "paths": {
-      "@server/*": ["server/src/*"]
+      "@server/*": [
+        "server/src/*"
+      ],
+      "@shared/*": [
+        "shared/*"
+      ]
     }
   }
 }
