@@ -13,25 +13,22 @@ export default class UserService {
   /**
    * Finds a user entity by its primary key (user ID).
    *
-   * @param userId - The ID of the user to find.
-   * @param options - Additional find options to customize the query.
+   * @param userId {string} - The ID of the user to find.
    *
-   * @returns A promise that resolves with the user entity if found, otherwise null.
+   * @returns {Promise<UserEntity | null>} A promise that resolves with the user entity if found, otherwise null.
    */
-  async findByPk(userId: string, options?: FindOneOptions<UserEntity>): Promise<UserEntity | null> {
-    options = { ...options, where: { ...options?.where, id: userId } };
-
-    return this.userRepository.findOne(options);
+  async findUserByPk(userId: string): Promise<UserEntity | null> {
+    return this.userRepository.findOneBy({ id: userId });
   }
 
   /**
    * Finds a single user entity.
    *
-   * @param options - Additional find options to customize the query.
+   * @param options {FindOneOptions<UserEntity>} - Additional find options to customize the query.
    *
-   * @returns A promise that resolves with the user entity if found, otherwise null.
+   * @returns {Promise<UserEntity | null>} A promise that resolves with the user entity if found, otherwise null.
    */
-  async find(options: FindOneOptions<UserEntity>): Promise<UserEntity | null> {
+  async findUser(options: FindOneOptions<UserEntity>): Promise<UserEntity | null> {
     return this.userRepository.findOne(options);
   }
 }

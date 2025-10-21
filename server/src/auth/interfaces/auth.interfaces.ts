@@ -76,7 +76,6 @@ interface AuthMetadata {
     isEmailVerified: boolean;
     password: string;
     verificationSendAt?: Date;
-    verificationExpiresAt?: Date;
     verificationAcceptedAt?: Date;
     callbackUrl?: string;
     temporaryInfo?: {

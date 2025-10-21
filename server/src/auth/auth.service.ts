@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, Logger, LoggerService, UnauthorizedException } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
-import { DataSource, EntityManager, Repository } from "typeorm";
+import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
 // import TokenService from "./token.service.js";
 import UserService from "@server/user/user.service";
@@ -47,7 +47,7 @@ export default class AuthService {
   async localSignUp(signUpLocalDto: SignUpLocalDto): Promise<void> {
     const { username, firstName, lastName, email, avatarUrl, password } = signUpLocalDto;
 
-    const user: UserEntity | null = await this.userService.find({
+    const user: UserEntity | null = await this.userService.findUser({
       relations: ["authentications"],
       select: {
         id: true,
@@ -157,6 +157,43 @@ export default class AuthService {
         );
       }
     });
+  }
+
+  /**
+   * Updates an authentication entity with the given values.
+   *
+   * @param whereCondition {FindOptionsWhere<AuthenticationEntity>} - The condition to find the authentication entity to update.
+   * @param values {Record<string, unknown>} - The values to update the authentication entity with.
+   *
+   * @returns {Promise<UpdateResult>} A promise that resolves with the update result.
+   */
+  async updateAuthentication(
+    whereCondition: FindOptionsWhere<AuthenticationEntity>,
+    values: Record<string, unknown> = {},
+  ): Promise<UpdateResult> {
+    return this.authenticationRepository.update(whereCondition, values);
+  }
+
+  /**
+   * Finds an authentication entity by its primary key (authentication ID).
+   *
+   * @param authenticationId {string} - The ID of the authentication to find.
+   *
+   * @returns {Promise<AuthenticationEntity | null>} A promise that resolves with the authentication entity if found, otherwise null.
+   */
+  async findAuthenticationByPk(authenticationId: string): Promise<AuthenticationEntity | null> {
+    return this.authenticationRepository.findOneBy({ id: authenticationId });
+  }
+
+  /**
+   * Finds an authentication entity using the given options.
+   *
+   * @param options {FindOneOptions<AuthenticationEntity>} - The options to find the authentication entity.
+   *
+   * @returns {Promise<AuthenticationEntity | null>} A promise that resolves with the authentication entity if found, otherwise null.
+   */
+  async findAuthentication(options: FindOneOptions<AuthenticationEntity>): Promise<AuthenticationEntity | null> {
+    return this.authenticationRepository.findOne(options);
   }
 
   // async authAccordingToStrategy(

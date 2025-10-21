@@ -41,6 +41,6 @@ import AuthService from "@server/auth/auth.service";
     // KeycloakOAuth2OIDCStrategy,
     // KeycloakSAMLStrategy,
   ],
-  exports: [],
+  exports: [AuthService],
 })
 export default class AuthModule {}
