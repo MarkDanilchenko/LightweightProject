@@ -4,7 +4,7 @@ import AppConfiguration from "./interfaces/appConfiguration.interfaces";
 import { utilities as nestWinstonModuleUtilities } from "nest-winston";
 import { Transport } from "@nestjs/microservices";
 
-dotenv.config({ path: "./.env.development" });
+dotenv.config({ path: "../.env.development" });
 
 export default (): AppConfiguration => {
   const {
@@ -102,7 +102,8 @@ export default (): AppConfiguration => {
     password: DATABASE_PASSWORD,
     logging: TYPEORM_LOGGING === "true",
     migrationsRun: TYPEORM_MIGRATIONS_RUN === "true",
-    entities: ["**/*.entity.js"],
+    entities: [__dirname + "/**/*.entity{.ts,.js}"],
+    autoLoadEntities: true,
     migrations: ["**/migrations/*.js"],
     applicationName: "LightweightProject",
   };
