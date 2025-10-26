@@ -169,7 +169,7 @@ export default class AuthService {
    */
   async updateAuthentication(
     whereCondition: FindOptionsWhere<AuthenticationEntity>,
-    values: Record<string, unknown> = {},
+    values: Record<string, unknown>,
   ): Promise<UpdateResult> {
     return this.authenticationRepository.update(whereCondition, values);
   }
@@ -177,12 +177,12 @@ export default class AuthService {
   /**
    * Finds an authentication entity by its primary key (authentication ID).
    *
-   * @param authenticationId {string} - The ID of the authentication to find.
+   * @param id {string} - The ID of the authentication to find.
    *
    * @returns {Promise<AuthenticationEntity | null>} A promise that resolves with the authentication entity if found, otherwise null.
    */
-  async findAuthenticationByPk(authenticationId: string): Promise<AuthenticationEntity | null> {
-    return this.authenticationRepository.findOneBy({ id: authenticationId });
+  async findAuthenticationByPk(id: string): Promise<AuthenticationEntity | null> {
+    return this.authenticationRepository.findOneBy({ id });
   }
 
   /**

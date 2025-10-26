@@ -39,10 +39,10 @@ import { JwtModule } from "@nestjs/jwt";
         };
       },
     }),
-    RmqEmailModule,
     EventModule,
     AuthModule,
     UserModule,
+    RmqEmailModule,
   ],
   controllers: [],
   providers: [],

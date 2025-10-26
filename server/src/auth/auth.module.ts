@@ -20,8 +20,8 @@ import AuthService from "@server/auth/auth.service";
   imports: [
     TypeOrmModule.forFeature([AuthenticationEntity]),
     PassportModule,
-    UserModule,
     EventModule,
+    UserModule,
     // JwtModule.registerAsync({
     //   inject: [ConfigService],
     //   useFactory: (configService: ConfigService) => {

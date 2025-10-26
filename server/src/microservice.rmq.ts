@@ -33,7 +33,7 @@ async function bootstrap(): Promise<void> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
     app
       .get(WINSTON_MODULE_NEST_PROVIDER)
-      .log("RabbitMQ microservice (email producer/consumer) is running", "LightweightProject");
+      .log("RabbitMQ microservice (email) is running", "LightweightProject");
   });
 }
 
