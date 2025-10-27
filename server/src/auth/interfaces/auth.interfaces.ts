@@ -4,11 +4,7 @@
 //   [key: string]: any;
 // }
 //
-// interface JwtPayload {
-//   jwti: string;
-//   userId: string;
-//   provider: string;
-// }
+
 //
 // interface JwtAuthGuardResponse {
 //   userId: string;
@@ -100,7 +96,6 @@ enum AuthenticationProvider {
 export {
   AuthenticationProvider,
   AuthMetadata,
-  // JwtPayload,
   // JwtAuthGuardResponse,
   // GoogleOAuth2,
   // KeycloakOAuth2OIDC,

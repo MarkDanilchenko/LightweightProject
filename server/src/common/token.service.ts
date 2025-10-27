@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
+import { TokenPayload } from "@server/common/interfaces/common.interfaces";
 
 @Injectable()
 export default class TokenService {
@@ -16,13 +17,24 @@ export default class TokenService {
    * Generates a JWT token that can be used to verify a local user's email address.
    * The token will contain the user's ID and will expire after the given TTL or 1 day if no TTL is given.
    *
-   * @param userId The ID of the user to generate the token for.
-   * @param [ttl] The TTL of the token in seconds. If not given, the token will expire after 1 day.
+   * @param userId {string} The ID of the user to generate the token for.
+   * @param [ttl] {string | undefined} The TTL of the token in seconds. If not given, the token will expire after 1 day.
    *
-   * @returns A promise that resolves with the generated JWT token.
+   * @returns {Promise<string>} A promise that resolves with the generated JWT token.
    */
   async generateLocalEmailVerificationToken(userId: string, ttl?: string): Promise<string> {
     return this.jwtService.signAsync({ userId }, { expiresIn: ttl || "1d" });
+  }
+
+  /**
+   * Verifies the given jwt.
+   *
+   * @param token {string} The token to verify.
+   *
+   * @returns {Promise<TokenPayload>} A promise that resolves with the verified token payload, or rejects with an UnauthorizedException if the token is invalid.
+   */
+  async verifyToken(token: string): Promise<TokenPayload> {
+    return this.jwtService.verifyAsync<TokenPayload>(token);
   }
 
   //   /**
@@ -126,14 +138,4 @@ export default class TokenService {
   //     return { accessToken: newAccessToken };
   //   }
   //
-  //   /**
-  //    * Verifies the given refresh token.
-  //    *
-  //    * @param refreshToken The refresh token to verify.
-  //    *
-  //    * @throws UnauthorizedException If the refresh token is invalid.
-  //    */
-  //   async verifyRefreshToken(refreshToken: string): Promise<void> {
-  //     await this.jwtService.verifyAsync<JwtPayload>(refreshToken);
-  //   }
 }

@@ -2,15 +2,15 @@ import { BadRequestException, Injectable, Logger, LoggerService, UnauthorizedExc
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
-// import TokenService from "./token.service.js";
 import UserService from "@server/user/user.service";
 import UserEntity from "@server/user/user.entity";
-import { SignUpLocalDto } from "@server/auth/dto/auth.dto";
+import { LocalVerificationEmailDto, SignUpLocalDto } from "@server/auth/dto/auth.dto";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { EventName } from "@server/event/interfaces/event.interfaces";
 import EventService from "@server/event/event.service";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
 import { hash } from "@server/utils/hasher";
+import TokenService from "@server/common/token.service";
 
 @Injectable()
 export default class AuthService {
@@ -18,23 +18,23 @@ export default class AuthService {
   private readonly eventService: EventService;
   private readonly eventEmitter: EventEmitter2;
   private readonly userService: UserService;
-  // private readonly tokenService: TokenService;
+  private readonly tokenService: TokenService;
 
   constructor(
     eventService: EventService,
     eventEmitter: EventEmitter2,
     userService: UserService,
+    tokenService: TokenService,
     @InjectDataSource()
     private readonly dataSource: DataSource,
     @InjectRepository(AuthenticationEntity)
     private readonly authenticationRepository: Repository<AuthenticationEntity>,
-    // tokenService: TokenService,
   ) {
     this.logger = new Logger(AuthService.name);
     this.eventService = eventService;
     this.eventEmitter = eventEmitter;
     this.userService = userService;
-    // this.tokenService = tokenService;
+    this.tokenService = tokenService;
   }
 
   /**
@@ -42,7 +42,7 @@ export default class AuthService {
    *
    * @param {SignUpLocalDto} signUpLocalDto - The data transfer object containing the user's sign up information.
    *
-   * @return {Promise<void>} A promise that resolves when the user is successfully signed up.
+   * @return {Promise<void>} A promise, that resolves, when the user is successfully signed up.
    */
   async localSignUp(signUpLocalDto: SignUpLocalDto): Promise<void> {
     const { username, firstName, lastName, email, avatarUrl, password } = signUpLocalDto;
@@ -194,6 +194,16 @@ export default class AuthService {
    */
   async findAuthentication(options: FindOneOptions<AuthenticationEntity>): Promise<AuthenticationEntity | null> {
     return this.authenticationRepository.findOne(options);
+  }
+
+  async localVerificationEmail(localVerificationEmailDto: LocalVerificationEmailDto): Promise<void> {
+    const { token } = localVerificationEmailDto;
+
+    const { userId } = await this.tokenService.verifyToken(token);
+    if (!userId) {
+      throw new UnauthorizedException("Invalid token.");
+    }
+    // TODO: Update authentication entity
   }
 
   // async authAccordingToStrategy(

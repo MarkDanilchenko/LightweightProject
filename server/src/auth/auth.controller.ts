@@ -1,5 +1,26 @@
-import { Body, Controller, Get, Post, Req, Res, UnauthorizedException, UseGuards, UsePipes } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiOAuth2, ApiCookieAuth } from "@nestjs/swagger";
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+  UsePipes,
+} from "@nestjs/common";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBody,
+  ApiResponse,
+  ApiOAuth2,
+  ApiCookieAuth,
+  ApiParam,
+  ApiQuery,
+} from "@nestjs/swagger";
 import { Request, Response } from "express";
 // import { Profile, requestWithUser } from "./types/auth.types.js";
 import { setCookie } from "../utils/cookie.js";
@@ -13,7 +34,7 @@ import GoogleAuthGuard from "./guards/google-auth.guard.js";
 import { KeycloakAuthGuard, KeycloakSAMLAuthGuard } from "./guards/keycloak-auth.guard.js";
 import UserService from "@server/user/user.service";
 import AuthService from "@server/auth/auth.service";
-import { SignUpLocalDto } from "@server/auth/dto/auth.dto";
+import { LocalVerificationEmailDto, SignUpLocalDto } from "@server/auth/dto/auth.dto";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -56,8 +77,32 @@ export default class AuthController {
     await this.authService.localSignUp(signUpLocalDto);
   }
 
-  @Get("local/email-verification")
-  async localEmailVerification(): Promise<void> {}
+  @Get("local/verification/email")
+  @ApiOperation({
+    summary: "Verify email address",
+    description: "Verify the email address of the user during local sign up.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Email address verified successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Invalid token.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "User not found.",
+  })
+  @ApiQuery({ type: LocalVerificationEmailDto })
+  @UsePipes(ZodValidationPipe)
+  async localVerificationEmail(@Query() localVerificationEmailDto: LocalVerificationEmailDto): Promise<void> {
+    await this.authService.localVerificationEmail(localVerificationEmailDto);
+  }
 
   //   @Get("local/signin")
   //   @ApiOperation({

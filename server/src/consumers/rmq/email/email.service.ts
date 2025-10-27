@@ -47,7 +47,7 @@ export class RmqEmailService {
     await fs.promises.access(emailVerificationTemplatePath, fs.constants.R_OK);
 
     const token: string = await this.tokenService.generateLocalEmailVerificationToken(userId);
-    const callbackUrl: string = `${baseUrl}/auth/local/email-verification?token=${token}`;
+    const callbackUrl: string = `${baseUrl}/auth/local/verification/email?token=${token}`;
     const html: string = await ejs.renderFile(emailVerificationTemplatePath, {
       username: metadata.username,
       callbackUrl,

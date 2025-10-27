@@ -56,6 +56,16 @@ const signUpLocalSchema = z
     },
   });
 
+const localVerificationEmailSchema = z
+  .object({
+    token: z.string().openapi({ title: "Token", description: "Token.", example: "Token in jwt format" }),
+  })
+  .openapi({
+    title: "Local verification email schema",
+    description: "Local verification email schema.",
+    example: { token: "Token in jwt format" },
+  });
+
 const signInLocalSchema = z
   .object({
     login: z.string().openapi({ title: "Login", description: "Email or username", example: "johndoe" }),
@@ -127,4 +137,4 @@ const profileSchema = z
     },
   });
 
-export { signInLocalSchema, profileSchema, signUpLocalSchema };
+export { signInLocalSchema, profileSchema, signUpLocalSchema, localVerificationEmailSchema };
