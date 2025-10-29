@@ -80,28 +80,33 @@ export default class AuthController {
   @Get("local/verification/email")
   @ApiOperation({
     summary: "Verify email address",
-    description: "Verify the email address of the user during local sign up.",
+    description: "Verify the User's email address during local sign up workflow.",
   })
   @ApiResponse({
-    status: 200,
-    description: "Email address verified successfully.",
-  })
-  @ApiResponse({
-    status: 400,
-    description: "Invalid request.",
-  })
-  @ApiResponse({
-    status: 401,
-    description: "Invalid token.",
-  })
-  @ApiResponse({
-    status: 404,
-    description: "User not found.",
+    status: 302,
+    description:
+      "Redirect to the home client page (frontend-app) after successful email verification." +
+      "If varification was failed - back to the sign in page.",
   })
   @ApiQuery({ type: LocalVerificationEmailDto })
   @UsePipes(ZodValidationPipe)
-  async localVerificationEmail(@Query() localVerificationEmailDto: LocalVerificationEmailDto): Promise<void> {
-    await this.authService.localVerificationEmail(localVerificationEmailDto);
+  async localVerificationEmail(
+    @Query() localVerificationEmailDto: LocalVerificationEmailDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    try {
+      const { accessToken } = await this.authService.localVerificationEmail(localVerificationEmailDto);
+
+      // TODO: set accessToken to the secure cookie;
+
+      // TODO: should redirect to the home client page (frontend-app) after successful email verification;
+      res.redirect(302, "/home");
+    } catch (error: unknown) {
+      const errorMsg: string = error instanceof Error ? error.message : "An unknown error occurred.";
+
+      // TODO: should redirect to the sign in page (frontend-app) after failed email verification;
+      res.redirect(302, `/signin?errorMsg=${errorMsg}`);
+    }
   }
 
   //   @Get("local/signin")
