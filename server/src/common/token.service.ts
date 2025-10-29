@@ -2,28 +2,36 @@ import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { TokenPayload } from "@server/common/interfaces/common.interfaces";
+import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
 
 @Injectable()
 export default class TokenService {
   private readonly configService: ConfigService;
   private readonly jwtService: JwtService;
+  public readonly jwtRefreshTokenExpiresIn: string;
+  public readonly jwtAccessTokenExpiresIn: string;
 
   constructor(configService: ConfigService, jwtService: JwtService) {
     this.configService = configService;
     this.jwtService = jwtService;
+    this.jwtRefreshTokenExpiresIn = configService.get<AppConfiguration["jwtConfiguration"]["refreshTokenExpiresIn"]>(
+      "jwtConfiguration.refreshTokenExpiresIn",
+    )!;
+    this.jwtAccessTokenExpiresIn = configService.get<AppConfiguration["jwtConfiguration"]["accessTokenExpiresIn"]>(
+      "jwtConfiguration.accessTokenExpiresIn",
+    )!;
   }
 
   /**
-   * Generates a JWT token that can be used to verify a local user's email address.
-   * The token will contain the user's ID and will expire after the given TTL or 1 day if no TTL is given.
+   * Generates a jwt with the given payload and expiresIn.
    *
-   * @param userId {string} The ID of the user to generate the token for.
-   * @param [ttl] {string | undefined} The TTL of the token in seconds. If not given, the token will expire after 1 day.
+   * @param payload {TokenPayload} The payload to sign.
+   * @param [expiresIn] {string} The time until the token expires. Defaults to 1 day.
    *
-   * @returns {Promise<string>} A promise that resolves with the generated JWT token.
+   * @returns {Promise<string>} A promise that resolves with the generated jwt.
    */
-  async generateLocalEmailVerificationToken(userId: string, ttl?: string): Promise<string> {
-    return this.jwtService.signAsync({ userId }, { expiresIn: ttl || "1d" });
+  async generateToken(payload: TokenPayload, expiresIn?: string): Promise<string> {
+    return this.jwtService.signAsync(payload, { expiresIn: expiresIn || "1d" });
   }
 
   /**
@@ -31,55 +39,13 @@ export default class TokenService {
    *
    * @param token {string} The token to verify.
    *
-   * @returns {Promise<TokenPayload>} A promise that resolves with the verified token payload, or rejects with an UnauthorizedException if the token is invalid.
+   * @returns {Promise<TokenPayload>} A promise that resolves with the verified token payload
+   * or rejects with an UnauthorizedException if the token is invalid or expired.
    */
   async verifyToken(token: string): Promise<TokenPayload> {
     return this.jwtService.verifyAsync<TokenPayload>(token);
   }
 
-  //   /**
-  //    * Generates both an access token and a refresh token given a payload.
-  //    * @param payload The payload to sign.
-  //    *
-  //    * @returns An object containing the access token and refresh token.
-  //    */
-  //   async generateBothTokens(payload: JwtPayload): Promise<{ accessToken: string; refreshToken: string }> {
-  //     const [accessToken, refreshToken] = await Promise.all([
-  //       this.generateAccessToken(payload),
-  //       this.generateRefreshToken(payload),
-  //     ]);
-  //
-  //     return { accessToken, refreshToken };
-  //   }
-  //
-  //   /**
-  //    * Generates an access token given a payload.
-  //    * @param payload The payload to sign.
-  //    *
-  //    * @returns A promise that resolves with the access token.
-  //    */
-  //   async generateAccessToken(payload: JwtPayload): Promise<string> {
-  //     const accessToken = await this.jwtService.signAsync(payload, {
-  //       expiresIn: this.jwtAccessTokenExpirationTime,
-  //     });
-  //
-  //     return accessToken;
-  //   }
-  //
-  //   /**
-  //    * Generates a refresh token given a payload.
-  //    * @param payload The payload to sign.
-  //    *
-  //    * @returns A promise that resolves with the refresh token.
-  //    */
-  //   async generateRefreshToken(payload: JwtPayload): Promise<string> {
-  //     const refreshToken = await this.jwtService.signAsync(payload, {
-  //       expiresIn: this.jwtRefreshTokenExpirationTime,
-  //     });
-  //
-  //     return refreshToken;
-  //   }
-  //
   //   /**
   //    * Refreshes an access token.
   //    *
