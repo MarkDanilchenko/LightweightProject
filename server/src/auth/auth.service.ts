@@ -18,6 +18,7 @@ import EventService from "@server/event/event.service";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
 import { hash } from "@server/utils/hasher";
 import TokenService from "@server/common/token.service";
+import { v4 as uuidv4 } from "uuid";
 
 @Injectable()
 export default class AuthService {
@@ -62,7 +63,7 @@ export default class AuthService {
   /**
    * Finds an authentication entity by its primary key (authentication ID).
    *
-   * @param id {string} - The ID of the authentication to find.
+   * @param {string} id - The ID of the authentication to find.
    *
    * @returns {Promise<AuthenticationEntity | null>} A promise that resolves with the authentication entity if found, otherwise null.
    */
@@ -73,7 +74,7 @@ export default class AuthService {
   /**
    * Finds an authentication entity using the given options.
    *
-   * @param options {FindOneOptions<AuthenticationEntity>} - The options to find the authentication entity.
+   * @param {FindOneOptions<AuthenticationEntity>} options - The options to find the authentication entity.
    *
    * @returns {Promise<AuthenticationEntity | null>} A promise that resolves with the authentication entity if found, otherwise null.
    */
@@ -203,6 +204,13 @@ export default class AuthService {
     });
   }
 
+  /**
+   * Verify local user email, update user data and authentication data and return access token.
+   *
+   * @param {LocalVerificationEmailDto} localVerificationEmailDto - Token in jwt format.
+   *
+   * @returns {Promise<{ accessToken: string }>} - Access token.
+   */
   async localVerificationEmail(localVerificationEmailDto: LocalVerificationEmailDto): Promise<{ accessToken: string }> {
     const { token } = localVerificationEmailDto;
 
@@ -221,9 +229,8 @@ export default class AuthService {
       throw new NotFoundException("Authentication not found.");
     }
 
-    // TODO: implement jwti (for REDIS workflow);
     const accessToken: string = await this.tokenService.generateToken(
-      { userId, provider, jwti: undefined },
+      { userId, provider, jwti: uuidv4() },
       this.tokenService.jwtAccessTokenExpiresIn,
     );
     const refreshToken: string = await this.tokenService.generateToken(
