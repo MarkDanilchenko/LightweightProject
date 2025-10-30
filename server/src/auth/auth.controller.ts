@@ -23,7 +23,6 @@ import {
 } from "@nestjs/swagger";
 import { Request, Response } from "express";
 // import { Profile, requestWithUser } from "./types/auth.types.js";
-import { setCookie } from "../utils/cookie.js";
 // import TokenService from "./token.service.js";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces";
@@ -35,6 +34,7 @@ import { KeycloakAuthGuard, KeycloakSAMLAuthGuard } from "./guards/keycloak-auth
 import UserService from "@server/user/user.service";
 import AuthService from "@server/auth/auth.service";
 import { LocalVerificationEmailDto, SignUpLocalDto } from "@server/auth/dto/auth.dto";
+import { setCookie } from "@server/utils/cookie";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -97,14 +97,14 @@ export default class AuthController {
     try {
       const { accessToken } = await this.authService.localVerificationEmail(localVerificationEmailDto);
 
-      // TODO: set accessToken to the secure cookie;
+      setCookie(res, "accessToken", accessToken, this.https);
 
       // TODO: should redirect to the home client page (frontend-app) after successful email verification;
       res.redirect(302, "/home");
     } catch (error: unknown) {
       const errorMsg: string = error instanceof Error ? error.message : "An unknown error occurred.";
 
-      // TODO: should redirect to the sign in page (frontend-app) after failed email verification;
+      // TODO: should redirect to the sign in page (frontend-app) after failed email verification with error message in query;
       res.redirect(302, `/signin?errorMsg=${errorMsg}`);
     }
   }
