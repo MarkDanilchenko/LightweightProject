@@ -1,6 +1,7 @@
 # common
 **/*.pdf
 **/db_data/
+**/redis_data/
 **/dumps/
 
 # environment files

@@ -47,11 +47,16 @@ export default (): AppConfiguration => {
     RABBITMQ_DEFAULT_PASS,
     RABBITMQ_MAIN_QUEUE,
     RABBITMQ_PREFETCH_COUNT,
-    RABBITMQ_NO_ACK,
+    RABBITMQ_NO_ACK, // Is used only when creates an instance of NestMicroservice;
     RABBITMQ_DURABLE,
     RABBITMQ_PERSISTENT,
     RABBITMQ_HEARTBEAT_INTERVAL,
     RABBITMQ_RECONNECT_TIME,
+    REDIS_HOST,
+    REDIS_PORT,
+    REDIS_PASSWORD,
+    REDIS_DB,
+    REDIS_KEY_PREFIX,
   } = process.env;
 
   const serverConfiguration: AppConfiguration["serverConfiguration"] = {
@@ -157,6 +162,17 @@ export default (): AppConfiguration => {
     },
   };
 
+  const redisConfiguration: AppConfiguration["redisConfiguration"] = {
+    transport: Transport.REDIS,
+    options: {
+      host: REDIS_HOST || "127.0.0.1",
+      port: Number(REDIS_PORT) || 6379,
+      password: REDIS_PASSWORD,
+      db: Number(REDIS_DB) || 0,
+      keyPrefix: REDIS_KEY_PREFIX || "",
+    },
+  };
+
   return {
     serverConfiguration,
     loggerConfiguration,
@@ -165,5 +181,6 @@ export default (): AppConfiguration => {
     authConfiguration,
     smtpConfiguration,
     rabbitmqConfiguration,
+    redisConfiguration,
   };
 };

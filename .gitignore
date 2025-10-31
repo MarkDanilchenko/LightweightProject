@@ -4,6 +4,7 @@ package-lock.json
 **/*.pdf
 **/*.sql
 **/db_data/
+**/redis_data/
 **/rabbitmq_data/
 compose.development.yaml
 **/uploads/
