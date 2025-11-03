@@ -8,9 +8,9 @@ const keylen = 64;
 /**
  * Hashes the given string using the scrypt algorithm with a secret key.
  *
- * @param toHash - The string to be hashed.
+ * @param {string} toHash - The string to be hashed.
  *
- * @returns A promise that resolves to the hashed string in hexadecimal format.
+ * @returns {Promise<string>} A promise that resolves to the hashed string in hexadecimal format.
  */
 async function hash(toHash: string): Promise<string> {
   const salt: Buffer = Buffer.from(AppConfiguration().serverConfiguration.commonSecret, "hex");
@@ -22,16 +22,12 @@ async function hash(toHash: string): Promise<string> {
 /**
  * Verifies that the given string matches a previously hashed string.
  *
- * @param toHash - The string to be compared to the stored hash.
- * @param hash - The stored hash string in hexadecimal format.
+ * @param {string} toHash - The string to be compared to the stored hash.
+ * @param {string} hash - The stored hash string in hexadecimal format.
  *
- * @returns A promise that resolves to true if the string matches the stored hash, otherwise false.
+ * @returns {Promise<boolean>} A promise that resolves to true if the string matches the stored hash, otherwise false.
  */
 async function verifyHash(toHash: string, hash: string): Promise<boolean> {
-  if (!hash) {
-    return false;
-  }
-
   const salt: Buffer = Buffer.from(AppConfiguration().serverConfiguration.commonSecret, "hex");
   const hashToCompare = (await scryptAsync(toHash, salt, keylen)) as Buffer;
   const storedHash: Buffer = Buffer.from(hash, "hex");
@@ -40,9 +36,7 @@ async function verifyHash(toHash: string, hash: string): Promise<boolean> {
     return false;
   }
 
-  const verified = timingSafeEqual(hashToCompare, storedHash);
-
-  return verified;
+  return timingSafeEqual(hashToCompare, storedHash);
 }
 
 export { hash, verifyHash };
