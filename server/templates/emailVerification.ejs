@@ -38,27 +38,25 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h3>Welcome, <%= username; %>!</h3>
-        <p>
-            Thank you for signing up to LightweightProject.<br>
-            To continue, please verify your email address by clicking the link below:
-        </p>
-        <p>
-            <a href="<%= callbackUrl; %>"
-               title="Verify Email Address"
-               target="_blank"><%= callbackUrl; %></a>
-        </p>
-    </div>
+<div class="container">
+    <h3>Welcome, <%= username; %>!</h3>
+    <p>
+        Thank you for signing up to LightweightProject.<br>
+        To continue, please verify your email address by clicking the link below:
+    </p>
+    <p>
+        <a href="<%= callbackUrl; %>"
+           title="LightweightProject - email verification link"
+           target="_blank"><%= callbackUrl; %></a>
+    </p>
+</div>
 </body>
 <footer>
     <div class="container">
         <p>
-            <i>If you did not sign up for LightweightProject, please, ignore this email.<br>
-               Best regards,<br>
-               LightweightProject Team</i>
+            If you did not sign up in the LightweightProject, please, ignore this email.<br><br>
+            <i> Best regards, LightweightProject Team <span><%= new Date().getFullYear(); %></span></i>
         </p>
-        <p>LightweightProject, <span><%= new Date().getFullYear(); %></span></p>
     </div>
 </footer>
 </html>
