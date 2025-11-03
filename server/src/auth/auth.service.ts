@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
-import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
+import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Not, Repository, UpdateResult } from "typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import UserService from "@server/user/user.service";
 import UserEntity from "@server/user/user.entity";
@@ -218,8 +218,7 @@ export default class AuthService {
       throw new NotFoundException("Authentication not found.");
     }
 
-    const isEmailVerified: boolean | undefined = authentication.metadata.local?.isEmailVerified;
-    if (isEmailVerified) {
+    if (authentication.metadata.local?.isEmailVerified) {
       throw new BadRequestException("Email has been already verified.");
     }
 
@@ -235,7 +234,7 @@ export default class AuthService {
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
       await manager.update(
         AuthenticationEntity,
-        { id: authentication.id },
+        { id: authentication.id, userId, provider: AuthenticationProvider.LOCAL },
         {
           refreshToken,
           metadata: {
@@ -248,7 +247,77 @@ export default class AuthService {
         },
       );
 
+      // Set refreshToken to null for all other user's authentications;
+      await manager.update(
+        AuthenticationEntity,
+        { userId, provider: Not(AuthenticationProvider.LOCAL) },
+        {
+          refreshToken: null,
+          lastAccessedAt: () => "lastAccessedAt",
+        },
+      );
+
       await manager.update(UserEntity, { id: userId }, authentication.metadata.local?.temporaryInfo ?? {});
+    });
+
+    return { accessToken };
+  }
+
+  /**
+   * Sign in user with local authentication.
+   *
+   * @param {UserEntity} user - User entity.
+   *
+   * @returns {Promise<{ accessToken: string }>} - Access token.
+   */
+  async localSignIn(user: UserEntity): Promise<{ accessToken: string }> {
+    let authentication: AuthenticationEntity | null | undefined = user.authentications.find(
+      (auth: AuthenticationEntity) =>
+        auth.provider === AuthenticationProvider.LOCAL && auth.metadata.local?.isEmailVerified,
+    );
+
+    if (!authentication) {
+      authentication = await this.findAuthentication({
+        where: {
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        },
+      });
+
+      if (!authentication) {
+        throw new UnauthorizedException("Authentication failed. Authentication not found.");
+      }
+
+      if (!authentication.metadata.local?.isEmailVerified) {
+        throw new UnauthorizedException("Authentication failed. Email is not verified.");
+      }
+    }
+
+    const accessToken: string = await this.tokenService.generateToken(
+      { userId: user.id, provider: AuthenticationProvider.LOCAL, jwti: uuidv4() },
+      this.tokenService.jwtAccessTokenExpiresIn,
+    );
+    const refreshToken: string = await this.tokenService.generateToken(
+      { userId: user.id, provider: AuthenticationProvider.LOCAL },
+      this.tokenService.jwtRefreshTokenExpiresIn,
+    );
+
+    await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
+      await manager.update(
+        AuthenticationEntity,
+        { id: authentication.id, userId: user.id, provider: AuthenticationProvider.LOCAL },
+        { refreshToken },
+      );
+
+      // Set refreshToken to null for all other user's authentications;
+      await manager.update(
+        AuthenticationEntity,
+        { userId: user.id, provider: Not(AuthenticationProvider.LOCAL) },
+        {
+          refreshToken: null,
+          lastAccessedAt: () => "lastAccessedAt",
+        },
+      );
     });
 
     return { accessToken };
@@ -337,234 +406,4 @@ export default class AuthService {
   //
   //       break;
   //     }
-  //
-  //     case "github": {
-  //       break;
-  //     }
-  //
-  //     case "local": {
-  //       const { method } = options;
-  //
-  //       if (method === "signup") {
-  //         return this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
-  //           if (!user) {
-  //             const isUsernameTaken: UserEntity | null = await manager.findOne(UserEntity, {
-  //               select: { id: true },
-  //               where: { username },
-  //             });
-  //
-  //             if (isUsernameTaken) {
-  //               throw new BadRequestException(`Username is already taken.`);
-  //             }
-  //
-  //             const user: UserEntity = manager.create(UserEntity, { email });
-  //
-  //             const hashedPassword = await hash(password);
-  //
-  //             const authentication = manager.create(AuthenticationEntity, {
-  //               userId: user.id,
-  //               provider: idP,
-  //               metadata: {
-  //                 local: {
-  //                   isEmailVerified: false,
-  //                   password: hashedPassword,
-  //                   temporaryInfo: {
-  //                     username,
-  //                     firstName,
-  //                     lastName,
-  //                     avatarUrl,
-  //                   },
-  //                 },
-  //               },
-  //             });
-  //
-  //             await manager.save(user);
-  //             await manager.save(authentication);
-  //           } else {
-  //             let authentication: AuthenticationEntity | undefined = user.authentications.find(
-  //               (auth: AuthenticationEntity): boolean => auth.provider === idP,
-  //             );
-  //
-  //             if (authentication) {
-  //               if (authentication.metadata.local?.isEmailVerified) {
-  //                 throw new BadRequestException(
-  //                   `Already signed up. Please, sign in with local authentication credentials.`,
-  //                 );
-  //               }
-  //
-  //               throw new BadRequestException("Already signed up. Email verification is required to proceed.");
-  //             }
-  //
-  //             const hashedPassword = await hash(password);
-  //
-  //             authentication = manager.create(AuthenticationEntity, {
-  //               userId: user.id,
-  //               provider: idP,
-  //               metadata: {
-  //                 local: {
-  //                   isEmailVerified: false,
-  //                   password: hashedPassword,
-  //                   temporaryInfo: {
-  //                     username,
-  //                     firstName,
-  //                     lastName,
-  //                     avatarUrl,
-  //                   },
-  //                 },
-  //               },
-  //             });
-  //
-  //             await manager.save(authentication);
-  //           }
-  //         });
-  //
-  //         // TODO: send a message to the any queue service (Bull/RabbitMQ/Kafka) to implement email verification;
-  //       } else if (method === "signin") {
-  //         // try {
-  //         //   if (!user) {
-  //         //     if (!username) {
-  //         //       throw new BadRequestException(
-  //         //         "Username or email are required to proceed authentication with local provider.",
-  //         //       );
-  //         //     }
-  //         //
-  //         //     const isUserExistsWithUsername = await this.dataSource.getRepository(UserEntity).findOne({
-  //         //       select: {
-  //         //         id: true,
-  //         //       },
-  //         //       where: {
-  //         //         username,
-  //         //       },
-  //         //     });
-  //         //
-  //         //     if (!isUserExistsWithUsername) {
-  //         //       throw new NotFoundException(`User with: "${username ?? email}" does not exist. Please sign up first.`);
-  //         //     }
-  //         //
-  //         //     email = isUserExistsWithUsername.email;
-  //         //   }
-  //         // } catch (error) {
-  //         //   this.logger.error(error.message);
-  //         //
-  //         //   throw new UnauthorizedException(`SignIn user with "${username ?? email}" failed.`);
-  //         // }
-  //       }
-  //
-  //       break;
-  //     }
-  //
-  //     default: {
-  //       throw new BadRequestException("Authentication provider is not supported.");
-  //     }
-  //   }
-  //
-  //   // const reloadUser = await this.userRepository.findOne({
-  //   //   relations: ["authentications"],
-  //   //   select: {
-  //   //     id: true,
-  //   //     username: true,
-  //   //     email: true,
-  //   //     firstName: true,
-  //   //     lastName: true,
-  //   //     avatarUrl: true,
-  //   //     createdAt: true,
-  //   //     updatedAt: true,
-  //   //     authentications: {
-  //   //       id: true,
-  //   //       provider: true,
-  //   //       lastAccessedAt: true,
-  //   //     },
-  //   //   },
-  //   //   where: {
-  //   //     email,
-  //   //     authentications: { provider: idP },
-  //   //   },
-  //   // });
-  //   //
-  //   // return reloadUser!;
-  // }
-  //
-  // /**
-  //  * Signs in a user based on the provided credentials and returns an access token.
-  //  *
-  //  * @param credentials - The authentication credentials for the user.
-  //  *
-  //  * @returns A promise that resolves with an object containing the access token.
-  //  */
-  // async signIn(credentials: AuthCredentials): Promise<any> {
-  //   // async signIn(credentials: AuthCredentials): Promise<{ accessToken: string }> {
-  //   //   const { provider, email, password } = credentials;
-  //   //
-  //   //   const user = await this.userRepository.findOne({
-  //   //     relations: ["authentications"],
-  //   //     select: {
-  //   //       id: true,
-  //   //       authentications: {
-  //   //         provider: true,
-  //   //         password: true,
-  //   //       },
-  //   //     },
-  //   //     where: {
-  //   //       email,
-  //   //       authentications: {
-  //   //         provider,
-  //   //       },
-  //   //     },
-  //   //   });
-  //   //
-  //   //   if (!user) {
-  //   //     throw new NotFoundException("Authentication failed. User not found.");
-  //   //   }
-  //   //
-  //   //   if (provider === "local") {
-  //   //     if (!password) {
-  //   //       throw new BadRequestException("Authentication failed. Password is required.");
-  //   //     }
-  //   //
-  //   //     const isPasswordValid = await verifyHash(password, user.authentications[0].password!);
-  //   //
-  //   //     if (!isPasswordValid) {
-  //   //       throw new UnauthorizedException("Authentication failed. Invalid password.");
-  //   //     }
-  //   //   }
-  //   //
-  //   //   const payload: JwtPayload = {
-  //   //     userId: user.id,
-  //   //     provider,
-  //   //     jwti: uuidv4(),
-  //   //   };
-  //   //
-  //   //   return this.dataSource.transaction(async (transactionalEntityManager: EntityManager) => {
-  //   //     try {
-  //   //       const { accessToken, refreshToken } = await this.tokenService.generateBothTokens(payload);
-  //   //       const encryptedRefreshToken = encrypt(refreshToken);
-  //   //
-  //   //       await transactionalEntityManager.update(
-  //   //         AuthenticationEntity,
-  //   //         { userId: user.id, provider },
-  //   //         { refreshToken: encryptedRefreshToken },
-  //   //       );
-  //   //
-  //   //       // NOTE: Reset refresh token to null for all other authentication providers, but not for the current one;
-  //   //       await transactionalEntityManager.update(
-  //   //         AuthenticationEntity,
-  //   //         { userId: user.id, provider: Not(provider) },
-  //   //         { refreshToken: null },
-  //   //       );
-  //   //
-  //   //       return { accessToken };
-  //   //     } catch (error) {
-  //   //       this.logger.error(error.message);
-  //   //
-  //   //       throw new UnauthorizedException("Authentication failed.");
-  //   //     }
-  //   //   });
-  //   // }
-  // }
-  //
-  // // async emailVerification(emailOrUsername: string): Promise<void> {
-  // //   if (!emailOrUsername) {
-  // //     throw new BadRequestException("Email or username is required.");
-  // //   }
-  // // }
 }

@@ -2,7 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  Param,
   Post,
   Query,
   Req,
@@ -11,50 +10,28 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBody,
-  ApiResponse,
-  ApiOAuth2,
-  ApiCookieAuth,
-  ApiParam,
-  ApiQuery,
-} from "@nestjs/swagger";
-import { Request, Response } from "express";
-// import { Profile, requestWithUser } from "./types/auth.types.js";
-// import TokenService from "./token.service.js";
+import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery } from "@nestjs/swagger";
+import { Response } from "express";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces";
 import { ZodValidationPipe } from "@anatine/zod-nestjs";
-import JwtGuard from "./guards/jwt.guard.js";
-import LocalAuthGuard from "./guards/local-auth.guard.js";
-import GoogleAuthGuard from "./guards/google-auth.guard.js";
-import { KeycloakAuthGuard, KeycloakSAMLAuthGuard } from "./guards/keycloak-auth.guard.js";
-import UserService from "@server/user/user.service";
 import AuthService from "@server/auth/auth.service";
-import { LocalVerificationEmailDto, SignUpLocalDto } from "@server/auth/dto/auth.dto";
+import { LocalVerificationEmailDto, SignInLocalDto, SignUpLocalDto } from "@server/auth/dto/auth.dto";
 import { setCookie } from "@server/utils/cookie";
+import AuthLocalGuard from "@server/auth/guards/local.guard";
+import { RequestWithUser } from "@server/auth/types/auth.types";
+import UserEntity from "@server/user/user.entity";
 
 @ApiTags("auth")
 @Controller("auth")
 export default class AuthController {
   private readonly configService: ConfigService;
   private readonly authService: AuthService;
-  // private readonly userService: UserService;
-  // private readonly tokenService: TokenService;
   private readonly https: boolean;
 
-  constructor(
-    configService: ConfigService,
-    authService: AuthService,
-    // userService: UserService,
-    // tokenService: TokenService,
-  ) {
+  constructor(configService: ConfigService, authService: AuthService) {
     this.configService = configService;
     this.authService = authService;
-    // this.userService = userService;
-    // this.tokenService = tokenService;
     this.https = configService.get<AppConfiguration["serverConfiguration"]["https"]>("serverConfiguration.https")!;
   }
 
@@ -109,49 +86,41 @@ export default class AuthController {
     }
   }
 
-  //   @Get("local/signin")
-  //   @ApiOperation({
-  //     summary: "Local authentication",
-  //     description: "The user will be authenticated locally with a username and password.",
-  //   })
-  //   @ApiResponse({
-  //     status: 302,
-  //     description: "The user will be redirected to the home page of the web application after successful authentication.",
-  //   })
-  //   @ApiResponse({
-  //     status: 400,
-  //     description: "Authentication failed. Invalid credentials.",
-  //   })
-  //   @ApiResponse({
-  //     status: 401,
-  //     description: "Authentication failed.",
-  //   })
-  //   @ApiResponse({
-  //     status: 404,
-  //     description: "Authentication failed. User not found.",
-  //   })
-  //   @ApiBody({ type: SignInLocalDto })
-  //   @UseGuards(LocalAuthGuard)
-  //   async localSignIn(
-  //     @Req() req: requestWithUser,
-  //     @Res({ passthrough: true }) res: Response,
-  //     @Body() signInLocalDto: SignInLocalDto,
-  //   ): Promise<void> {
-  //     const user = req.user;
-  //
-  //     const credentials: AuthCredentials = {
-  //       provider: "local",
-  //       email: user.email,
-  //       password: signInLocalDto.password,
-  //     };
-  //
-  //     const { accessToken } = await this.authService.signIn(credentials);
-  //
-  //     setCookie(res, "accessToken", accessToken, this.https);
-  //
-  //     res.redirect("/");
-  //   }
-  //
+  @Get("local/signin")
+  @ApiOperation({
+    summary: "Sign in with local authentication",
+    description: "Sign in with local authentication strategy, using email or username and password.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "User signed in successfully.",
+  })
+  @ApiResponse({
+    status: 401,
+    description:
+      "Authentication failed. " + "Invalid credentials or " + "user not found or " + "email is not verified.",
+  })
+  @ApiBody({ type: SignInLocalDto })
+  @UsePipes(ZodValidationPipe)
+  @UseGuards(AuthLocalGuard)
+  async localSignIn(
+    @Req() req: RequestWithUser,
+    @Body() signInLocalDto: SignInLocalDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    const user: UserEntity = req.user;
+
+    const { accessToken } = await this.authService.localSignIn(user);
+
+    if (!accessToken) {
+      throw new UnauthorizedException(
+        "Authentication failed. " + "Invalid credentials or " + "user not found or " + "email is not verified.",
+      );
+    }
+
+    setCookie(res, "accessToken", accessToken, this.https);
+  }
+
   //   @Get("google/signin")
   //   @ApiOperation({
   //     summary: "Google authentication via OAuth2",
