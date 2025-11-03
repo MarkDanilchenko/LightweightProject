@@ -152,7 +152,6 @@ export default class AuthService {
             avatarUrl,
             email,
           }),
-          manager,
         );
       } else {
         const existingAuthentication: AuthenticationEntity | undefined = user.authentications.find(
@@ -198,7 +197,6 @@ export default class AuthService {
             avatarUrl,
             email,
           }),
-          manager,
         );
       }
     });
