@@ -229,6 +229,11 @@ export default class AuthService {
       throw new NotFoundException("Authentication not found.");
     }
 
+    const isEmailVerified: boolean | undefined = authentication.metadata.local?.isEmailVerified;
+    if (isEmailVerified) {
+      throw new BadRequestException("Email has been already verified.");
+    }
+
     const accessToken: string = await this.tokenService.generateToken(
       { userId, provider, jwti: uuidv4() },
       this.tokenService.jwtAccessTokenExpiresIn,
