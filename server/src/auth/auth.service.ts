@@ -1,11 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-  LoggerService,
-  NotFoundException,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
@@ -22,7 +15,6 @@ import { v4 as uuidv4 } from "uuid";
 
 @Injectable()
 export default class AuthService {
-  private readonly logger: LoggerService;
   private readonly eventService: EventService;
   private readonly eventEmitter: EventEmitter2;
   private readonly userService: UserService;
@@ -38,7 +30,6 @@ export default class AuthService {
     @InjectRepository(AuthenticationEntity)
     private readonly authenticationRepository: Repository<AuthenticationEntity>,
   ) {
-    this.logger = new Logger(AuthService.name);
     this.eventService = eventService;
     this.eventEmitter = eventEmitter;
     this.userService = userService;
@@ -203,7 +194,7 @@ export default class AuthService {
   }
 
   /**
-   * Verify local user email, update user data and authentication data and return access token.
+   * Verify user email while local authentication workflow, update user data and authentication data and return access token.
    *
    * @param {LocalVerificationEmailDto} localVerificationEmailDto - Token in jwt format.
    *

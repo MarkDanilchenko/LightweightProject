@@ -1,7 +1,7 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 import * as ejs from "ejs";
-import { Injectable, Logger, LoggerService } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { AuthLocalCreatedEvent } from "@server/event/interfaces/event.interfaces";
 import { ConfigService } from "@nestjs/config";
 import { Transporter } from "nodemailer";
@@ -17,19 +17,24 @@ import { FindOptionsWhere } from "typeorm";
 @Injectable()
 export class RmqEmailService {
   private readonly configService: ConfigService;
-  private readonly logger: LoggerService;
   private readonly transporter: Transporter;
   private readonly tokenService: TokenService;
   private readonly authService: AuthService;
 
   constructor(configService: ConfigService, tokenService: TokenService, authService: AuthService) {
     this.configService = configService;
-    this.logger = new Logger(RmqEmailService.name);
     this.transporter = transporter;
     this.tokenService = tokenService;
     this.authService = authService;
   }
 
+  /**
+   * Send a welcome verification email to the user.
+   *
+   * @param {AuthLocalCreatedEvent} payload - The event payload containing the user's metadata.
+   *
+   * @returns {Promise<void>} A promise, that resolves, when the email is successfully sent.
+   */
   async sendWelcomeVerificationEmail(payload: AuthLocalCreatedEvent): Promise<void> {
     const { userId, metadata, modelId } = payload;
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;

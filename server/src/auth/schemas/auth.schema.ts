@@ -38,21 +38,19 @@ const signUpLocalSchema = z
         title: "Password",
         description: `Password must contain at least one uppercase letter, one lowercase letter, one digit
         and be at least 8 characters long.`,
-        example: "********",
+        example: "12345678Aa_",
       }),
   })
   .openapi({
     title: "Sign up schema",
-    description: `Sign up with local authentication strategy.
-      Password must contain at least one uppercase letter, one lowercase letter, one digit
-      and be at least 8 characters long.`,
+    description: "Sign up credentials with local authentication.",
     example: {
       username: "johndoe",
       firstName: "John",
       lastName: "Doe",
       email: "johndoe@me.com",
       avatarUrl: "https://example.com/avatar.jpg",
-      password: "********",
+      password: "12345678Aa_",
     },
   });
 
@@ -62,22 +60,21 @@ const localVerificationEmailSchema = z
   })
   .openapi({
     title: "Local verification email schema",
-    description: "Local verification email schema.",
+    description: "Local verification email with provided token.",
     example: { token: "Token in jwt format" },
   });
 
 const signInLocalSchema = z
   .object({
-    login: z.string().openapi({ title: "Login", description: "Email or username", example: "johndoe" }),
-    password: z
+    login: z
       .string()
-      .describe("Password")
-      .openapi({ title: "Password", description: "Password", example: "12345678Aa_" }),
+      .openapi({ title: "Login", description: "Email or username", example: "johndoe or johndoe@me.com" }),
+    password: z.string().openapi({ title: "Password", description: "Password", example: "12345678Aa_" }),
   })
   .openapi({
     title: "Sign in schema",
-    description: "Sign in with local strategy",
-    example: { login: "johndoe", password: "password" },
+    description: "Sign in credentials with local authentication.",
+    example: { login: "johndoe or johndoe@me.com", password: "12345678Aa_" },
   });
 
 const profileSchema = z

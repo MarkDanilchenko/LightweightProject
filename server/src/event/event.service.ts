@@ -1,4 +1,4 @@
-import { Injectable, Logger, LoggerService } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { EventRegistry } from "@server/event/interfaces/event.interfaces";
 import { eventRegistry } from "@server/event/event.events";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
@@ -8,7 +8,6 @@ import { EventType } from "@server/event/types/event.types";
 
 @Injectable()
 export default class EventService {
-  private readonly logger: LoggerService;
   private readonly eventRegistry: EventRegistry = eventRegistry;
 
   constructor(
@@ -16,9 +15,7 @@ export default class EventService {
     private readonly dataSource: DataSource,
     @InjectRepository(EventEntity)
     private readonly eventRepository: Repository<EventEntity>,
-  ) {
-    this.logger = new Logger(EventService.name);
-  }
+  ) {}
 
   /**
    * Build a new event instance according to the provided event name.
