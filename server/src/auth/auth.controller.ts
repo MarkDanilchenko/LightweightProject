@@ -16,10 +16,15 @@ import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces";
 import { ZodValidationPipe } from "@anatine/zod-nestjs";
 import AuthService from "@server/auth/auth.service";
-import { LocalVerificationEmailDto, SignInLocalDto, SignUpLocalDto } from "@server/auth/dto/auth.dto";
+import { LocalVerificationEmailDtoClass, LocalSignInDtoClass, LocalSignUpDtoClass } from "@server/auth/dto/auth.dto";
 import { setCookie } from "@server/utils/cookie";
 import AuthLocalGuard from "@server/auth/guards/local.guard";
-import { RequestWithUser } from "@server/auth/types/auth.types";
+import {
+  LocalSignInDto,
+  LocalSignUpDto,
+  LocalVerificationEmailDto,
+  RequestWithUser,
+} from "@server/auth/types/auth.types";
 import UserEntity from "@server/user/user.entity";
 
 @ApiTags("auth")
@@ -48,10 +53,10 @@ export default class AuthController {
     status: 400,
     description: "Invalid credentials or user already exists.",
   })
-  @ApiBody({ type: SignUpLocalDto })
+  @ApiBody({ type: LocalSignUpDtoClass })
   @UsePipes(ZodValidationPipe)
-  async localSignUp(@Body() signUpLocalDto: SignUpLocalDto): Promise<void> {
-    await this.authService.localSignUp(signUpLocalDto);
+  async localSignUp(@Body() localSignUpDto: LocalSignUpDto): Promise<void> {
+    await this.authService.localSignUp(localSignUpDto);
   }
 
   @Get("local/verification/email")
@@ -65,7 +70,7 @@ export default class AuthController {
       "Redirect to the home client page (frontend-app) after successful email verification." +
       "If varification was failed - back to the sign in page.",
   })
-  @ApiQuery({ type: LocalVerificationEmailDto })
+  @ApiQuery({ type: LocalVerificationEmailDtoClass })
   @UsePipes(ZodValidationPipe)
   async localVerificationEmail(
     @Query() localVerificationEmailDto: LocalVerificationEmailDto,
@@ -100,12 +105,12 @@ export default class AuthController {
     description:
       "Authentication failed. " + "Invalid credentials or " + "user not found or " + "email is not verified.",
   })
-  @ApiBody({ type: SignInLocalDto })
+  @ApiBody({ type: LocalSignInDtoClass })
   @UsePipes(ZodValidationPipe)
   @UseGuards(AuthLocalGuard)
   async localSignIn(
     @Req() req: RequestWithUser,
-    @Body() signInLocalDto: SignInLocalDto,
+    @Body() localSignInDto: LocalSignInDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     const user: UserEntity = req.user;

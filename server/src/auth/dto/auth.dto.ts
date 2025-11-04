@@ -6,12 +6,12 @@ import {
   localSignUpSchema,
 } from "@server/auth/schemas/auth.schema";
 
-class LocalSignUpDto extends createZodDto(localSignUpSchema) {}
+class LocalSignUpDtoClass extends createZodDto(localSignUpSchema) {}
 
-class LocalSignInDto extends createZodDto(localSignInSchema) {}
+class LocalVerificationEmailDtoClass extends createZodDto(localVerificationEmailSchema) {}
 
-class ProfileDto extends createZodDto(profileSchema) {}
+class LocalSignInDtoClass extends createZodDto(localSignInSchema) {}
 
-class LocalVerificationEmailDto extends createZodDto(localVerificationEmailSchema) {}
+class ProfileDtoClass extends createZodDto(profileSchema) {}
 
-export { LocalSignUpDto, LocalSignInDto, ProfileDto, LocalVerificationEmailDto };
+export { LocalSignUpDtoClass, LocalSignInDtoClass, ProfileDtoClass, LocalVerificationEmailDtoClass };

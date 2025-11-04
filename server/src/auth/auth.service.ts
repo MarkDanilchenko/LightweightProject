@@ -4,7 +4,6 @@ import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Not, Repos
 import AuthenticationEntity from "@server/auth/auth.entity";
 import UserService from "@server/user/user.service";
 import UserEntity from "@server/user/user.entity";
-import { LocalVerificationEmailDto, SignUpLocalDto } from "@server/auth/dto/auth.dto";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { EventName } from "@server/event/interfaces/event.interfaces";
 import EventService from "@server/event/event.service";
@@ -12,6 +11,7 @@ import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces"
 import { hash } from "@server/utils/hasher";
 import TokenService from "@server/common/token.service";
 import { v4 as uuidv4 } from "uuid";
+import { LocalSignUpDto, LocalVerificationEmailDto } from "@server/auth/types/auth.types";
 
 @Injectable()
 export default class AuthService {
@@ -76,12 +76,12 @@ export default class AuthService {
   /**
    * Sign up a user with local authentication.
    *
-   * @param {SignUpLocalDto} signUpLocalDto - The data transfer object containing the user's sign up information.
+   * @param {LocalSignUpDto} localSignUpDto - The data transfer object containing the user's sign up information.
    *
    * @return {Promise<void>} A promise, that resolves, when the user is successfully signed up.
    */
-  async localSignUp(signUpLocalDto: SignUpLocalDto): Promise<void> {
-    const { username, firstName, lastName, email, avatarUrl, password } = signUpLocalDto;
+  async localSignUp(localSignUpDto: LocalSignUpDto): Promise<void> {
+    const { username, firstName, lastName, email, avatarUrl, password } = localSignUpDto;
 
     const user: UserEntity | null = await this.userService.findUser({
       relations: ["authentications"],
@@ -234,7 +234,7 @@ export default class AuthService {
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
       await manager.update(
         AuthenticationEntity,
-        { id: authentication.id, userId, provider: AuthenticationProvider.LOCAL },
+        { id: authentication.id, userId, provider },
         {
           refreshToken,
           metadata: {

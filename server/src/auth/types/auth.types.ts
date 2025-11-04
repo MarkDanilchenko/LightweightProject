@@ -4,10 +4,10 @@ import UserEntity from "@server/user/user.entity";
 
 type RequestWithUser = Request & { user: UserEntity };
 
-type LocalSignUp = z.infer<typeof localSignUpSchema>;
+type LocalSignUpDto = z.infer<typeof localSignUpSchema>;
 
-type LocalSignIn = z.infer<typeof localSignInSchema>;
+type LocalVerificationEmailDto = z.infer<typeof localVerificationEmailSchema>;
 
-type LocalVerificationEmail = z.infer<typeof localVerificationEmailSchema>;
+type LocalSignInDto = z.infer<typeof localSignInSchema>;
 
-export { RequestWithUser, LocalSignIn, LocalSignUp, LocalVerificationEmail };
+export { RequestWithUser, LocalSignInDto, LocalSignUpDto, LocalVerificationEmailDto };
