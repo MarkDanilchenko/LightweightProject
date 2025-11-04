@@ -2,16 +2,16 @@ import { createZodDto } from "@anatine/zod-nestjs";
 import {
   localVerificationEmailSchema,
   profileSchema,
-  signInLocalSchema,
-  signUpLocalSchema,
+  localSignInSchema,
+  localSignUpSchema,
 } from "@server/auth/schemas/auth.schema";
 
-class SignUpLocalDto extends createZodDto(signUpLocalSchema) {}
+class LocalSignUpDto extends createZodDto(localSignUpSchema) {}
 
-class SignInLocalDto extends createZodDto(signInLocalSchema) {}
+class LocalSignInDto extends createZodDto(localSignInSchema) {}
 
 class ProfileDto extends createZodDto(profileSchema) {}
 
 class LocalVerificationEmailDto extends createZodDto(localVerificationEmailSchema) {}
 
-export { SignUpLocalDto, SignInLocalDto, ProfileDto, LocalVerificationEmailDto };
+export { LocalSignUpDto, LocalSignInDto, ProfileDto, LocalVerificationEmailDto };

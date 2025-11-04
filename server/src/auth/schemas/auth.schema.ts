@@ -3,7 +3,7 @@ import { extendZodWithOpenApi } from "@anatine/zod-openapi";
 
 extendZodWithOpenApi(z);
 
-const signUpLocalSchema = z
+const localSignUpSchema = z
   .object({
     username: z.string().min(3).max(64).openapi({
       title: "Username",
@@ -64,7 +64,7 @@ const localVerificationEmailSchema = z
     example: { token: "Token in jwt format" },
   });
 
-const signInLocalSchema = z
+const localSignInSchema = z
   .object({
     login: z
       .string()
@@ -134,4 +134,4 @@ const profileSchema = z
     },
   });
 
-export { signInLocalSchema, profileSchema, signUpLocalSchema, localVerificationEmailSchema };
+export { localSignInSchema, profileSchema, localSignUpSchema, localVerificationEmailSchema };
