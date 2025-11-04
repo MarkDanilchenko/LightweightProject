@@ -91,7 +91,7 @@ export default class AuthController {
     }
   }
 
-  @Get("local/signin")
+  @Post("local/signin")
   @ApiOperation({
     summary: "Sign in with local authentication",
     description: "Sign in with local authentication strategy, using email or username and password.",
@@ -124,6 +124,8 @@ export default class AuthController {
     }
 
     setCookie(res, "accessToken", accessToken, this.https);
+
+    res.status(200).send();
   }
 
   //   @Get("google/signin")
