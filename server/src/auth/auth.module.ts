@@ -6,7 +6,7 @@ import EventModule from "@server/event/event.module";
 import UserModule from "@server/user/user.module";
 import AuthController from "@server/auth/auth.controller";
 import AuthService from "@server/auth/auth.service";
-import AuthLocalStrategy from "@server/auth/strategies/local.strategy";
+import LocalAuthStrategy from "@server/auth/strategies/local.strategy";
 import TokenService from "@server/common/token.service";
 
 @Module({
@@ -15,7 +15,7 @@ import TokenService from "@server/common/token.service";
   providers: [
     AuthService,
     TokenService,
-    AuthLocalStrategy,
+    LocalAuthStrategy,
     // GoogleOAuth2Strategy,
     // JwtStrategy,
     // KeycloakOAuth2OIDCStrategy,

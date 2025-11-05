@@ -18,7 +18,7 @@ import { ZodValidationPipe } from "@anatine/zod-nestjs";
 import AuthService from "@server/auth/auth.service";
 import { LocalVerificationEmailDtoClass, LocalSignInDtoClass, LocalSignUpDtoClass } from "@server/auth/dto/auth.dto";
 import { setCookie } from "@server/utils/cookie";
-import AuthLocalGuard from "@server/auth/guards/local.guard";
+import LocalAuthGuard from "@server/auth/guards/local.guard";
 import {
   LocalSignInDto,
   LocalSignUpDto,
@@ -107,7 +107,7 @@ export default class AuthController {
   })
   @ApiBody({ type: LocalSignInDtoClass })
   @UsePipes(ZodValidationPipe)
-  @UseGuards(AuthLocalGuard)
+  @UseGuards(LocalAuthGuard)
   async localSignIn(
     @Req() req: RequestWithUser,
     @Body() localSignInDto: LocalSignInDto,
