@@ -6,7 +6,7 @@ services:
     ports:
       - ${DATABASE_PORT}:${DATABASE_PORT}
     env_file:
-      - ./.env.public
+      - ./.env
     volumes:
       - ./db_data:/var/lib/postgresql/data
       - ./init/db:/docker-entrypoint-initdb.d:ro
@@ -23,7 +23,7 @@ services:
     ports:
       - ${REDIS_PORT}:${REDIS_PORT}
     env_file:
-      - ./.env.public
+      - ./.env
     command: redis-server --requirepass ${REDIS_PASSWORD}
     volumes:
       - ./redis_data:/data
@@ -41,7 +41,7 @@ services:
     ports:
       - ${KC_PORT}:${KC_PORT}
     env_file:
-      - ./.env.public
+      - ./.env
     volumes:
       - ./certs/???:/opt/keycloak/conf/certs:ro
     depends_on:
@@ -61,7 +61,7 @@ services:
       - ${RABBITMQ_PORT}:${RABBITMQ_PORT}
       - ${RABBITMQ_WEBCLIENT_PORT}:${RABBITMQ_WEBCLIENT_PORT}
     env_file:
-      - ./.env.public
+      - ./.env
     volumes:
       - ./rabbitmq_data:/var/lib/rabbitmq/
     healthcheck:

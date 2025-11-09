@@ -7,6 +7,8 @@
 
 # Ignore db related directories
 **/db_data/
+**/redis_data/
+**/rabbitmq_data/
 
 # Ignore node modules
 **/node_modules/

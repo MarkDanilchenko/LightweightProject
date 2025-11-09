@@ -16,6 +16,8 @@ export default tseslint.config(
       "**/public/**",
       "**/certs/**",
       "**/db_data/**",
+      "**/redis_data/**",
+      "**/rabbitmq_data/**",
       "**/dumps/**",
       "**/screenshots/**",
       "**/insomnia/**",

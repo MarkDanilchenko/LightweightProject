@@ -2,12 +2,18 @@
 **/*.pdf
 **/db_data/
 **/redis_data/
+**/logs/
+**/coverage/
+**/node_modules/
+**/dist/
+**/server/dist/
+**/rabbitmq_data/
+**/screenshots/
 **/dumps/
 
 # environment files
-.env.development
-.env.production
-.env.public
+.env
+.env.*
 
 # Certs
 /certs
