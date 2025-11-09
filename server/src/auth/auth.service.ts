@@ -327,7 +327,6 @@ export default class AuthService {
   async signOut(payload: TokenPayload): Promise<void> {
     // const { jwti, userId, provider, exp: ttl } = payload;
     // await this.tokenService.addToBlacklist(jwti, ttl);
-
     // await this.updateAuthentication(
     //   {
     //     userId,
