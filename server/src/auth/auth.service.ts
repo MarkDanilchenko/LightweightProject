@@ -12,6 +12,7 @@ import { hash } from "@server/utils/hasher";
 import TokenService from "@server/common/token.service";
 import { v4 as uuidv4 } from "uuid";
 import { LocalSignUpDto, LocalVerificationEmailDto } from "@server/auth/types/auth.types";
+import { TokenPayload } from "@server/common/interfaces/common.interfaces";
 
 @Injectable()
 export default class AuthService {
@@ -203,7 +204,7 @@ export default class AuthService {
   async localVerificationEmail(localVerificationEmailDto: LocalVerificationEmailDto): Promise<{ accessToken: string }> {
     const { token } = localVerificationEmailDto;
 
-    const { userId, provider } = await this.tokenService.verifyToken(token);
+    const { userId, provider } = await this.tokenService.verify(token);
     if (!userId || provider !== AuthenticationProvider.LOCAL || !provider) {
       throw new UnauthorizedException("Invalid or expired token.");
     }
@@ -222,11 +223,11 @@ export default class AuthService {
       throw new BadRequestException("Email has been already verified.");
     }
 
-    const accessToken: string = await this.tokenService.generateToken(
+    const accessToken: string = await this.tokenService.generate(
       { userId, provider, jwti: uuidv4() },
       this.tokenService.jwtAccessTokenExpiresIn,
     );
-    const refreshToken: string = await this.tokenService.generateToken(
+    const refreshToken: string = await this.tokenService.generate(
       { userId, provider },
       this.tokenService.jwtRefreshTokenExpiresIn,
     );
@@ -293,11 +294,11 @@ export default class AuthService {
       }
     }
 
-    const accessToken: string = await this.tokenService.generateToken(
+    const accessToken: string = await this.tokenService.generate(
       { userId: user.id, provider: AuthenticationProvider.LOCAL, jwti: uuidv4() },
       this.tokenService.jwtAccessTokenExpiresIn,
     );
-    const refreshToken: string = await this.tokenService.generateToken(
+    const refreshToken: string = await this.tokenService.generate(
       { userId: user.id, provider: AuthenticationProvider.LOCAL },
       this.tokenService.jwtRefreshTokenExpiresIn,
     );
@@ -321,6 +322,21 @@ export default class AuthService {
     });
 
     return { accessToken };
+  }
+
+  async signOut(payload: TokenPayload): Promise<void> {
+    // const { jwti, userId, provider, exp: ttl } = payload;
+    // await this.tokenService.addToBlacklist(jwti, ttl);
+
+    // await this.updateAuthentication(
+    //   {
+    //     userId,
+    //     provider,
+    //   },
+    //   {
+    //     refreshToken: null,
+    //   },
+    // );
   }
 
   // async authAccordingToStrategy(

@@ -30,7 +30,7 @@ export default class TokenService {
    *
    * @returns {Promise<string>} A promise that resolves with the generated jwt.
    */
-  async generateToken(payload: TokenPayload, expiresIn?: string): Promise<string> {
+  async generate(payload: TokenPayload, expiresIn?: string): Promise<string> {
     return this.jwtService.signAsync(payload, { expiresIn: expiresIn || "1d" });
   }
 
@@ -42,9 +42,13 @@ export default class TokenService {
    * @returns {Promise<TokenPayload>} A promise that resolves with the verified token payload
    * or rejects with an UnauthorizedException if the token is invalid or expired.
    */
-  async verifyToken(token: string): Promise<TokenPayload> {
+  async verify(token: string): Promise<TokenPayload> {
     return this.jwtService.verifyAsync<TokenPayload>(token);
   }
+
+  async isBlacklisted(jwti: string): Promise<any> {}
+
+  async addToBlacklist(jwti: string, ttl: number): Promise<void> {}
 
   //   /**
   //    * Refreshes an access token.

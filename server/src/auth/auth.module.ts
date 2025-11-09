@@ -8,19 +8,12 @@ import AuthController from "@server/auth/auth.controller";
 import AuthService from "@server/auth/auth.service";
 import LocalAuthStrategy from "@server/auth/strategies/local.strategy";
 import TokenService from "@server/common/token.service";
+import JwtStrategy from "@server/auth/strategies/jwt.strategy";
 
 @Module({
   imports: [TypeOrmModule.forFeature([AuthenticationEntity]), PassportModule, EventModule, UserModule],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    TokenService,
-    LocalAuthStrategy,
-    // GoogleOAuth2Strategy,
-    // JwtStrategy,
-    // KeycloakOAuth2OIDCStrategy,
-    // KeycloakSAMLStrategy,
-  ],
+  providers: [AuthService, TokenService, LocalAuthStrategy, JwtStrategy],
   exports: [AuthService],
 })
 export default class AuthModule {}

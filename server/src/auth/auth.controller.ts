@@ -17,15 +17,13 @@ import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces"
 import { ZodValidationPipe } from "@anatine/zod-nestjs";
 import AuthService from "@server/auth/auth.service";
 import { LocalVerificationEmailDtoClass, LocalSignInDtoClass, LocalSignUpDtoClass } from "@server/auth/dto/auth.dto";
-import { setCookie } from "@server/utils/cookie";
+import { clearCookie, setCookie } from "@server/utils/cookie";
 import LocalAuthGuard from "@server/auth/guards/local.guard";
-import {
-  LocalSignInDto,
-  LocalSignUpDto,
-  LocalVerificationEmailDto,
-  RequestWithUser,
-} from "@server/auth/types/auth.types";
+import { LocalSignInDto, LocalSignUpDto, LocalVerificationEmailDto } from "@server/auth/types/auth.types";
 import UserEntity from "@server/user/user.entity";
+import JwtGuard from "@server/auth/guards/jwt.guard";
+import { RequestWithTokenPayload, RequestWithUser } from "@server/common/types/common.types";
+import { TokenPayload } from "@server/common/interfaces/common.interfaces";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -61,7 +59,7 @@ export default class AuthController {
 
   @Get("local/verification/email")
   @ApiOperation({
-    summary: "Verify email address",
+    summary: "Verify email address with local authentication",
     description: "Verify the User's email address during local sign up workflow.",
   })
   @ApiResponse({
@@ -124,6 +122,35 @@ export default class AuthController {
     }
 
     setCookie(res, "accessToken", accessToken, this.https);
+
+    res.status(200).send();
+  }
+
+  @Post("signout")
+  @ApiOperation({
+    summary: "Sign out",
+    description:
+      "Sign out and " +
+      "clear the current access token in cookies and put it in blacklist while it is still not expired, " +
+      "clear refresh token from database.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "User signed out successfully.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Authentication failed. Invalid credentials or user not found.",
+  })
+  @UseGuards(JwtGuard)
+  async signOut(@Req() req: RequestWithTokenPayload, @Res({ passthrough: true }) res: Response): Promise<void> {
+    const payload: TokenPayload = req.tokenPayload;
+
+    // console.log("payload", payload);
+
+    await this.authService.signOut(payload);
+
+    clearCookie(res, "accessToken");
 
     res.status(200).send();
   }

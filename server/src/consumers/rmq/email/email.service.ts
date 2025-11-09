@@ -51,7 +51,7 @@ export class RmqEmailService {
     );
     await fs.promises.access(emailVerificationTemplatePath, fs.constants.R_OK);
 
-    const token: string = await this.tokenService.generateToken({
+    const token: string = await this.tokenService.generate({
       userId,
       provider: AuthenticationProvider.LOCAL,
     });

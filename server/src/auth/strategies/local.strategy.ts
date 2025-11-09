@@ -7,7 +7,7 @@ import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces"
 import { verifyHash } from "@server/utils/hasher";
 
 @Injectable()
-export default class LocalAuthStrategy extends PassportStrategy(Strategy, "localAuth") {
+export default class LocalAuthStrategy extends PassportStrategy(Strategy, "localAuthStrategy") {
   private readonly userService: UserService;
 
   constructor(userService: UserService) {
