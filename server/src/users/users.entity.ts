@@ -11,7 +11,7 @@ import {
 import AuthenticationEntity from "@server/auth/auth.entity";
 import EventEntity from "@server/event/event.entity";
 
-@Entity({ name: "users" })
+@Entity({ name: "users", schema: "public" })
 export default class UserEntity extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id: string;
@@ -40,10 +40,10 @@ export default class UserEntity extends BaseEntity {
   @DeleteDateColumn({ type: "timestamptz", nullable: true, default: null })
   deletedAt: Date | null;
 
-  // associations
-  @OneToMany(() => AuthenticationEntity, (authentication) => authentication.user)
+  // Associations;
+  @OneToMany(() => AuthenticationEntity, (authentication: AuthenticationEntity): UserEntity => authentication.user)
   authentications: AuthenticationEntity[];
 
-  @OneToMany(() => EventEntity, (event) => event.user)
+  @OneToMany(() => EventEntity, (event: EventEntity): UserEntity => event.user)
   events: EventEntity[];
 }
