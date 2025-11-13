@@ -28,7 +28,7 @@ const transporter: Transporter = createTransport({
   },
 });
 
-transporter.verify((error): void => {
+transporter.verify((error: Error | null): void => {
   if (error) {
     return logger.error("Error with SMTP configuration:", error);
   }

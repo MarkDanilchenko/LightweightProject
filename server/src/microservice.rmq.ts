@@ -4,6 +4,11 @@ import { RmqOptions, Transport } from "@nestjs/microservices";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import AppModule from "@server/app.module";
 
+/**
+ * Bootstraps the RabbitMQ microservice.
+ *
+ * @returns {Promise<void>} A promise, that resolves, when the microservice is ready.
+ */
 async function bootstrap(): Promise<void> {
   // Can not use ConfigService here, so use process.env to get configuration variables for RabbitMQ;
   const app: INestMicroservice = await NestFactory.createMicroservice<RmqOptions>(AppModule, {
@@ -31,7 +36,7 @@ async function bootstrap(): Promise<void> {
 
   await app.listen().then((): void => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
-    app.get(WINSTON_MODULE_NEST_PROVIDER).log("RabbitMQ microservice (email) is running", "LightweightProject");
+    app.get(WINSTON_MODULE_NEST_PROVIDER).log("RabbitMQ microservice (email) is running", "NestMicroservice");
   });
 }
 

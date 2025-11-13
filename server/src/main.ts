@@ -1,3 +1,4 @@
+import * as path from "node:path";
 import * as fs from "node:fs";
 import * as cookieParser from "cookie-parser";
 import { NestFactory } from "@nestjs/core";
@@ -5,18 +6,23 @@ import { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "./configs/interfaces/appConfiguration.interfaces";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
+import { DocumentBuilder, OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { InternalServerErrorException } from "@nestjs/common";
 import { patchNestjsSwagger } from "@anatine/zod-nestjs";
 import AppModule from "@server/app.module";
 
+/**
+ * Bootstraps the NestJS application.
+ *
+ * @returns {Promise<void>} - A promise which resolves when the application is ready.
+ */
 async function bootstrap(): Promise<void> {
   const https = process.env.HTTPS === "true";
   const httpsOptions: { key?: Buffer; cert?: Buffer } = {};
   if (https) {
     if (!process.env.CERT_PATH || !process.env.KEY_PATH) {
       throw new InternalServerErrorException(
-        "Both CERT_PATH and KEY_PATH env variables must be set when HTTPS is true!",
+        "Both CERT_PATH and KEY_PATH env variables must be set when HTTPS is enabled!",
       );
     }
 
@@ -39,16 +45,11 @@ async function bootstrap(): Promise<void> {
 
   app.use(cookieParser(cookieSecret));
 
-  // new ValidationPipe does not work with zod validation;
-  // app.useGlobalPipes(
-  //   new ValidationPipe({
-  //     whitelist: true,
-  //   }),
-  // );
-
   if (swaggerEnabled) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const packageJsonInfo: Record<string, string> = JSON.parse(fs.readFileSync("../package.json", "utf-8"));
+    const packageJsonInfo: Record<string, string> = JSON.parse(
+      fs.readFileSync(path.join(process.cwd(), "../package.json"), "utf-8"),
+    );
 
     const swaggerConfiguration = new DocumentBuilder()
       .setTitle(packageJsonInfo.name)
@@ -64,7 +65,7 @@ async function bootstrap(): Promise<void> {
         "accessToken",
         {
           type: "apiKey",
-          description: "API access token in cookie",
+          description: "API jwt access token in cookies",
           name: "accessToken",
           in: "cookie",
           scheme: "bearer",
@@ -118,14 +119,22 @@ async function bootstrap(): Promise<void> {
         },
         "keycloakOAuth2OIDC",
       )
+      // TODO: add github oauth2
+      // .addOAuth2({}, "githubOAuth2")
       .build();
 
-    // patch nestjs swagger to support zod validation;
+    // This is necessary patch nestjs swagger function to support zod validation;
     patchNestjsSwagger();
 
-    const documentFactory = () => {
+    /**
+     * Factory function for creating OpenAPI document.
+     *
+     * @returns {OpenAPIObject} - The OpenAPI document.
+     */
+    const documentFactory = (): OpenAPIObject => {
       return SwaggerModule.createDocument(app, swaggerConfiguration);
     };
+
     SwaggerModule.setup("docs", app, documentFactory, {
       jsonDocumentUrl: "docs/json",
       yamlDocumentUrl: "docs/yaml",
@@ -137,7 +146,7 @@ async function bootstrap(): Promise<void> {
     app
       .get(WINSTON_MODULE_NEST_PROVIDER)
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      .log(`Server is running on ${protocol}://${host}:${port}`, "LightweightProject");
+      .log(`Server is running on ${protocol}://${host}:${port}`, "NestApplication");
   });
 }
 
