@@ -1,5 +1,5 @@
-import UserEntity from "@server/user/user.entity";
-import { TokenPayload } from "@server/common/interfaces/common.interfaces";
+import UserEntity from "@server/users/users.entity";
+import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 
 type RequestWithUser = Request & { user: UserEntity };
 

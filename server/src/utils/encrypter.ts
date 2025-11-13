@@ -6,9 +6,9 @@ const algorithm = "aes-256-cbc";
 /**
  * Encrypts the given string applying AES-256-CBC with a secret key.
  *
- * @param strToEncrypt The string to be encrypted.
+ * @param {string} strToEncrypt The string to be encrypted.
  *
- * @returns The encrypted string.
+ * @returns {string} The encrypted string.
  */
 function encrypt(strToEncrypt: string): string {
   const iv = crypto.randomBytes(16);
@@ -24,9 +24,9 @@ function encrypt(strToEncrypt: string): string {
 /**
  * Decrypts a string that was encrypted using the `encrypt` function.
  *
- * @param strToDecrypt The string to be decrypted.
+ * @param {string} strToDecrypt The string to be decrypted.
  *
- * @returns The decrypted string.
+ * @returns {string} The decrypted string.
  */
 function decrypt(strToDecrypt: string): string {
   const secretKey = Buffer.from(AppConfiguration().serverConfiguration.commonSecret, "hex");

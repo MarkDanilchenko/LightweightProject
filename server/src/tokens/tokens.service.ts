@@ -1,11 +1,11 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
-import { TokenPayload } from "@server/common/interfaces/common.interfaces";
+import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
 
 @Injectable()
-export default class TokenService {
+export default class TokensService {
   private readonly configService: ConfigService;
   private readonly jwtService: JwtService;
   public readonly jwtRefreshTokenExpiresIn: string;
@@ -25,8 +25,8 @@ export default class TokenService {
   /**
    * Generates a jwt with the given payload and expiresIn.
    *
-   * @param payload {TokenPayload} The payload to sign.
-   * @param [expiresIn] {string} The time until the token expires. Defaults to 1 day.
+   * @param {TokenPayload} payload The payload to sign.
+   * @param {string} [expiresIn] The time until the token expires. Defaults to 1 day.
    *
    * @returns {Promise<string>} A promise that resolves with the generated jwt.
    */
@@ -37,7 +37,7 @@ export default class TokenService {
   /**
    * Verifies the given jwt.
    *
-   * @param token {string} The token to verify.
+   * @param {string} token The token to verify.
    *
    * @returns {Promise<TokenPayload>} A promise that resolves with the verified token payload
    * or rejects with an UnauthorizedException if the token is invalid or expired.
@@ -57,7 +57,7 @@ export default class TokenService {
   //    *
   //    * @returns A promise that resolves with an object containing the new access token.
   //    *
-  //    * @throws UnauthorizedException If the access token is invalid or the related user or authentication are not found.
+  //    * @throws UnauthorizedException If the access token is invalid or the related users or authentication are not found.
   //    */
   //   async refreshAccessToken(accessToken: string): Promise<{ accessToken: string }> {
   //     const payload: JwtPayload = await this.jwtService.verifyAsync<JwtPayload>(accessToken, {
@@ -70,7 +70,7 @@ export default class TokenService {
   //
   //     const { jwti, userId, provider } = payload;
   //
-  //     const user = await this.userService.findByPk(userId, {
+  //     const users = await this.userService.findByPk(userId, {
   //       relations: ["authentications"],
   //       select: {
   //         id: true,
@@ -89,11 +89,11 @@ export default class TokenService {
   //       },
   //     });
   //
-  //     if (!user) {
+  //     if (!users) {
   //       throw new UnauthorizedException("Authentication failed. User or related authentication are not found.");
   //     }
   //
-  //     const { refreshToken } = user.authentications[0];
+  //     const { refreshToken } = users.authentications[0];
   //
   //     const decryptedRefreshToken = decrypt(refreshToken!);
   //
