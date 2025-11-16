@@ -8,7 +8,7 @@ import UsersModule from "@server/users/users.module";
 import EventsModule from "@server/events/events.module";
 import TokensModule from "@server/tokens/tokens.module";
 import appConfiguration from "@server/configs/app.configuration";
-import { RmqEmailModule } from "@server/consumers/rmq/email/email.module";
+import { RmqModule } from "@server/services/rmq/rmq.module";
 import { JwtModule } from "@nestjs/jwt";
 
 @Module({
@@ -42,7 +42,7 @@ import { JwtModule } from "@nestjs/jwt";
     EventsModule,
     AuthModule,
     UsersModule,
-    RmqEmailModule,
+    RmqModule,
   ],
   controllers: [],
   providers: [],

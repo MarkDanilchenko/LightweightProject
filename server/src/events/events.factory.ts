@@ -4,7 +4,6 @@ import {
   AuthLocalEmailVerificationVerifiedEvent,
   BaseEvent,
   EventName,
-  EventRegistry,
 } from "@server/events/interfaces/events.interfaces";
 
 // Base Event;
@@ -53,7 +52,7 @@ class AuthLocalCreatedEventClass extends BaseEventClass implements AuthLocalCrea
   }
 }
 
-const eventRegistry: EventRegistry = {
+const eventRegistry = {
   [EventName.AUTH_LOCAL_CREATED]: AuthLocalCreatedEventClass,
   [EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT]: AuthLocalEmailVerificationSentEventClass,
   [EventName.AUTH_LOCAL_EMAIL_VERIFICATION_VERIFIED]: AuthLocalEmailVerificationVerifiedEventClass,
