@@ -5,7 +5,7 @@ import AppConfiguration from "./configs/interfaces/appConfiguration.interfaces";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import AuthModule from "@server/auth/auth.module";
 import UsersModule from "@server/users/users.module";
-import EventModule from "@server/event/event.module";
+import EventsModule from "@server/events/events.module";
 import TokensModule from "@server/tokens/tokens.module";
 import appConfiguration from "@server/configs/app.configuration";
 import { RmqEmailModule } from "@server/consumers/rmq/email/email.module";
@@ -39,7 +39,7 @@ import { JwtModule } from "@nestjs/jwt";
       },
     }),
     TokensModule,
-    EventModule,
+    EventsModule,
     AuthModule,
     UsersModule,
     RmqEmailModule,

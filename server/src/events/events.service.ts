@@ -1,13 +1,13 @@
 import { Injectable } from "@nestjs/common";
-import { EventRegistry } from "@server/event/interfaces/event.interfaces";
-import { eventRegistry } from "@server/event/event.events";
+import { EventRegistry } from "@server/events/interfaces/events.interfaces";
+import { eventRegistry } from "@server/events/events.factory";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
-import EventEntity from "@server/event/event.entity";
+import EventEntity from "@server/events/events.entity";
 import { DataSource, EntityManager, Repository } from "typeorm";
-import { EventType } from "@server/event/types/event.types";
+import { EventType } from "@server/events/types/events.types";
 
 @Injectable()
-export default class EventService {
+export default class EventsService {
   private readonly eventRegistry: EventRegistry = eventRegistry;
 
   constructor(
@@ -18,13 +18,13 @@ export default class EventService {
   ) {}
 
   /**
-   * Build a new event instance according to the provided event name.
+   * Build a new events instance according to the provided event's name.
    *
-   * @template K - The type of the event name.
-   * @param {K} eventName - The name of the event to create.
-   * @param {...ConstructorParameters<EventRegistry[K]> extends [any, ...infer Rest] ? Rest : never} payload - The payload for the event.
+   * @template K - The type of the event's name.
+   * @param {K} eventName - The name of the events to create.
+   * @param {...ConstructorParameters<EventRegistry[K]> extends [any, ...infer Rest] ? Rest : never} payload - The payload for the events.
    *
-   * @returns {InstanceType<EventRegistry[K]>} The event instance.
+   * @returns {InstanceType<EventRegistry[K]>} The events instance.
    */
   buildInstance<K extends keyof EventRegistry>(
     eventName: K,
@@ -40,12 +40,12 @@ export default class EventService {
   }
 
   /**
-   * Create a new event in the database.
+   * Create a new events in the database.
    *
-   * @param {EventType} payload - The payload for the event.
+   * @param {EventType} payload - The payload for the events.
    * @param {EntityManager} [manager] - The entity manager to use. If not provided, a new transaction will be started.
    *
-   * @returns {Promise<void>} A promise that resolves when the event has been created.
+   * @returns {Promise<void>} A promise that resolves when the events has been created.
    */
   async createEvent(payload: EventType, manager?: EntityManager): Promise<void> {
     const callback = async (manager: EntityManager): Promise<void> => {

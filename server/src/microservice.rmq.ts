@@ -11,7 +11,7 @@ import AppModule from "@server/app.module";
  */
 async function bootstrap(): Promise<void> {
   // Can not use ConfigService here, so use process.env to get configuration variables for RabbitMQ;
-  const app: INestMicroservice = await NestFactory.createMicroservice<RmqOptions>(AppModule, {
+  const microserviceRmq: INestMicroservice = await NestFactory.createMicroservice<RmqOptions>(AppModule, {
     transport: Transport.RMQ,
     options: {
       urls: [
@@ -32,11 +32,11 @@ async function bootstrap(): Promise<void> {
     },
   });
 
-  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
+  microserviceRmq.useLogger(microserviceRmq.get(WINSTON_MODULE_NEST_PROVIDER));
 
-  await app.listen().then((): void => {
+  await microserviceRmq.listen().then((): void => {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
-    app.get(WINSTON_MODULE_NEST_PROVIDER).log("RabbitMQ microservice (email) is running", "NestMicroservice");
+    microserviceRmq.get(WINSTON_MODULE_NEST_PROVIDER).log("RabbitMQ microservice is running", "NestMicroservice");
   });
 }
 

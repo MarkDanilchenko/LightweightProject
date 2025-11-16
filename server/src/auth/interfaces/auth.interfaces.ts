@@ -63,7 +63,7 @@
 //   provider: AuthenticationProvider;
 //   email: string;
 //   password?: string;
-//   // NOTE: "username" is used only in local strategy where user can signIn with either an email or username;
+//   // NOTE: "username" is used only in local strategy where users can signIn with either an email or username;
 //   username?: string;
 // }
 

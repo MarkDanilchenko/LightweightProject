@@ -1,9 +1,9 @@
 import { Module } from "@nestjs/common";
 import { EventEmitterModule } from "@nestjs/event-emitter";
-import EventService from "@server/event/event.service";
-import EventConsumer from "@server/event/event.consumer";
+import EventsService from "@server/events/events.service";
+import EventsConsumer from "@server/events/events.consumer";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import EventEntity from "@server/event/event.entity";
+import EventEntity from "@server/events/events.entity";
 import { ClientsModule } from "@nestjs/microservices";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
@@ -25,7 +25,7 @@ import AppConfiguration from "@server/configs/interfaces/appConfiguration.interf
     ]),
   ],
   controllers: [],
-  providers: [EventService, EventConsumer],
-  exports: [EventService],
+  providers: [EventsService, EventsConsumer],
+  exports: [EventsService],
 })
-export default class EventModule {}
+export default class EventsModule {}

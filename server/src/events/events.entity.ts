@@ -8,10 +8,10 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from "typeorm";
-import { EventName } from "@server/event/interfaces/event.interfaces";
-import UserEntity from "@server/user/user.entity";
+import { EventName } from "@server/events/interfaces/events.interfaces";
+import UserEntity from "@server/users/users.entity";
 
-@Entity({ name: "events" })
+@Entity({ name: "events", schema: "public" })
 @Index(["userId"])
 @Index(["name", "userId"])
 export default class EventEntity extends BaseEntity {
@@ -23,24 +23,24 @@ export default class EventEntity extends BaseEntity {
 
   @Column({
     type: "uuid",
-    comment: "actor who performed the event",
+    comment: "actor who performed the events",
   })
   userId: string;
 
-  @Column({ type: "uuid", comment: "event related model, e.g. user, organization, etc., so FK is not set" })
+  @Column({ type: "uuid", comment: "events related model, e.g. users, organization, etc., so FK is not set" })
   modelId: string;
 
   @Column({
     type: "jsonb",
     default: "'{}'::jsonb",
-    comment: "additional event metadata",
+    comment: "additional events metadata",
   })
   metadata: Record<string, any>;
 
   @CreateDateColumn({ type: "timestamp" })
   createdAt: Date;
 
-  // associations
+  // Associations;
   @ManyToOne(() => UserEntity, (user) => user.events)
   @JoinColumn({ name: "userId", referencedColumnName: "id" })
   user: UserEntity;

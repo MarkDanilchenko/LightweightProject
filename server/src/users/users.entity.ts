@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
-import EventEntity from "@server/event/event.entity";
+import EventEntity from "@server/events/events.entity";
 
 @Entity({ name: "users", schema: "public" })
 export default class UserEntity extends BaseEntity {

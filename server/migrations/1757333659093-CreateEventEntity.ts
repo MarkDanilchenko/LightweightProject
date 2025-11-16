@@ -22,20 +22,20 @@ export class CreateEventEntity1757333659093 implements MigrationInterface {
             name: "userId",
             type: "uuid",
             isNullable: false,
-            comment: "actor who performed the event",
+            comment: "actor who performed the events",
           },
           {
             name: "modelId",
             type: "uuid",
             isNullable: false,
-            comment: "event related model, e.g. user, organization, etc., so FK is not set",
+            comment: "events related model, e.g. users, organization, etc., so FK is not set",
           },
           {
             name: "metadata",
             type: "jsonb",
             isNullable: false,
             default: "'{}'::jsonb",
-            comment: "additional event metadata",
+            comment: "additional events metadata",
           },
           {
             name: "createdAt",
