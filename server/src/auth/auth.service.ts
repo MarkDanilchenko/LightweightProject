@@ -2,35 +2,37 @@ import { BadRequestException, Injectable, NotFoundException, UnauthorizedExcepti
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Not, Repository, UpdateResult } from "typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
-import UserService from "@server/user/user.service";
-import UserEntity from "@server/user/user.entity";
+import UsersService from "@server/users/users.service";
+import UserEntity from "@server/users/users.entity";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { EventName } from "@server/event/interfaces/event.interfaces";
-import EventService from "@server/event/event.service";
+import { EventName } from "@server/events/interfaces/events.interfaces";
+import EventsService from "@server/events/events.service";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
 import { hash } from "@server/utils/hasher";
-import TokenService from "@server/common/token.service";
+import TokensService from "@server/tokens/tokens.service";
 import { v4 as uuidv4 } from "uuid";
 import { LocalSignUpDto, LocalVerificationEmailDto } from "@server/auth/types/auth.types";
-import { TokenPayload } from "@server/common/interfaces/common.interfaces";
+import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 
 @Injectable()
 export default class AuthService {
-  private readonly eventService: EventService;
+  private readonly dataSource: DataSource;
+  private readonly eventService: EventsService;
   private readonly eventEmitter: EventEmitter2;
-  private readonly userService: UserService;
-  private readonly tokenService: TokenService;
+  private readonly userService: UsersService;
+  private readonly tokenService: TokensService;
 
   constructor(
-    eventService: EventService,
-    eventEmitter: EventEmitter2,
-    userService: UserService,
-    tokenService: TokenService,
     @InjectDataSource()
-    private readonly dataSource: DataSource,
+    dataSource: DataSource,
     @InjectRepository(AuthenticationEntity)
     private readonly authenticationRepository: Repository<AuthenticationEntity>,
+    eventService: EventsService,
+    eventEmitter: EventEmitter2,
+    userService: UsersService,
+    tokenService: TokensService,
   ) {
+    this.dataSource = dataSource;
     this.eventService = eventService;
     this.eventEmitter = eventEmitter;
     this.userService = userService;
@@ -42,14 +44,24 @@ export default class AuthService {
    *
    * @param whereCondition {FindOptionsWhere<AuthenticationEntity>} - The condition to find the authentication entity to update.
    * @param values {Record<string, unknown>} - The values to update the authentication entity with.
+   * @param [manager] {EntityManager} - The entity manager to use. If not provided, a new transaction will be started.
    *
    * @returns {Promise<UpdateResult>} A promise that resolves with the update result.
    */
   async updateAuthentication(
     whereCondition: FindOptionsWhere<AuthenticationEntity>,
     values: Record<string, unknown>,
+    manager?: EntityManager,
   ): Promise<UpdateResult> {
-    return this.authenticationRepository.update(whereCondition, values);
+    const callback = async (manager: EntityManager): Promise<UpdateResult> => {
+      return manager.update(AuthenticationEntity, whereCondition, values);
+    };
+
+    if (!manager) {
+      return this.dataSource.transaction(callback);
+    }
+
+    return callback(manager);
   }
 
   /**
@@ -75,11 +87,11 @@ export default class AuthService {
   }
 
   /**
-   * Sign up a user with local authentication.
+   * Sign up a users with local authentication.
    *
-   * @param {LocalSignUpDto} localSignUpDto - The data transfer object containing the user's sign up information.
+   * @param {LocalSignUpDto} localSignUpDto - The data transfer object containing the users's sign up information.
    *
-   * @return {Promise<void>} A promise, that resolves, when the user is successfully signed up.
+   * @return {Promise<void>} A promise, that resolves, when the users is successfully signed up.
    */
   async localSignUp(localSignUpDto: LocalSignUpDto): Promise<void> {
     const { username, firstName, lastName, email, avatarUrl, password } = localSignUpDto;
@@ -195,7 +207,7 @@ export default class AuthService {
   }
 
   /**
-   * Verify user email while local authentication workflow, update user data and authentication data and return access token.
+   * Verify users email while local authentication workflow, update users data and authentication data and return access token.
    *
    * @param {LocalVerificationEmailDto} localVerificationEmailDto - Token in jwt format.
    *
@@ -248,7 +260,7 @@ export default class AuthService {
         },
       );
 
-      // Set refreshToken to null for all other user's authentications;
+      // Set refreshToken to null for all other users's authentications;
       await manager.update(
         AuthenticationEntity,
         { userId, provider: Not(AuthenticationProvider.LOCAL) },
@@ -265,7 +277,7 @@ export default class AuthService {
   }
 
   /**
-   * Sign in user with local authentication.
+   * Sign in users with local authentication.
    *
    * @param {UserEntity} user - User entity.
    *
@@ -310,7 +322,7 @@ export default class AuthService {
         { refreshToken },
       );
 
-      // Set refreshToken to null for all other user's authentications;
+      // Set refreshToken to null for all other users's authentications;
       await manager.update(
         AuthenticationEntity,
         { userId: user.id, provider: Not(AuthenticationProvider.LOCAL) },
@@ -350,7 +362,7 @@ export default class AuthService {
   //   const { accessToken, refreshToken } = options;
   //   const { username, email, firstName, lastName, avatarUrl, password } = userInfo;
   //
-  //   const user: UserEntity | null = await this.userService.find({
+  //   const users: UserEntity | null = await this.userService.find({
   //     relations: ["authentications"],
   //     select: {
   //       id: true,
@@ -372,19 +384,19 @@ export default class AuthService {
   //     case "google": {
   //       await this.dataSource.transaction(async (transactionalEntityManager: EntityManager) => {
   //         try {
-  //           if (!user) {
+  //           if (!users) {
   //             this.logger.log(`User with email "${email}" does not exist. Creating ...`);
   //
-  //             const user = transactionalEntityManager.create(UserEntity, {
+  //             const users = transactionalEntityManager.create(UserEntity, {
   //               firstName,
   //               lastName,
   //               email,
   //               avatarUrl,
   //             });
-  //             await transactionalEntityManager.save(user);
+  //             await transactionalEntityManager.save(users);
   //
   //             const authentication = transactionalEntityManager.create(AuthenticationEntity, {
-  //               userId: user.id,
+  //               userId: users.id,
   //               provider: idP,
   //             });
   //             await transactionalEntityManager.save(authentication);
@@ -393,16 +405,16 @@ export default class AuthService {
   //               `User with email "${email}" already exists. Update profile partially and check related authentication ...`,
   //             );
   //
-  //             let authentication = user.authentications.find((auth) => auth.provider === idP);
+  //             let authentication = users.authentications.find((auth) => auth.provider === idP);
   //
   //             if (!authentication) {
   //               authentication = transactionalEntityManager.create(AuthenticationEntity, {
-  //                 userId: user.id,
+  //                 userId: users.id,
   //                 provider: idP,
   //               });
   //             }
   //
-  //             await transactionalEntityManager.update(UserEntity, user.id, {
+  //             await transactionalEntityManager.update(UserEntity, users.id, {
   //               firstName,
   //               lastName,
   //               avatarUrl,

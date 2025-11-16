@@ -3,16 +3,16 @@ import { PassportStrategy } from "@nestjs/passport";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
 import { ExtractJwt, Strategy, VerifiedCallback } from "passport-jwt";
-import { TokenPayload } from "@server/common/interfaces/common.interfaces";
+import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 import { RequestWithSignedCookies } from "@server/common/types/common.types";
-import TokenService from "@server/common/token.service";
+import TokensService from "@server/tokens/tokens.service";
 
 @Injectable()
 export default class JwtStrategy extends PassportStrategy(Strategy, "jwtStrategy") {
   private readonly configService: ConfigService;
-  private readonly tokenService: TokenService;
+  private readonly tokenService: TokensService;
 
-  constructor(configService: ConfigService, tokenService: TokenService) {
+  constructor(configService: ConfigService, tokenService: TokensService) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: RequestWithSignedCookies): string | null => {

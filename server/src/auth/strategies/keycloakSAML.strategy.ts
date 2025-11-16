@@ -71,9 +71,9 @@
 //         avatarUrl: profile!.attributes.avatarUrl,
 //       };
 //
-//       const user = await this.authService.authAccordingToStrategy(idP, userInfo);
+//       const users = await this.authService.authAccordingToStrategy(idP, userInfo);
 //
-//       done(null, instanceToPlain(user));
+//       done(null, instanceToPlain(users));
 //     } catch (error) {
 //       this.logger.error("🚀 ~ KeycloakSAMLStrategy ~ validate ~ error:", error);
 //

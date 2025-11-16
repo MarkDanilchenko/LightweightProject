@@ -9,7 +9,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import UserEntity from "@server/user/user.entity";
+import UserEntity from "@server/users/users.entity";
 import { AuthenticationProvider, AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
 
 @Entity({ name: "authentications" })

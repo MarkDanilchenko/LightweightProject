@@ -30,7 +30,7 @@
 //
 //   /**
 //    * Returns the additional authorization parameters for the Google OAuth2 strategy.
-//    * This is needed for returning the refresh token while consent is accepted and related user info is received at first time.
+//    * This is needed for returning the refresh token while consent is accepted and related users info is received at first time.
 //    *
 //    * @returns An object containing the access type and prompt settings.
 //    */
@@ -42,11 +42,11 @@
 //   }
 //
 //   /**
-//    * Validate the user during the Google OAuth2 strategy.
+//    * Validate the users during the Google OAuth2 strategy.
 //    *
 //    * @param accessToken The access token received from Google.
 //    * @param refreshToken The refresh token received from Google.
-//    * @param profile The user profile received from Google.
+//    * @param profile The users profile received from Google.
 //    * @param done The callback for the validation result.
 //    *
 //    * @returns A promise that resolves with `void` once the validation is complete.
@@ -65,8 +65,8 @@
 //       refreshToken,
 //     };
 //
-//     const user = await this.authService.authAccordingToStrategy(idP, userInfo, idPTokens);
+//     const users = await this.authService.authAccordingToStrategy(idP, userInfo, idPTokens);
 //
-//     done(null, user!);
+//     done(null, users!);
 //   }
 // }

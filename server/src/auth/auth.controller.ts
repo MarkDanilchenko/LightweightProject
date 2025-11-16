@@ -20,10 +20,10 @@ import { LocalVerificationEmailDtoClass, LocalSignInDtoClass, LocalSignUpDtoClas
 import { clearCookie, setCookie } from "@server/utils/cookie";
 import LocalAuthGuard from "@server/auth/guards/local.guard";
 import { LocalSignInDto, LocalSignUpDto, LocalVerificationEmailDto } from "@server/auth/types/auth.types";
-import UserEntity from "@server/user/user.entity";
+import UserEntity from "@server/users/users.entity";
 import JwtGuard from "@server/auth/guards/jwt.guard";
 import { RequestWithTokenPayload, RequestWithUser } from "@server/common/types/common.types";
-import { TokenPayload } from "@server/common/interfaces/common.interfaces";
+import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -41,7 +41,7 @@ export default class AuthController {
   @Post("local/signup")
   @ApiOperation({
     summary: "Sign up with local authentication",
-    description: "Create a new user with local authentication strategy. Email verification is required to proceed.",
+    description: "Create a new users with local authentication strategy. Email verification is required to proceed.",
   })
   @ApiResponse({
     status: 201,
@@ -49,7 +49,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 400,
-    description: "Invalid credentials or user already exists.",
+    description: "Invalid credentials or users already exists.",
   })
   @ApiBody({ type: LocalSignUpDtoClass })
   @UsePipes(ZodValidationPipe)
@@ -101,7 +101,7 @@ export default class AuthController {
   @ApiResponse({
     status: 401,
     description:
-      "Authentication failed. " + "Invalid credentials or " + "user not found or " + "email is not verified.",
+      "Authentication failed. " + "Invalid credentials or " + "users not found or " + "email is not verified.",
   })
   @ApiBody({ type: LocalSignInDtoClass })
   @UsePipes(ZodValidationPipe)
@@ -117,7 +117,7 @@ export default class AuthController {
 
     if (!accessToken) {
       throw new UnauthorizedException(
-        "Authentication failed. " + "Invalid credentials or " + "user not found or " + "email is not verified.",
+        "Authentication failed. " + "Invalid credentials or " + "users not found or " + "email is not verified.",
       );
     }
 
@@ -140,7 +140,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Authentication failed. Invalid credentials or user not found.",
+    description: "Authentication failed. Invalid credentials or users not found.",
   })
   @UseGuards(JwtGuard)
   async signOut(@Req() req: RequestWithTokenPayload, @Res({ passthrough: true }) res: Response): Promise<void> {
@@ -158,12 +158,12 @@ export default class AuthController {
   //   @Get("google/signin")
   //   @ApiOperation({
   //     summary: "Google authentication via OAuth2",
-  //     description: "The user will be redirected to Google for further authentication.",
+  //     description: "The users will be redirected to Google for further authentication.",
   //   })
   //   @ApiOAuth2(["email", "profile"], "googleOAuth2")
   //   @ApiResponse({
   //     status: 302,
-  //     description: "The user will be redirected to Google authentication form.",
+  //     description: "The users will be redirected to Google authentication form.",
   //   })
   //   @UseGuards(GoogleAuthGuard)
   //   async googleSignIn(): Promise<void> {
@@ -174,12 +174,12 @@ export default class AuthController {
   //   @Get("google/redirect")
   //   @ApiOperation({
   //     summary: "Google authentication via OAuth2 (redirect)",
-  //     description: "The user will be redirected to the home page of the web application after successful authentication.",
+  //     description: "The users will be redirected to the home page of the web application after successful authentication.",
   //   })
   //   @ApiOAuth2(["email", "profile"], "googleOAuth2")
   //   @ApiResponse({
   //     status: 302,
-  //     description: "The user will be redirected to the home page of the web application.",
+  //     description: "The users will be redirected to the home page of the web application.",
   //   })
   //   @ApiResponse({
   //     status: 400,
@@ -195,11 +195,11 @@ export default class AuthController {
   //   })
   //   @UseGuards(GoogleAuthGuard)
   //   async googleSignInRedirect(@Req() req: requestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
-  //     const user = req.user;
+  //     const users = req.users;
   //
   //     const credentials: AuthCredentials = {
   //       provider: "google",
-  //       email: user.email,
+  //       email: users.email,
   //     };
   //
   //     const { accessToken } = await this.authService.signIn(credentials);
@@ -212,12 +212,12 @@ export default class AuthController {
   //   @Get("keycloak/signin")
   //   @ApiOperation({
   //     summary: "Keycloak authentication via OAuth2(OIDC)",
-  //     description: "The user will be redirected to Keycloak for further authentication.",
+  //     description: "The users will be redirected to Keycloak for further authentication.",
   //   })
   //   @ApiOAuth2(["profile", "email"], "keycloakOAuth2OIDC")
   //   @ApiResponse({
   //     status: 302,
-  //     description: "The user will be redirected to Keycloak authentication form.",
+  //     description: "The users will be redirected to Keycloak authentication form.",
   //   })
   //   @UseGuards(KeycloakAuthGuard)
   //   async keycloakSignIn(): Promise<void> {
@@ -228,12 +228,12 @@ export default class AuthController {
   //   @Get("keycloak/redirect")
   //   @ApiOperation({
   //     summary: "Keycloak authentication via OAuth2(OIDC) (redirect)",
-  //     description: "The user will be redirected to the home page of the web application after successful authentication.",
+  //     description: "The users will be redirected to the home page of the web application after successful authentication.",
   //   })
   //   @ApiOAuth2(["profile", "email"], "keycloakOAuth2OIDC")
   //   @ApiResponse({
   //     status: 302,
-  //     description: "The user will be redirected to the home page of the web application.",
+  //     description: "The users will be redirected to the home page of the web application.",
   //   })
   //   @ApiResponse({
   //     status: 400,
@@ -249,11 +249,11 @@ export default class AuthController {
   //   })
   //   @UseGuards(KeycloakAuthGuard)
   //   async keycloakSignInRedirect(@Req() req: requestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
-  //     const user = req.user;
+  //     const users = req.users;
   //
   //     const credentials: AuthCredentials = {
   //       provider: "keycloak",
-  //       email: user.email,
+  //       email: users.email,
   //     };
   //
   //     const { accessToken } = await this.authService.signIn(credentials);
@@ -266,11 +266,11 @@ export default class AuthController {
   //   @Get("keycloak/saml/signin")
   //   @ApiOperation({
   //     summary: "Keycloak authentication via SAML",
-  //     description: "The user will be redirected to Keycloak for further authentication.",
+  //     description: "The users will be redirected to Keycloak for further authentication.",
   //   })
   //   @ApiResponse({
   //     status: 302,
-  //     description: "The user will be redirected to Keycloak authentication form.",
+  //     description: "The users will be redirected to Keycloak authentication form.",
   //   })
   //   @UseGuards(KeycloakSAMLAuthGuard)
   //   async keycloakSamlSignIn(): Promise<void> {
@@ -281,11 +281,11 @@ export default class AuthController {
   //   @Post("keycloak/saml/redirect")
   //   @ApiOperation({
   //     summary: "Keycloak authentication via SAML (redirect)",
-  //     description: "The user will be redirected to the home page of the web application after successful authentication.",
+  //     description: "The users will be redirected to the home page of the web application after successful authentication.",
   //   })
   //   @ApiResponse({
   //     status: 302,
-  //     description: "The user will be redirected to the home page of the web application.",
+  //     description: "The users will be redirected to the home page of the web application.",
   //   })
   //   @ApiResponse({
   //     status: 400,
@@ -304,11 +304,11 @@ export default class AuthController {
   //     @Req() req: requestWithUser,
   //     @Res({ passthrough: true }) res: Response,
   //   ): Promise<void> {
-  //     const user = req.user;
+  //     const users = req.users;
   //
   //     const credentials: AuthCredentials = {
   //       provider: "keycloak",
-  //       email: user.email,
+  //       email: users.email,
   //     };
   //
   //     const { accessToken } = await this.authService.signIn(credentials);
@@ -319,7 +319,7 @@ export default class AuthController {
   //   }
   //
   //   @Get("profile")
-  //   @ApiOperation({ summary: "User profile", description: "Get the user profile" })
+  //   @ApiOperation({ summary: "User profile", description: "Get the users profile" })
   //   @ApiCookieAuth("accessToken")
   //   @ApiResponse({
   //     status: 200,
@@ -328,11 +328,11 @@ export default class AuthController {
   //   })
   //   @ApiResponse({
   //     status: 401,
-  //     description: "Authentication failed. Invalid request or user is not authenticated.",
+  //     description: "Authentication failed. Invalid request or users is not authenticated.",
   //   })
   //   @UseGuards(JwtGuard)
   //   async getProfile(@Req() req: requestWithUser): Promise<ProfileDto> {
-  //     const { userId, username, email, provider } = req.user;
+  //     const { userId, username, email, provider } = req.users;
   //
   //     const profile = (await this.userService.findByPk(userId, {
   //       relations: ["authentications"],
@@ -366,15 +366,15 @@ export default class AuthController {
   //   @Get("refresh")
   //   @ApiOperation({
   //     summary: "Refresh authentication",
-  //     description: "The user will be re-authenticated with a new access token.",
+  //     description: "The users will be re-authenticated with a new access token.",
   //   })
   //   @ApiResponse({
   //     status: 200,
-  //     description: "The user will be re-authenticated with a new access token.",
+  //     description: "The users will be re-authenticated with a new access token.",
   //   })
   //   @ApiResponse({
   //     status: 401,
-  //     description: "Authentication failed. Token is not provided, not valid or user is not authenticated.",
+  //     description: "Authentication failed. Token is not provided, not valid or users is not authenticated.",
   //   })
   //   @ApiCookieAuth("accessToken")
   //   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {

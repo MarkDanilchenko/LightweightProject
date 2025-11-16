@@ -63,8 +63,8 @@
 //   }
 //
 //   async validate(accessToken: string, refreshToken: string, profile: any, done: VerifyCallback): Promise<void> {
-//     // LEARN: passport-oauth2 is not capable of getting the user profile;
-//     // LEARN: so we will call the axios request to the user profile separately;
+//     // LEARN: passport-oauth2 is not capable of getting the users profile;
+//     // LEARN: so we will call the axios request to the users profile separately;
 //     try {
 //       const idP: AuthenticationProvider = "keycloak";
 //       const idPTokens: AuthAccordingToStrategyOptions = {
@@ -92,9 +92,9 @@
 //         avatarUrl: response.avatarUrl,
 //       };
 //
-//       const user = await this.authService.authAccordingToStrategy(idP, userInfo, idPTokens);
+//       const users = await this.authService.authAccordingToStrategy(idP, userInfo, idPTokens);
 //
-//       done(null, user!);
+//       done(null, users!);
 //     } catch (error) {
 //       this.logger.error("🚀 ~ KeycloakOAuth2OIDCStrategy ~ validate ~ error:", error);
 //
