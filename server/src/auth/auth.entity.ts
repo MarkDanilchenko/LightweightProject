@@ -12,7 +12,7 @@ import {
 import UserEntity from "@server/users/users.entity";
 import { AuthenticationProvider, AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
 
-@Entity({ name: "authentications" })
+@Entity({ name: "authentications", schema: "public" })
 @Index(["userId", "provider"], { unique: true })
 export default class AuthenticationEntity extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
@@ -21,20 +21,19 @@ export default class AuthenticationEntity extends BaseEntity {
   @Column({ type: "uuid" })
   userId: string;
 
-  @Column({ type: "varchar" })
+  @Column({ type: "enum", enum: AuthenticationProvider })
   provider: AuthenticationProvider;
 
   @Column({
     type: "varchar",
     nullable: true,
-    default: null,
     comment: "app generated refresh token",
   })
-  refreshToken: string | null;
+  refreshToken?: string | null;
 
   @Column({
     type: "jsonb",
-    default: "'{}'::jsonb",
+    default: {},
     comment: "additional authentication metadata",
   })
   metadata: AuthMetadata;
@@ -49,7 +48,11 @@ export default class AuthenticationEntity extends BaseEntity {
   lastAccessedAt: Date;
 
   // associations
-  @ManyToOne(() => UserEntity, (user) => user.authentications)
+  @ManyToOne(() => UserEntity, (user) => user.authentications, {
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+    nullable: false,
+  })
   @JoinColumn({ name: "userId", referencedColumnName: "id" })
   user: UserEntity;
 }

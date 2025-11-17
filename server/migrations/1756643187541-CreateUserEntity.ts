@@ -1,74 +1,29 @@
-import { MigrationInterface, QueryRunner, Table } from "typeorm";
+import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class CreateUserEntity1756643187541 implements MigrationInterface {
+  name: string = "CreateUserEntity1756643187541";
+
   public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.createTable(
-      new Table({
-        name: "users",
-        columns: [
-          {
-            name: "id",
-            type: "uuid",
-            isPrimary: true,
-            isNullable: false,
-            default: "uuid_generate_v4()",
-          },
-          {
-            name: "username",
-            type: "varchar",
-            isUnique: true,
-            isNullable: true,
-          },
-          {
-            name: "firstName",
-            type: "varchar",
-            isNullable: true,
-          },
-          {
-            name: "lastName",
-            type: "varchar",
-            isNullable: true,
-          },
-          {
-            name: "email",
-            type: "varchar",
-            isUnique: true,
-            isNullable: false,
-          },
-          {
-            name: "avatarUrl",
-            type: "varchar",
-            isNullable: true,
-          },
-          {
-            name: "createdAt",
-            type: "timestamptz",
-            isNullable: false,
-            default: "now()",
-          },
-          {
-            name: "updatedAt",
-            type: "timestamptz",
-            isNullable: false,
-            default: "now()",
-          },
-          {
-            name: "deletedAt",
-            type: "timestamptz",
-            isNullable: true,
-          },
-        ],
-      }),
-      true, // if true, the table will be created if it does not exist;
+    await queryRunner.query(
+      `CREATE TABLE "users"
+       (
+         "id"        uuid                     NOT NULL DEFAULT uuid_generate_v4(),
+         "username"  character varying,
+         "firstName" character varying,
+         "lastName"  character varying,
+         "email"     character varying        NOT NULL,
+         "avatarUrl" character varying,
+         "createdAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+         "updatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+         "deletedAt" TIMESTAMP WITH TIME ZONE,
+         CONSTRAINT "UQ_fe0bb3f6520ee0469504521e710" UNIQUE ("username"),
+         CONSTRAINT "UQ_97672ac88f789774dd47f7c8be3" UNIQUE ("email"),
+         CONSTRAINT "PK_a3ffb1c0c8416b9fc6f907b7433" PRIMARY KEY ("id")
+       )`,
     );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.dropTable(
-      new Table({
-        name: "users",
-      }),
-      true, // if true, the table will be dropped if it exists;
-    );
+    await queryRunner.query(`DROP TABLE "users"`);
   }
 }

@@ -1,6 +1,6 @@
 import { AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
 
-const enum EventName {
+enum EventName {
   AUTH_LOCAL_EMAIL_VERIFICATION_SENT = "auth.local.email-verification.sent",
   AUTH_LOCAL_EMAIL_VERIFICATION_VERIFIED = "auth.local.email-verification.verified",
   AUTH_LOCAL_CREATED = "auth.local.created",

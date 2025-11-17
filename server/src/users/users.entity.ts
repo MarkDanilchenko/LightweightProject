@@ -16,20 +16,20 @@ export default class UserEntity extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({ type: "varchar", unique: true, nullable: true, default: null })
-  username: string | null;
+  @Column({ type: "varchar", unique: true, nullable: true })
+  username?: string | null;
 
-  @Column({ type: "varchar", nullable: true, default: null })
-  firstName: string | null;
+  @Column({ type: "varchar", nullable: true })
+  firstName?: string | null;
 
-  @Column({ type: "varchar", nullable: true, default: null })
-  lastName: string | null;
+  @Column({ type: "varchar", nullable: true })
+  lastName?: string | null;
 
   @Column({ type: "varchar", unique: true })
   email: string;
 
-  @Column({ type: "varchar", nullable: true, default: null })
-  avatarUrl: string | null;
+  @Column({ type: "varchar", nullable: true })
+  avatarUrl?: string | null;
 
   @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
@@ -37,8 +37,8 @@ export default class UserEntity extends BaseEntity {
   @UpdateDateColumn({ type: "timestamptz" })
   updatedAt: Date;
 
-  @DeleteDateColumn({ type: "timestamptz", nullable: true, default: null })
-  deletedAt: Date | null;
+  @DeleteDateColumn({ type: "timestamptz", nullable: true })
+  deletedAt?: Date | null;
 
   // Associations;
   @OneToMany(() => AuthenticationEntity, (authentication: AuthenticationEntity): UserEntity => authentication.user)

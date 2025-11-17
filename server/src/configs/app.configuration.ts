@@ -108,9 +108,9 @@ export default (): AppConfiguration => {
     password: DATABASE_PASSWORD,
     logging: TYPEORM_LOGGING === "true",
     migrationsRun: TYPEORM_MIGRATIONS_RUN === "true",
-    entities: [__dirname + "/**/*.entity{.ts,.js}"],
+    entities: [process.cwd() + "/server/**/*.entity{.ts,.js}"],
     autoLoadEntities: true,
-    migrations: [process.cwd() + "/**/migrations/*.js"],
+    migrations: [process.cwd() + "/server/**/migrations/*.js"],
     applicationName: "LightweightProject",
   };
 

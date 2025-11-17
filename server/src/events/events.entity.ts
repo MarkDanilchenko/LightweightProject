@@ -18,7 +18,7 @@ export default class EventEntity extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({ type: "varchar" })
+  @Column({ type: "enum", enum: EventName })
   name: EventName;
 
   @Column({
@@ -32,16 +32,20 @@ export default class EventEntity extends BaseEntity {
 
   @Column({
     type: "jsonb",
-    default: "'{}'::jsonb",
+    default: {},
     comment: "additional events metadata",
   })
   metadata: Record<string, any>;
 
-  @CreateDateColumn({ type: "timestamp" })
+  @CreateDateColumn({ type: "timestamptz" })
   createdAt: Date;
 
   // Associations;
-  @ManyToOne(() => UserEntity, (user) => user.events)
+  @ManyToOne(() => UserEntity, (user) => user.events, {
+    onDelete: "CASCADE",
+    onUpdate: "CASCADE",
+    nullable: false,
+  })
   @JoinColumn({ name: "userId", referencedColumnName: "id" })
   user: UserEntity;
 }
