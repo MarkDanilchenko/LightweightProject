@@ -50,6 +50,10 @@ export default class EventsService {
    * @returns {Promise<void>} A promise that resolves when the events has been created.
    */
   async createEvent(payload: EventType, manager?: EntityManager): Promise<void> {
+    if (!payload) {
+      return;
+    }
+
     const callback = async (manager: EntityManager): Promise<void> => {
       const event: EventEntity = manager.create(EventEntity, {
         ...payload,

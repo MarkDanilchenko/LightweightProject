@@ -41,7 +41,7 @@ export default class AuthController {
   @Post("local/signup")
   @ApiOperation({
     summary: "Sign up with local authentication",
-    description: "Create a new users with local authentication strategy. Email verification is required to proceed.",
+    description: "Create a new user with local authentication strategy. Email verification is required to proceed.",
   })
   @ApiResponse({
     status: 201,
@@ -49,7 +49,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 400,
-    description: "Invalid credentials or users already exists.",
+    description: "Invalid credentials or user already exists.",
   })
   @ApiBody({ type: LocalSignUpDtoClass })
   @UsePipes(ZodValidationPipe)
@@ -59,14 +59,14 @@ export default class AuthController {
 
   @Get("local/verification/email")
   @ApiOperation({
-    summary: "Verify email address with local authentication",
-    description: "Verify the User's email address during local sign up workflow.",
+    summary: "Verify email for local authentication",
+    description: "Verify the User's email during local sign up workflow.",
   })
   @ApiResponse({
     status: 302,
     description:
       "Redirect to the home client page (frontend-app) after successful email verification." +
-      "If varification was failed - back to the sign in page.",
+      "If varification was failed - redirect back to the sign in page.",
   })
   @ApiQuery({ type: LocalVerificationEmailDtoClass })
   @UsePipes(ZodValidationPipe)
@@ -129,10 +129,7 @@ export default class AuthController {
   @Post("signout")
   @ApiOperation({
     summary: "Sign out",
-    description:
-      "Sign out and " +
-      "clear the current access token in cookies and put it in blacklist while it is still not expired, " +
-      "clear refresh token from database.",
+    description: "Sign out and clear both access & refresh tokens.",
   })
   @ApiResponse({
     status: 200,
@@ -145,8 +142,6 @@ export default class AuthController {
   @UseGuards(JwtGuard)
   async signOut(@Req() req: RequestWithTokenPayload, @Res({ passthrough: true }) res: Response): Promise<void> {
     const payload: TokenPayload = req.tokenPayload;
-
-    // console.log("payload", payload);
 
     await this.authService.signOut(payload);
 

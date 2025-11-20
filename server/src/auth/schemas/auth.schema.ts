@@ -43,7 +43,7 @@ const localSignUpSchema = z
   })
   .openapi({
     title: "Sign up schema",
-    description: "Sign up credentials with local authentication.",
+    description: "Sign up credentials for the local authentication.",
     example: {
       username: "johndoe",
       firstName: "John",
@@ -73,7 +73,7 @@ const localSignInSchema = z
   })
   .openapi({
     title: "Sign in schema",
-    description: "Sign in credentials with local authentication.",
+    description: "Sign in credentials for the local authentication.",
     example: { login: "johndoe or johndoe@me.com", password: "12345678Aa_" },
   });
 

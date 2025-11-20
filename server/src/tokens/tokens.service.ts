@@ -46,7 +46,7 @@ export default class TokensService {
     return this.jwtService.verifyAsync<TokenPayload>(token);
   }
 
-  async isBlacklisted(jwti: string): Promise<any> {}
+  async isBlacklisted(jwti: string): Promise<boolean> {}
 
   async addToBlacklist(jwti: string, ttl: number): Promise<void> {}
 

@@ -30,16 +30,22 @@ export default class JwtStrategy extends PassportStrategy(Strategy, "jwtStrategy
 
   async validate(payload: TokenPayload, done: VerifiedCallback): Promise<void> {
     if (!payload) {
-      throw new UnauthorizedException("Authentication failed. Token payload is not provided.");
+      throw new UnauthorizedException("Authentication failed.");
     }
 
     const { jwti } = payload;
     if (!jwti) {
-      throw new UnauthorizedException("Authentication failed. Token payload is invalid.");
+      throw new UnauthorizedException("Authentication failed. Token is invalid.");
     }
 
-    await this.tokenService.isBlacklisted(jwti);
+    const isBlackListed: boolean = await this.tokenService.isBlacklisted(jwti);
+    if (isBlackListed) {
+      throw new UnauthorizedException("Authentication failed. Token is expired.");
+    }
 
+    // Do not return user instance here, because it is an additional select-request to the database;
+    // It is not needed for high-load Guards because of performance reasons;
+    // So, return only payload;
     done(null, payload);
   }
 }

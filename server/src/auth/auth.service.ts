@@ -42,9 +42,9 @@ export default class AuthService {
   /**
    * Updates an authentication entity with the given values.
    *
-   * @param whereCondition {FindOptionsWhere<AuthenticationEntity>} - The condition to find the authentication entity to update.
-   * @param values {Record<string, unknown>} - The values to update the authentication entity with.
-   * @param [manager] {EntityManager} - The entity manager to use. If not provided, a new transaction will be started.
+   * @param {FindOptionsWhere<AuthenticationEntity>} whereCondition - The condition to find the authentication entity to update.
+   * @param {Record<string, unknown>} values - The values to update the authentication entity with.
+   * @param {EntityManager} [manager]  - The entity manager to use. If not provided, a new transaction will be started.
    *
    * @returns {Promise<UpdateResult>} A promise that resolves with the update result.
    */
@@ -207,7 +207,7 @@ export default class AuthService {
   }
 
   /**
-   * Verify users email while local authentication workflow, update users data and authentication data and return access token.
+   * Verify user's email during local authentication workflow and return access token.
    *
    * @param {LocalVerificationEmailDto} localVerificationEmailDto - Token in jwt format.
    *
@@ -245,8 +245,7 @@ export default class AuthService {
     );
 
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
-      await manager.update(
-        AuthenticationEntity,
+      await this.updateAuthentication(
         { id: authentication.id, userId, provider },
         {
           refreshToken,
@@ -254,23 +253,30 @@ export default class AuthService {
             local: {
               ...authentication.metadata.local,
               isEmailVerified: true,
-              verificationConfirmedAt: new Date(),
             },
           },
         },
+        manager,
       );
 
-      // Set refreshToken to null for all other users's authentications;
-      await manager.update(
-        AuthenticationEntity,
+      // Set refreshToken to null for all other user's authentications;
+      await this.updateAuthentication(
         { userId, provider: Not(AuthenticationProvider.LOCAL) },
         {
           refreshToken: null,
           lastAccessedAt: () => "lastAccessedAt",
         },
+        manager,
       );
 
+      // Finally update user with info from temporary;
       await manager.update(UserEntity, { id: userId }, authentication.metadata.local?.temporaryInfo ?? {});
+
+      this.eventEmitter.emit(
+        EventName.AUTH_LOCAL_EMAIL_VERIFICATION_VERIFIED,
+        this.eventService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_VERIFIED, userId, authentication.id),
+        manager,
+      );
     });
 
     return { accessToken };
@@ -284,26 +290,17 @@ export default class AuthService {
    * @returns {Promise<{ accessToken: string }>} - Access token.
    */
   async localSignIn(user: UserEntity): Promise<{ accessToken: string }> {
-    let authentication: AuthenticationEntity | null | undefined = user.authentications.find(
+    if (!user.authentications || user.authentications.length === 0) {
+      throw new UnauthorizedException("Authentication failed. Authentication not found.");
+    }
+
+    const authentication: AuthenticationEntity | null | undefined = user.authentications.find(
       (auth: AuthenticationEntity) =>
         auth.provider === AuthenticationProvider.LOCAL && auth.metadata.local?.isEmailVerified,
     );
 
     if (!authentication) {
-      authentication = await this.findAuthentication({
-        where: {
-          userId: user.id,
-          provider: AuthenticationProvider.LOCAL,
-        },
-      });
-
-      if (!authentication) {
-        throw new UnauthorizedException("Authentication failed. Authentication not found.");
-      }
-
-      if (!authentication.metadata.local?.isEmailVerified) {
-        throw new UnauthorizedException("Authentication failed. Email is not verified.");
-      }
+      throw new UnauthorizedException("Authentication failed. Authentication not found.");
     }
 
     const accessToken: string = await this.tokenService.generate(
@@ -316,38 +313,39 @@ export default class AuthService {
     );
 
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
-      await manager.update(
-        AuthenticationEntity,
+      await this.updateAuthentication(
         { id: authentication.id, userId: user.id, provider: AuthenticationProvider.LOCAL },
         { refreshToken },
+        manager,
       );
 
-      // Set refreshToken to null for all other users's authentications;
-      await manager.update(
-        AuthenticationEntity,
+      // Set refreshToken to null for all other users' authentications;
+      await this.updateAuthentication(
         { userId: user.id, provider: Not(AuthenticationProvider.LOCAL) },
-        {
-          refreshToken: null,
-          lastAccessedAt: () => "lastAccessedAt",
-        },
+        { refreshToken: null, lastAccessedAt: (): string => "lastAccessedAt" },
+        manager,
       );
     });
 
     return { accessToken };
   }
 
+  /**
+   * Signs out a user based on the given payload.
+   *
+   * @param {TokenPayload} payload - The payload containing the user's authentication information.
+   *
+   * @returns {Promise<void>} A promise that resolves when the user is successfully signed out.
+   */
   async signOut(payload: TokenPayload): Promise<void> {
-    // const { jwti, userId, provider, exp: ttl } = payload;
-    // await this.tokenService.addToBlacklist(jwti, ttl);
-    // await this.updateAuthentication(
-    //   {
-    //     userId,
-    //     provider,
-    //   },
-    //   {
-    //     refreshToken: null,
-    //   },
-    // );
+    const { jwti, userId, provider, ext: ttl } = payload;
+
+    if (!jwti || !ttl) {
+      throw new UnauthorizedException("Authentication failed. Token is invalid.");
+    }
+
+    await this.tokenService.addToBlacklist(jwti, ttl);
+    await this.updateAuthentication({ userId, provider }, { refreshToken: null });
   }
 
   // async authAccordingToStrategy(

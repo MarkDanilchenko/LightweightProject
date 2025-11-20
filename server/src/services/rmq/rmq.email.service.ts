@@ -91,10 +91,7 @@ export class RmqEmailService {
 
     try {
       await this.authService.updateAuthentication(
-        {
-          userId,
-          provider: AuthenticationProvider.LOCAL,
-        },
+        { userId, provider: AuthenticationProvider.LOCAL },
         {
           metadata: {
             local: {
