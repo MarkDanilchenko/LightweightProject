@@ -1,6 +1,7 @@
 import { Global, Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
+import { RedisService } from "@server/services/redis/redis.service";
 
 export const REDIS_CLIENT = "REDIS_CLIENT";
 
@@ -16,7 +17,8 @@ export const REDIS_CLIENT = "REDIS_CLIENT";
         return configService.get<AppConfiguration["redisConfiguration"]>("redisConfiguration")!;
       },
     },
+    RedisService,
   ],
-  exports: [REDIS_CLIENT], // Export the Redis client for use in other modules by inject REDIS_CLIENT;
+  exports: [RedisService],
 })
 export class RedisModule {}
