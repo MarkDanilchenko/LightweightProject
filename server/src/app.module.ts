@@ -10,6 +10,7 @@ import TokensModule from "@server/tokens/tokens.module";
 import appConfiguration from "@server/configs/app.configuration";
 import { RmqModule } from "@server/services/rmq/rmq.module";
 import { JwtModule } from "@nestjs/jwt";
+import { RedisModule } from "@server/services/redis/redis.module";
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { JwtModule } from "@nestjs/jwt";
       },
     }),
     TokensModule,
+    RedisModule,
     EventsModule,
     AuthModule,
     UsersModule,

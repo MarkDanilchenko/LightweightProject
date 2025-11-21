@@ -9,12 +9,11 @@ import AuthService from "@server/auth/auth.service";
 import LocalAuthStrategy from "@server/auth/strategies/local.strategy";
 import TokensService from "@server/tokens/tokens.service";
 import JwtStrategy from "@server/auth/strategies/jwt.strategy";
-import TokensModule from "@server/tokens/tokens.module";
 import UsersService from "@server/users/users.service";
 import EventsService from "@server/events/events.service";
 
 @Module({
-  imports: [TypeOrmModule.forFeature([AuthenticationEntity]), PassportModule, EventsModule, UsersModule, TokensModule],
+  imports: [TypeOrmModule.forFeature([AuthenticationEntity]), PassportModule, EventsModule, UsersModule],
   controllers: [AuthController],
   providers: [AuthService, TokensService, LocalAuthStrategy, JwtStrategy, EventsService, UsersService],
   exports: [AuthService],
