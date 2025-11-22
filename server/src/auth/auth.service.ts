@@ -338,13 +338,13 @@ export default class AuthService {
    * @returns {Promise<void>} A promise that resolves when the user is successfully signed out.
    */
   async signOut(payload: TokenPayload): Promise<void> {
-    const { jwti, userId, provider, ext: ttl } = payload;
+    const { jwti, userId, provider, ext } = payload;
 
-    if (!jwti || !ttl) {
+    if (!jwti || !ext) {
       throw new UnauthorizedException("Authentication failed. Token is invalid.");
     }
 
-    await this.tokenService.addToBlacklist(jwti, ttl);
+    await this.tokenService.addToBlacklist(jwti, ext);
     await this.updateAuthentication({ userId, provider }, { refreshToken: null });
   }
 
