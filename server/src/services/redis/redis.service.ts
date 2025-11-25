@@ -3,7 +3,7 @@ import { REDIS_CLIENT, REDIS_KEY_MAX_BYTE_LEN, REDIS_KEY_TTL_SEC } from "@server
 import Redis from "ioredis";
 
 @Injectable()
-export class RedisService implements OnModuleInit {
+export default class RedisService implements OnModuleInit {
   private readonly logger: LoggerService;
 
   constructor(@Inject(REDIS_CLIENT) private readonly redisClient: Redis) {

@@ -1,6 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
-import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Not, Repository, UpdateResult } from "typeorm";
+import {
+  DataSource,
+  EntityManager,
+  FindOneOptions,
+  FindOptionsWhere,
+  IsNull,
+  Not,
+  Repository,
+  UpdateResult,
+} from "typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import UsersService from "@server/users/users.service";
 import UserEntity from "@server/users/users.entity";
@@ -17,9 +26,9 @@ import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 @Injectable()
 export default class AuthService {
   private readonly dataSource: DataSource;
-  private readonly tokenService: TokensService;
+  private readonly tokensService: TokensService;
   private readonly userService: UsersService;
-  private readonly eventService: EventsService;
+  private readonly eventsService: EventsService;
   private readonly eventEmitter: EventEmitter2;
 
   constructor(
@@ -27,15 +36,15 @@ export default class AuthService {
     dataSource: DataSource,
     @InjectRepository(AuthenticationEntity)
     private readonly authenticationRepository: Repository<AuthenticationEntity>,
-    tokenService: TokensService,
+    tokensService: TokensService,
     userService: UsersService,
-    eventService: EventsService,
+    eventsService: EventsService,
     eventEmitter: EventEmitter2,
   ) {
     this.dataSource = dataSource;
-    this.tokenService = tokenService;
+    this.tokensService = tokensService;
     this.userService = userService;
-    this.eventService = eventService;
+    this.eventsService = eventsService;
     this.eventEmitter = eventEmitter;
   }
 
@@ -149,7 +158,7 @@ export default class AuthService {
 
         this.eventEmitter.emit(
           EventName.AUTH_LOCAL_CREATED,
-          this.eventService.buildInstance(EventName.AUTH_LOCAL_CREATED, user.id, authentication.id, {
+          this.eventsService.buildInstance(EventName.AUTH_LOCAL_CREATED, user.id, authentication.id, {
             username,
             firstName,
             lastName,
@@ -194,7 +203,7 @@ export default class AuthService {
 
         this.eventEmitter.emit(
           EventName.AUTH_LOCAL_CREATED,
-          this.eventService.buildInstance(EventName.AUTH_LOCAL_CREATED, user.id, authentication.id, {
+          this.eventsService.buildInstance(EventName.AUTH_LOCAL_CREATED, user.id, authentication.id, {
             username,
             firstName,
             lastName,
@@ -216,7 +225,7 @@ export default class AuthService {
   async localVerificationEmail(localVerificationEmailDto: LocalVerificationEmailDto): Promise<{ accessToken: string }> {
     const { token } = localVerificationEmailDto;
 
-    const { userId, provider } = await this.tokenService.verify(token);
+    const { userId, provider } = await this.tokensService.verify(token);
     if (!userId || provider !== AuthenticationProvider.LOCAL || !provider) {
       throw new UnauthorizedException("Invalid or expired token.");
     }
@@ -235,13 +244,13 @@ export default class AuthService {
       throw new BadRequestException("Email has been already verified.");
     }
 
-    const accessToken: string = await this.tokenService.generate(
+    const accessToken: string = await this.tokensService.generate(
       { userId, provider, jwti: uuidv4() },
-      this.tokenService.jwtAccessTokenExpiresIn,
+      this.tokensService.jwtAccessTokenExpiresIn,
     );
-    const refreshToken: string = await this.tokenService.generate(
+    const refreshToken: string = await this.tokensService.generate(
       { userId, provider },
-      this.tokenService.jwtRefreshTokenExpiresIn,
+      this.tokensService.jwtRefreshTokenExpiresIn,
     );
 
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
@@ -274,7 +283,7 @@ export default class AuthService {
 
       this.eventEmitter.emit(
         EventName.AUTH_LOCAL_EMAIL_VERIFICATION_VERIFIED,
-        this.eventService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_VERIFIED, userId, authentication.id),
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_VERIFIED, userId, authentication.id),
         manager,
       );
     });
@@ -302,13 +311,13 @@ export default class AuthService {
       throw new UnauthorizedException("Authentication failed. Authentication not found.");
     }
 
-    const accessToken: string = await this.tokenService.generate(
+    const accessToken: string = await this.tokensService.generate(
       { userId: user.id, provider: AuthenticationProvider.LOCAL, jwti: uuidv4() },
-      this.tokenService.jwtAccessTokenExpiresIn,
+      this.tokensService.jwtAccessTokenExpiresIn,
     );
-    const refreshToken: string = await this.tokenService.generate(
+    const refreshToken: string = await this.tokensService.generate(
       { userId: user.id, provider: AuthenticationProvider.LOCAL },
-      this.tokenService.jwtRefreshTokenExpiresIn,
+      this.tokensService.jwtRefreshTokenExpiresIn,
     );
 
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
@@ -342,8 +351,53 @@ export default class AuthService {
       throw new UnauthorizedException("Authentication failed. Token is invalid.");
     }
 
-    await this.tokenService.addToBlacklist(jwti, ext);
+    await this.tokensService.addToBlacklist(jwti, ext);
     await this.updateAuthentication({ userId, provider }, { refreshToken: null });
+  }
+
+  /**
+   * Refreshes the access token for a user based on the given access token.
+   *
+   * @param {string} accessToken - The access token to refresh.
+   *
+   * @returns {Promise<{ accessToken: string }>} - A promise that resolves with the new access token.
+   */
+  async refreshAccessToken(accessToken: string): Promise<{ accessToken: string }> {
+    const payload: TokenPayload = await this.tokensService.verify(accessToken, true);
+    if (!payload) {
+      throw new UnauthorizedException("Authentication failed.");
+    }
+
+    const { jwti, userId, provider } = payload;
+    if (!jwti || !userId || !provider) {
+      throw new UnauthorizedException("Authentication failed. Token is invalid.");
+    }
+
+    const isBlacklisted: boolean = await this.tokensService.isBlacklisted(jwti);
+    if (isBlacklisted) {
+      throw new UnauthorizedException("Authentication failed. Token is invalid.");
+    }
+
+    const authentication: AuthenticationEntity | null = await this.findAuthentication({
+      where: {
+        userId,
+        provider,
+        refreshToken: Not(IsNull()),
+      },
+    });
+    if (!authentication) {
+      throw new UnauthorizedException("Authentication failed. User is not signed in.");
+    }
+
+    const { refreshToken } = authentication;
+    await this.tokensService.verify(refreshToken!);
+
+    const newAccessToken: string = await this.tokensService.generate(
+      { userId, provider, jwti: uuidv4() },
+      this.tokensService.jwtAccessTokenExpiresIn,
+    );
+
+    return { accessToken: newAccessToken };
   }
 
   // async authAccordingToStrategy(

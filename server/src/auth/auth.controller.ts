@@ -10,7 +10,7 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery, ApiCookieAuth } from "@nestjs/swagger";
 import { Response } from "express";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces";
@@ -22,7 +22,7 @@ import LocalAuthGuard from "@server/auth/guards/local.guard";
 import { LocalSignInDto, LocalSignUpDto, LocalVerificationEmailDto } from "@server/auth/types/auth.types";
 import UserEntity from "@server/users/users.entity";
 import JwtGuard from "@server/auth/guards/jwt.guard";
-import { RequestWithTokenPayload, RequestWithUser } from "@server/common/types/common.types";
+import { RequestWithSignedCookies, RequestWithTokenPayload, RequestWithUser } from "@server/common/types/common.types";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 
 @ApiTags("auth")
@@ -139,6 +139,7 @@ export default class AuthController {
     status: 401,
     description: "Authentication failed. Invalid credentials or users not found.",
   })
+  @ApiCookieAuth("accessToken")
   @UseGuards(JwtGuard)
   async signOut(@Req() req: RequestWithTokenPayload, @Res({ passthrough: true }) res: Response): Promise<void> {
     const payload: TokenPayload = req.tokenPayload;
@@ -146,6 +147,36 @@ export default class AuthController {
     await this.authService.signOut(payload);
 
     clearCookie(res, "accessToken");
+
+    res.status(200).send();
+  }
+
+  @Get("refresh")
+  @ApiOperation({
+    summary: "Refresh access token",
+    description: "Refresh access token using related to the user refresh token in database.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Access token refreshed successfully.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Authentication failed. Invalid credentials or users not found.",
+  })
+  @ApiCookieAuth("accessToken")
+  async refreshAccessToken(
+    @Req() req: RequestWithSignedCookies & { headers: { authorization: string | undefined } },
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    const accessToken: string = req.signedCookies.accessToken || req.headers["authorization"]?.split(" ")[1] || "";
+    if (!accessToken) {
+      throw new UnauthorizedException("Authentication failed. Token is not provided.");
+    }
+
+    const { accessToken: newAccessToken } = await this.authService.refreshAccessToken(accessToken);
+
+    setCookie(res, "accessToken", newAccessToken, this.https);
 
     res.status(200).send();
   }
@@ -356,31 +387,5 @@ export default class AuthController {
   //     })) as Profile | ProfileDto;
   //
   //     return profile;
-  //   }
-  //
-  //   @Get("refresh")
-  //   @ApiOperation({
-  //     summary: "Refresh authentication",
-  //     description: "The users will be re-authenticated with a new access token.",
-  //   })
-  //   @ApiResponse({
-  //     status: 200,
-  //     description: "The users will be re-authenticated with a new access token.",
-  //   })
-  //   @ApiResponse({
-  //     status: 401,
-  //     description: "Authentication failed. Token is not provided, not valid or users is not authenticated.",
-  //   })
-  //   @ApiCookieAuth("accessToken")
-  //   async refresh(@Req() req: Request, @Res({ passthrough: true }) res: Response): Promise<void> {
-  //     const accessToken = (req.signedCookies?.accessToken || req.headers.authorization?.split(" ")[1]) as string;
-  //
-  //     if (!accessToken) {
-  //       throw new UnauthorizedException("Authentication failed. Token is not provided.");
-  //     }
-  //
-  //     const { accessToken: newAccessToken } = await this.tokenService.refreshAccessToken(accessToken);
-  //
-  //     setCookie(res, "accessToken", newAccessToken, this.https);
   //   }
 }

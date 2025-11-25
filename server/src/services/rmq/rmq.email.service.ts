@@ -22,26 +22,26 @@ export class RmqEmailService {
   private readonly configService: ConfigService;
   private readonly dataSource: DataSource;
   private readonly transporter: Transporter;
-  private readonly eventService: EventsService;
+  private readonly eventsService: EventsService;
   private readonly eventEmitter: EventEmitter2;
-  private readonly tokenService: TokensService;
+  private readonly tokensService: TokensService;
   private readonly authService: AuthService;
 
   constructor(
     configService: ConfigService,
     @InjectDataSource()
     dataSource: DataSource,
-    eventService: EventsService,
+    eventsService: EventsService,
     eventEmitter: EventEmitter2,
-    tokenService: TokensService,
+    tokensService: TokensService,
     authService: AuthService,
   ) {
     this.configService = configService;
     this.dataSource = dataSource;
     this.transporter = transporter;
-    this.eventService = eventService;
+    this.eventsService = eventsService;
     this.eventEmitter = eventEmitter;
-    this.tokenService = tokenService;
+    this.tokensService = tokensService;
     this.authService = authService;
   }
 
@@ -66,7 +66,7 @@ export class RmqEmailService {
       throw new Error("Authentication not found");
     }
 
-    const token: string = await this.tokenService.generate({
+    const token: string = await this.tokensService.generate({
       userId,
       provider: AuthenticationProvider.LOCAL,
     });
@@ -105,7 +105,7 @@ export class RmqEmailService {
 
       this.eventEmitter.emit(
         EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT,
-        this.eventService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT, userId, modelId),
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT, userId, modelId),
         manager,
       );
 

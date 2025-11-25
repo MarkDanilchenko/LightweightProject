@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
-import { RedisService } from "@server/services/redis/redis.service";
+import RedisService from "@server/services/redis/redis.service";
 
 @Injectable()
 export default class TokensService {
@@ -41,12 +41,13 @@ export default class TokensService {
    * Verifies the given jwt.
    *
    * @param {string} token The token to verify.
+   * @param {boolean} [ignoreExpiration] Whether to ignore the expiration time of the token. Defaults to false.
    *
    * @returns {Promise<TokenPayload>} A promise that resolves with the verified token payload
    * or rejects with an UnauthorizedException if the token is invalid or expired.
    */
-  async verify(token: string): Promise<TokenPayload> {
-    return this.jwtService.verifyAsync<TokenPayload>(token);
+  async verify(token: string, ignoreExpiration = false): Promise<TokenPayload> {
+    return this.jwtService.verifyAsync<TokenPayload>(token, { ignoreExpiration });
   }
 
   /**
@@ -76,63 +77,4 @@ export default class TokensService {
 
     await this.redisService.set(key, jwti, ttl);
   }
-
-  //   /**
-  //    * Refreshes an access token.
-  //    *
-  //    * @param accessToken The access token to refresh.
-  //    *
-  //    * @returns A promise that resolves with an object containing the new access token.
-  //    *
-  //    * @throws UnauthorizedException If the access token is invalid or the related users or authentication are not found.
-  //    */
-  //   async refreshAccessToken(accessToken: string): Promise<{ accessToken: string }> {
-  //     const payload: JwtPayload = await this.jwtService.verifyAsync<JwtPayload>(accessToken, {
-  //       ignoreExpiration: true,
-  //     });
-  //
-  //     if (!payload) {
-  //       throw new UnauthorizedException("Authentication failed. Token payload is not provided.");
-  //     }
-  //
-  //     const { jwti, userId, provider } = payload;
-  //
-  //     const users = await this.userService.findByPk(userId, {
-  //       relations: ["authentications"],
-  //       select: {
-  //         id: true,
-  //         username: true,
-  //         email: true,
-  //         authentications: {
-  //           provider: true,
-  //           refreshToken: true,
-  //         },
-  //       },
-  //       where: {
-  //         authentications: {
-  //           provider,
-  //           refreshToken: Not(IsNull()),
-  //         },
-  //       },
-  //     });
-  //
-  //     if (!users) {
-  //       throw new UnauthorizedException("Authentication failed. User or related authentication are not found.");
-  //     }
-  //
-  //     const { refreshToken } = users.authentications[0];
-  //
-  //     const decryptedRefreshToken = decrypt(refreshToken!);
-  //
-  //     await this.verifyRefreshToken(decryptedRefreshToken);
-  //
-  //     const newAccessToken = await this.generateAccessToken({
-  //       jwti,
-  //       userId,
-  //       provider,
-  //     });
-  //
-  //     return { accessToken: newAccessToken };
-  //   }
-  //
 }
