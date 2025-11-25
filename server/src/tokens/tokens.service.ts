@@ -65,15 +65,15 @@ export default class TokensService {
    * Adds a jwt to the blacklist in the Redis store.
    *
    * @param {string} jwti The jwt to add to the blacklist.
-   * @param {number} ext The expiration time of the jwt.
+   * @param {number} exp The expiration time of the jwt.
    *
    * @returns {Promise<void>} A promise that resolves when the jwt is added to the blacklist.
    */
-  async addToBlacklist(jwti: string, ext: number): Promise<void> {
+  async addToBlacklist(jwti: string, exp: number): Promise<void> {
     const key: string = `blacklist:jwti:${jwti}`;
 
     // Calculate time to live (TTL) in milliseconds for the token in Redis;
-    const ttl: number = new Date(ext).getTime() - new Date().getTime();
+    const ttl: number = Math.floor((new Date(exp * 1_000).getTime() - new Date().getTime()) / 1_000);
 
     await this.redisService.set(key, jwti, ttl);
   }

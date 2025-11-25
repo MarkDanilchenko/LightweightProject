@@ -100,8 +100,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description:
-      "Authentication failed. " + "Invalid credentials or " + "users not found or " + "email is not verified.",
+    description: "Authentication failed. " + "Invalid credentials or " + "email is not verified.",
   })
   @ApiBody({ type: LocalSignInDtoClass })
   @UsePipes(ZodValidationPipe)
@@ -137,7 +136,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Authentication failed. Invalid credentials or users not found.",
+    description: "Authentication failed. Invalid credentials.",
   })
   @ApiCookieAuth("accessToken")
   @UseGuards(JwtGuard)
@@ -162,7 +161,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Authentication failed. Invalid credentials or users not found.",
+    description: "Authentication failed. Invalid credentials.",
   })
   @ApiCookieAuth("accessToken")
   async refreshAccessToken(

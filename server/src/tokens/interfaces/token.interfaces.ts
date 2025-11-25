@@ -5,7 +5,7 @@ interface TokenPayload {
   userId: string;
   provider: AuthenticationProvider;
   iat?: number;
-  ext?: number;
+  exp?: number; // Unix timestamp in seconds;
 }
 
 export { TokenPayload };
