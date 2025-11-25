@@ -9,14 +9,15 @@ import {
 import { ClientProxy } from "@nestjs/microservices";
 import EventsService from "@server/events/events.service";
 import { EntityManager } from "typeorm";
+import { RMQ_MICROSERVICE } from "@server/constants";
 
 @Injectable()
 export default class EventsConsumer {
   private readonly eventsService: EventsService;
 
   constructor(
-    @Inject("MICROSERVICE_RMQ")
-    private readonly rmqClient: ClientProxy,
+    @Inject(RMQ_MICROSERVICE)
+    private readonly rmqMicroserviceClient: ClientProxy,
     eventsService: EventsService,
   ) {
     this.eventsService = eventsService;
@@ -70,6 +71,6 @@ export default class EventsConsumer {
    * @param {AuthLocalCreatedEvent} payload - The events payload containing the user's metadata.
    */
   handleAuthLocalCreated(payload: AuthLocalCreatedEvent): void {
-    this.rmqClient.emit(EventName.AUTH_LOCAL_CREATED, payload);
+    this.rmqMicroserviceClient.emit(EventName.AUTH_LOCAL_CREATED, payload);
   }
 }

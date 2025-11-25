@@ -21,9 +21,9 @@ import TokensService from "@server/tokens/tokens.service";
 export class RmqEmailService {
   private readonly configService: ConfigService;
   private readonly dataSource: DataSource;
+  private readonly transporter: Transporter;
   private readonly eventService: EventsService;
   private readonly eventEmitter: EventEmitter2;
-  private readonly transporter: Transporter;
   private readonly tokenService: TokensService;
   private readonly authService: AuthService;
 
@@ -38,9 +38,9 @@ export class RmqEmailService {
   ) {
     this.configService = configService;
     this.dataSource = dataSource;
+    this.transporter = transporter;
     this.eventService = eventService;
     this.eventEmitter = eventEmitter;
-    this.transporter = transporter;
     this.tokenService = tokenService;
     this.authService = authService;
   }

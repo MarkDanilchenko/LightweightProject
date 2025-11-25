@@ -18,7 +18,6 @@ export class RmqEmailConsumer {
     this.rmqEmailService = rmqEmailService;
   }
 
-  @MessagePattern(EventName.AUTH_LOCAL_CREATED)
   /**
    * Handles the AUTH_LOCAL_CREATED event from the message queue.
    * This method processes new local authentication events by sending a welcome verification email

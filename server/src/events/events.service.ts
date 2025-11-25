@@ -7,8 +7,8 @@ import { EventType } from "@server/events/types/events.types";
 
 @Injectable()
 export default class EventsService {
-  private readonly eventRegistry = eventRegistry;
   private readonly dataSource: DataSource;
+  private readonly eventRegistry = eventRegistry;
 
   constructor(
     @InjectDataSource()

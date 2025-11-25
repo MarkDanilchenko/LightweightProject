@@ -1,7 +1,6 @@
 import { BadRequestException, Inject, Injectable, Logger, LoggerService, OnModuleInit } from "@nestjs/common";
-import { Redis } from "ioredis";
-import { REDIS_CLIENT } from "@server/services/redis/redis.module";
-import { REDIS_KEY_MAX_BYTE_LEN, REDIS_KEY_TTL_SEC } from "@server/constants";
+import { REDIS_CLIENT, REDIS_KEY_MAX_BYTE_LEN, REDIS_KEY_TTL_SEC } from "@server/constants";
+import Redis from "ioredis";
 
 @Injectable()
 export class RedisService implements OnModuleInit {

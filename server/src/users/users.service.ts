@@ -1,14 +1,20 @@
 import { Injectable } from "@nestjs/common";
-import { InjectRepository } from "@nestjs/typeorm";
-import { FindOneOptions, Repository } from "typeorm";
+import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
+import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
 import UserEntity from "@server/users/users.entity";
 
 @Injectable()
 export default class UsersService {
+  private readonly dataSource: DataSource;
+
   constructor(
+    @InjectDataSource()
+    dataSource: DataSource,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
-  ) {}
+  ) {
+    this.dataSource = dataSource;
+  }
 
   /**
    * Finds a users entity by its primary key (users ID).
@@ -30,5 +36,30 @@ export default class UsersService {
    */
   async findUser(options: FindOneOptions<UserEntity>): Promise<UserEntity | null> {
     return this.userRepository.findOne(options);
+  }
+
+  /**
+   * Updates a users entity with the given values.
+   *
+   * @param {FindOptionsWhere<UserEntity>} whereCondition - The condition to find the users entity to update.
+   * @param {Record<string, unknown>} values - The values to update the users entity with.
+   * @param {EntityManager} [manager] - The entity manager to use. If not provided, a new transaction will be started.
+   *
+   * @returns {Promise<UpdateResult>} A promise that resolves with the update result.
+   */
+  async updateUser(
+    whereCondition: FindOptionsWhere<UserEntity>,
+    values: Record<string, unknown>,
+    manager?: EntityManager,
+  ): Promise<UpdateResult> {
+    const callback = async (manager: EntityManager): Promise<UpdateResult> => {
+      return manager.update(UserEntity, whereCondition, values);
+    };
+
+    if (!manager) {
+      return this.dataSource.transaction(callback);
+    }
+
+    return callback(manager);
   }
 }

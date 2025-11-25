@@ -14,7 +14,7 @@ export default class LocalAuthStrategy extends PassportStrategy(Strategy, "local
     super({
       usernameField: "login",
       passwordField: "password",
-      passReqToCallback: true, // Request object to the validate function in some purpose if we need to access it;
+      passReqToCallback: true, // Put request object into the validate function in some purpose if we need to access it;
     });
 
     this.userService = userService;

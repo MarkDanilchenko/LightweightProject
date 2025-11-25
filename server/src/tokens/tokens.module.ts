@@ -6,7 +6,7 @@ import { RedisService } from "@server/services/redis/redis.service";
 @Module({
   imports: [],
   controllers: [],
-  providers: [TokensService, RedisService],
+  providers: [TokensService],
   exports: [TokensService],
 })
 export default class TokensModule {}

@@ -17,26 +17,26 @@ import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 @Injectable()
 export default class AuthService {
   private readonly dataSource: DataSource;
+  private readonly tokenService: TokensService;
+  private readonly userService: UsersService;
   private readonly eventService: EventsService;
   private readonly eventEmitter: EventEmitter2;
-  private readonly userService: UsersService;
-  private readonly tokenService: TokensService;
 
   constructor(
     @InjectDataSource()
     dataSource: DataSource,
     @InjectRepository(AuthenticationEntity)
     private readonly authenticationRepository: Repository<AuthenticationEntity>,
+    tokenService: TokensService,
+    userService: UsersService,
     eventService: EventsService,
     eventEmitter: EventEmitter2,
-    userService: UsersService,
-    tokenService: TokensService,
   ) {
     this.dataSource = dataSource;
+    this.tokenService = tokenService;
+    this.userService = userService;
     this.eventService = eventService;
     this.eventEmitter = eventEmitter;
-    this.userService = userService;
-    this.tokenService = tokenService;
   }
 
   /**
@@ -115,7 +115,7 @@ export default class AuthService {
 
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
       if (!user) {
-        const isUsernameTaken: UserEntity | null = await manager.findOne(UserEntity, {
+        const isUsernameTaken: UserEntity | null = await this.userService.findUser({
           select: { id: true },
           where: { username },
         });
@@ -270,7 +270,7 @@ export default class AuthService {
       );
 
       // Finally update user with info from temporary;
-      await manager.update(UserEntity, { id: userId }, authentication.metadata.local?.temporaryInfo ?? {});
+      await this.userService.updateUser({ id: userId }, authentication.metadata.local?.temporaryInfo ?? {}, manager);
 
       this.eventEmitter.emit(
         EventName.AUTH_LOCAL_EMAIL_VERIFICATION_VERIFIED,
@@ -298,7 +298,6 @@ export default class AuthService {
       (auth: AuthenticationEntity) =>
         auth.provider === AuthenticationProvider.LOCAL && auth.metadata.local?.isEmailVerified,
     );
-
     if (!authentication) {
       throw new UnauthorizedException("Authentication failed. Authentication not found.");
     }
@@ -339,7 +338,6 @@ export default class AuthService {
    */
   async signOut(payload: TokenPayload): Promise<void> {
     const { jwti, userId, provider, ext } = payload;
-
     if (!jwti || !ext) {
       throw new UnauthorizedException("Authentication failed. Token is invalid.");
     }
