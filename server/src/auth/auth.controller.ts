@@ -180,6 +180,27 @@ export default class AuthController {
     res.status(200).send();
   }
 
+  @Get("me")
+  @ApiOperation({
+    summary: "Profile",
+    description: "Get current user's profile.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "User profile retrieved successfully.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Authentication failed. Invalid credentials.",
+  })
+  @ApiCookieAuth("accessToken")
+  @UseGuards(JwtGuard)
+  async me(@Req() req: RequestWithTokenPayload): Promise<Partial<UserEntity>> {
+    const payload: TokenPayload = req.tokenPayload;
+
+    return this.authService.retrieveProfile(payload.userId);
+  }
+
   //   @Get("google/signin")
   //   @ApiOperation({
   //     summary: "Google authentication via OAuth2",

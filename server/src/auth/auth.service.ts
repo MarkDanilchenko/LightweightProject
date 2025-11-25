@@ -400,6 +400,36 @@ export default class AuthService {
     return { accessToken: newAccessToken };
   }
 
+  /**
+   * Retrieves a user's profile information from the database.
+   *
+   * @param {string} userId - The user's ID.
+   *
+   * @returns {Promise<Partial<UserEntity>>} A promise that resolves with the user's profile information.
+   */
+  async retrieveProfile(userId: string): Promise<Partial<UserEntity>> {
+    const user: UserEntity | null = await this.userService.findUser({
+      select: {
+        id: true,
+        username: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        avatarUrl: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+      where: {
+        id: userId,
+      },
+    });
+    if (!user) {
+      throw new UnauthorizedException("Authentication failed. User is not found.");
+    }
+
+    return user;
+  }
+
   // async authAccordingToStrategy(
   //   idP: AuthenticationProvider,
   //   userInfo: SignUpLocalDto,
