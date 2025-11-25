@@ -363,49 +363,4 @@ export default class AuthController {
   //
   //     res.redirect("/");
   //   }
-  //
-  //   @Get("profile")
-  //   @ApiOperation({ summary: "User profile", description: "Get the users profile" })
-  //   @ApiCookieAuth("accessToken")
-  //   @ApiResponse({
-  //     status: 200,
-  //     description: "User profile",
-  //     type: ProfileDto,
-  //   })
-  //   @ApiResponse({
-  //     status: 401,
-  //     description: "Authentication failed. Invalid request or users is not authenticated.",
-  //   })
-  //   @UseGuards(JwtGuard)
-  //   async getProfile(@Req() req: requestWithUser): Promise<ProfileDto> {
-  //     const { userId, username, email, provider } = req.users;
-  //
-  //     const profile = (await this.userService.findByPk(userId, {
-  //       relations: ["authentications"],
-  //       select: {
-  //         id: true,
-  //         username: true,
-  //         firstName: true,
-  //         lastName: true,
-  //         email: true,
-  //         avatarUrl: true,
-  //         createdAt: true,
-  //         updatedAt: true,
-  //         authentications: {
-  //           id: true,
-  //           provider: true,
-  //           lastAccessedAt: true,
-  //         },
-  //       },
-  //       where: {
-  //         username,
-  //         email,
-  //         authentications: {
-  //           provider,
-  //         },
-  //       },
-  //     })) as Profile | ProfileDto;
-  //
-  //     return profile;
-  //   }
 }
