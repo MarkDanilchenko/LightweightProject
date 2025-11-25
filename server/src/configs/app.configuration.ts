@@ -5,7 +5,7 @@ import AppConfiguration from "./interfaces/appConfiguration.interfaces";
 import { utilities as nestWinstonModuleUtilities } from "nest-winston";
 import { Transport } from "@nestjs/microservices";
 
-dotenv.config({ path: path.join(process.cwd(), ".env") });
+dotenv.config({ path: path.join(process.cwd(), "../.env") });
 
 export default (): AppConfiguration => {
   const {
