@@ -1,7 +1,7 @@
 import {
   AuthLocalCreatedEvent,
   AuthLocalEmailVerificationSentEvent,
-  AuthLocalEmailVerificationVerifiedEvent,
+  AuthLocalEmailVerifiedEvent,
   BaseEvent,
   EventName,
 } from "@server/events/interfaces/events.interfaces";
@@ -26,10 +26,10 @@ class AuthLocalEmailVerificationSentEventClass extends BaseEventClass implements
   }
 }
 
-// Auth Local Email Verification Verified Event;
-class AuthLocalEmailVerificationVerifiedEventClass
+// Auth Local Email Verified Event;
+class AuthLocalEmailVerifiedEventClass
   extends BaseEventClass
-  implements AuthLocalEmailVerificationVerifiedEvent
+  implements AuthLocalEmailVerifiedEvent
 {
   constructor(name: BaseEvent["name"], userId: BaseEvent["userId"], modelId: BaseEvent["modelId"]) {
     super(name, userId, modelId);
@@ -55,7 +55,7 @@ class AuthLocalCreatedEventClass extends BaseEventClass implements AuthLocalCrea
 const eventsRegistry = {
   [EventName.AUTH_LOCAL_CREATED]: AuthLocalCreatedEventClass,
   [EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT]: AuthLocalEmailVerificationSentEventClass,
-  [EventName.AUTH_LOCAL_EMAIL_VERIFICATION_VERIFIED]: AuthLocalEmailVerificationVerifiedEventClass,
+  [EventName.AUTH_LOCAL_EMAIL_VERIFIED]: AuthLocalEmailVerifiedEventClass,
 };
 
 export { eventsRegistry };

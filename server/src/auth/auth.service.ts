@@ -291,8 +291,8 @@ export default class AuthService {
       await this.userService.updateUser({ id: userId }, authentication.metadata.local?.temporaryInfo ?? {}, manager);
 
       this.eventEmitter.emit(
-        EventName.AUTH_LOCAL_EMAIL_VERIFICATION_VERIFIED,
-        this.eventsService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_VERIFIED, userId, authentication.id),
+        EventName.AUTH_LOCAL_EMAIL_VERIFIED,
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFIED, userId, authentication.id),
         manager,
       );
     });
