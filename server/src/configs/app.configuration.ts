@@ -58,6 +58,8 @@ export default (): AppConfiguration => {
     REDIS_PASSWORD,
     REDIS_DB,
     REDIS_KEY_PREFIX,
+    CLIENT_HOST,
+    CLIENT_PORT,
   } = process.env;
 
   const serverConfiguration: AppConfiguration["serverConfiguration"] = {
@@ -72,6 +74,15 @@ export default (): AppConfiguration => {
   };
 
   serverConfiguration.baseUrl = `${serverConfiguration.protocol}://${serverConfiguration.host}:${serverConfiguration.port}`;
+
+  const clientConfiguration: AppConfiguration["clientConfiguration"] = {
+    host: CLIENT_HOST || "127.0.0.1",
+    port: Number(CLIENT_PORT) || 3001,
+    protocol: HTTPS === "true" ? "https" : "http",
+    baseUrl: "",
+  };
+
+  clientConfiguration.baseUrl = `${clientConfiguration.protocol}://${clientConfiguration.host}:${clientConfiguration.port}`;
 
   const smtpConfiguration: AppConfiguration["smtpConfiguration"] = {
     host: SMTP_HOST!,
@@ -176,6 +187,7 @@ export default (): AppConfiguration => {
 
   return {
     serverConfiguration,
+    clientConfiguration,
     loggerConfiguration,
     dbConfiguration,
     jwtConfiguration,

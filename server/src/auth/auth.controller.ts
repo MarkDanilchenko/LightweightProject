@@ -16,10 +16,15 @@ import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces";
 import { ZodValidationPipe } from "@anatine/zod-nestjs";
 import AuthService from "@server/auth/auth.service";
-import { LocalVerificationEmailDtoClass, LocalSignInDtoClass, LocalSignUpDtoClass } from "@server/auth/dto/auth.dto";
+import {
+  LocalVerificationEmailDto,
+  LocalSignInDto,
+  LocalSignUpDto,
+  LocalForgotPasswordDto,
+  LocalResetPasswordDto,
+} from "@server/auth/dto/auth.dto";
 import { clearCookie, setCookie } from "@server/utils/cookie";
 import LocalAuthGuard from "@server/auth/guards/local.guard";
-import { LocalSignInDto, LocalSignUpDto, LocalVerificationEmailDto } from "@server/auth/types/auth.types";
 import UserEntity from "@server/users/users.entity";
 import JwtGuard from "@server/auth/guards/jwt.guard";
 import { RequestWithSignedCookies, RequestWithTokenPayload, RequestWithUser } from "@server/common/types/common.types";
@@ -31,11 +36,14 @@ export default class AuthController {
   private readonly configService: ConfigService;
   private readonly authService: AuthService;
   private readonly https: boolean;
+  private readonly clientBaseUrl: string;
 
   constructor(configService: ConfigService, authService: AuthService) {
     this.configService = configService;
     this.authService = authService;
     this.https = configService.get<AppConfiguration["serverConfiguration"]["https"]>("serverConfiguration.https")!;
+    this.clientBaseUrl =
+      configService.get<AppConfiguration["clientConfiguration"]["baseUrl"]>("clientConfiguration.baseUrl")!;
   }
 
   @Post("local/signup")
@@ -51,7 +59,7 @@ export default class AuthController {
     status: 400,
     description: "Invalid credentials or user already exists.",
   })
-  @ApiBody({ type: LocalSignUpDtoClass })
+  @ApiBody({ type: LocalSignUpDto })
   @UsePipes(ZodValidationPipe)
   async localSignUp(@Body() localSignUpDto: LocalSignUpDto): Promise<void> {
     await this.authService.localSignUp(localSignUpDto);
@@ -72,7 +80,7 @@ export default class AuthController {
     status: 400,
     description: "Invalid request.",
   })
-  @ApiQuery({ type: LocalVerificationEmailDtoClass })
+  @ApiQuery({ type: LocalVerificationEmailDto })
   @UsePipes(ZodValidationPipe)
   async localVerificationEmail(
     @Query() localVerificationEmailDto: LocalVerificationEmailDto,
@@ -84,12 +92,12 @@ export default class AuthController {
       setCookie(res, "accessToken", accessToken, this.https);
 
       // TODO: should redirect to the home client page (frontend-app) after successful email verification;
-      res.redirect(302, "/home");
+      res.redirect(302, `${this.clientBaseUrl}/home`);
     } catch (error: unknown) {
       const errorMsg: string = error instanceof Error ? error.message : "An unknown error occurred.";
 
       // TODO: should redirect to the sign in page (frontend-app) after failed email verification with error message in query;
-      res.redirect(302, `/signin?errorMsg=${errorMsg}`);
+      res.redirect(302, `${this.clientBaseUrl}/signin?errorMsg=${errorMsg}`);
     }
   }
 
@@ -110,7 +118,7 @@ export default class AuthController {
     status: 401,
     description: "Authentication failed. " + "Invalid credentials or " + "email is not verified.",
   })
-  @ApiBody({ type: LocalSignInDtoClass })
+  @ApiBody({ type: LocalSignInDto })
   @UsePipes(ZodValidationPipe)
   @UseGuards(LocalAuthGuard)
   async localSignIn(
@@ -132,6 +140,44 @@ export default class AuthController {
 
     res.status(200).send();
   }
+
+  @Post("local/password/forgot")
+  @ApiOperation({
+    summary: "Forgot password",
+    description: "Generating a temporary token and sending a link to the mail for the further password reset.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Email with temporary generated token was sent successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "User not found.",
+  })
+  @ApiBody({ type: LocalForgotPasswordDto })
+  @UsePipes(ZodValidationPipe)
+  async forgotPassword(@Body() localForgotPasswordDto: LocalForgotPasswordDto): Promise<void> {}
+
+  @Post("local/password/reset")
+  @ApiOperation({
+    summary: "Reset password",
+    description: "Resetting the password using the temporary token.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Password was reset successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
+  })
+  @ApiBody({ type: LocalResetPasswordDto })
+  @UsePipes(ZodValidationPipe)
+  async resetPassword(@Body() localResetPasswordDto: LocalResetPasswordDto): Promise<void> {}
 
   @Post("signout")
   @ApiOperation({

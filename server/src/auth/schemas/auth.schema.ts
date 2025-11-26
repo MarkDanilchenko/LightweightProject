@@ -77,61 +77,88 @@ const localSignInSchema = z
     example: { login: "johndoe or johndoe@me.com", password: "12345678Aa_" },
   });
 
-const profileSchema = z
+const localForgotPasswordSchema = z
   .object({
-    id: z
-      .string()
-      .uuid()
-      .openapi({ title: "User ID", description: "User ID", example: "123e4567-e89b-12d3-a456-426655440000" }),
-    username: z.string().openapi({ title: "Username", description: "Username", example: "johndoe" }),
-    firstName: z.string().optional().openapi({ title: "First name", description: "First name", example: "John" }),
-    lastName: z.string().optional().openapi({ title: "Last name", description: "Last name", example: "Doe" }),
-    email: z.string().email().openapi({ title: "Email", description: "Email", example: "johndoe@me.com" }),
-    avatarUrl: z.string().url().optional().openapi({
-      title: "Avatar URL",
-      description: "Avatar URL",
-      example: "https://example.com/avatar.jpg",
-    }),
-    createdAt: z
-      .date()
-      .openapi({ title: "Created at", description: "Created at", example: "2022-01-01T00:00:00.000Z" }),
-    updatedAt: z
-      .date()
-      .openapi({ title: "Updated at", description: "Updated at", example: "2022-01-01T00:00:00.000Z" }),
-    authentications: z.array(
-      z.object({
-        id: z.string().uuid().openapi({
-          title: "Authentication ID",
-          description: "Authentication ID",
-          example: "123e4567-e89b-12d3-a456-426655440000",
-        }),
-        provider: z.string().openapi({ title: "Provider", description: "Provider", example: "local" }),
-        lastAccessedAt: z
-          .date()
-          .openapi({ title: "Last accessed at", description: "Last accessed at", example: "2022-01-01T00:00:00.000Z" }),
-      }),
-    ),
+    email: localSignUpSchema.shape.email,
   })
   .openapi({
-    title: "Profile schema",
-    description: "User's profile",
-    example: {
-      id: "123e4567-e89b-12d3-a456-426655440000",
-      username: "johndoe",
-      firstName: "John",
-      lastName: "Doe",
-      email: "johndoe@me.com",
-      avatarUrl: "https://example.com/avatar.jpg",
-      createdAt: "2022-01-01T00:00:00.000Z",
-      updatedAt: "2022-01-01T00:00:00.000Z",
-      authentications: [
-        {
-          id: "123e4567-e89b-12d3-a456-426655440000",
-          provider: "local",
-          lastAccessedAt: "2022-01-01T00:00:00.000Z",
-        },
-      ],
-    },
+    title: "Local forgot password schema",
+    description: "Local forgot password with provided email.",
+    example: { email: "johndoe@me.com" },
   });
 
-export { localSignInSchema, profileSchema, localSignUpSchema, localVerificationEmailSchema };
+const localResetPasswordSchema = z
+  .object({
+    token: z.string().openapi({ title: "Token", description: "Token.", example: "Token in jwt format" }),
+    password: localSignUpSchema.shape.password,
+  })
+  .openapi({
+    title: "Local reset password schema",
+    description: "Local reset password with provided token and new password.",
+    example: { token: "Token in jwt format", password: "12345678Aa_" },
+  });
+
+// const profileSchema = z
+//   .object({
+//     id: z
+//       .string()
+//       .uuid()
+//       .openapi({ title: "User ID", description: "User ID", example: "123e4567-e89b-12d3-a456-426655440000" }),
+//     username: z.string().openapi({ title: "Username", description: "Username", example: "johndoe" }),
+//     firstName: z.string().optional().openapi({ title: "First name", description: "First name", example: "John" }),
+//     lastName: z.string().optional().openapi({ title: "Last name", description: "Last name", example: "Doe" }),
+//     email: z.string().email().openapi({ title: "Email", description: "Email", example: "johndoe@me.com" }),
+//     avatarUrl: z.string().url().optional().openapi({
+//       title: "Avatar URL",
+//       description: "Avatar URL",
+//       example: "https://example.com/avatar.jpg",
+//     }),
+//     createdAt: z
+//       .date()
+//       .openapi({ title: "Created at", description: "Created at", example: "2022-01-01T00:00:00.000Z" }),
+//     updatedAt: z
+//       .date()
+//       .openapi({ title: "Updated at", description: "Updated at", example: "2022-01-01T00:00:00.000Z" }),
+//     authentications: z.array(
+//       z.object({
+//         id: z.string().uuid().openapi({
+//           title: "Authentication ID",
+//           description: "Authentication ID",
+//           example: "123e4567-e89b-12d3-a456-426655440000",
+//         }),
+//         provider: z.string().openapi({ title: "Provider", description: "Provider", example: "local" }),
+//         lastAccessedAt: z
+//           .date()
+//           .openapi({ title: "Last accessed at", description: "Last accessed at", example: "2022-01-01T00:00:00.000Z" }),
+//       }),
+//     ),
+//   })
+//   .openapi({
+//     title: "Profile schema",
+//     description: "User's profile",
+//     example: {
+//       id: "123e4567-e89b-12d3-a456-426655440000",
+//       username: "johndoe",
+//       firstName: "John",
+//       lastName: "Doe",
+//       email: "johndoe@me.com",
+//       avatarUrl: "https://example.com/avatar.jpg",
+//       createdAt: "2022-01-01T00:00:00.000Z",
+//       updatedAt: "2022-01-01T00:00:00.000Z",
+//       authentications: [
+//         {
+//           id: "123e4567-e89b-12d3-a456-426655440000",
+//           provider: "local",
+//           lastAccessedAt: "2022-01-01T00:00:00.000Z",
+//         },
+//       ],
+//     },
+//   });
+
+export {
+  localSignInSchema,
+  localSignUpSchema,
+  localVerificationEmailSchema,
+  localForgotPasswordSchema,
+  localResetPasswordSchema,
+};

@@ -13,6 +13,12 @@ export default interface AppConfiguration {
     protocol: "http" | "https";
     baseUrl: string;
   };
+  clientConfiguration: {
+    host: string;
+    port: number;
+    protocol: "http" | "https";
+    baseUrl: string;
+  };
   smtpConfiguration: {
     host: string;
     port: number;

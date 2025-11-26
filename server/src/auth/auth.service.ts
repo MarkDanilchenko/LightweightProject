@@ -20,8 +20,8 @@ import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces"
 import { hash } from "@server/utils/hasher";
 import TokensService from "@server/tokens/tokens.service";
 import { v4 as uuidv4 } from "uuid";
-import { LocalSignUpDto, LocalVerificationEmailDto } from "@server/auth/types/auth.types";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
+import { LocalSignUpDto, LocalVerificationEmailDto } from "@server/auth/dto/auth.dto";
 
 @Injectable()
 export default class AuthService {
