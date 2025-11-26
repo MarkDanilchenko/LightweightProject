@@ -20,8 +20,8 @@ import {
   LocalVerificationEmailDto,
   LocalSignInDto,
   LocalSignUpDto,
-  LocalForgotPasswordDto,
-  LocalResetPasswordDto,
+  LocalPasswordForgotDto,
+  LocalPasswordResetDto,
 } from "@server/auth/dto/auth.dto";
 import { clearCookie, setCookie } from "@server/utils/cookie";
 import LocalAuthGuard from "@server/auth/guards/local.guard";
@@ -158,9 +158,16 @@ export default class AuthController {
     status: 404,
     description: "User not found.",
   })
-  @ApiBody({ type: LocalForgotPasswordDto })
+  @ApiBody({ type: LocalPasswordForgotDto })
   @UsePipes(ZodValidationPipe)
-  async localForgotPassword(@Body() localForgotPasswordDto: LocalForgotPasswordDto): Promise<void> {}
+  async localPasswordForgot(
+    @Body() localPasswordForgotDto: LocalPasswordForgotDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    await this.authService.localPasswordForgot(localPasswordForgotDto);
+
+    res.status(200).send();
+  }
 
   @Post("local/password/reset")
   @ApiOperation({
@@ -175,9 +182,11 @@ export default class AuthController {
     status: 400,
     description: "Invalid request.",
   })
-  @ApiBody({ type: LocalResetPasswordDto })
+  @ApiBody({ type: LocalPasswordResetDto })
   @UsePipes(ZodValidationPipe)
-  async localResetPassword(@Body() localResetPasswordDto: LocalResetPasswordDto): Promise<void> {}
+  async localPasswordReset(@Body() localPasswordResetDto: LocalPasswordResetDto): Promise<void> {
+    await this.authService.localPasswordReset(localPasswordResetDto);
+  }
 
   @Post("signout")
   @ApiOperation({

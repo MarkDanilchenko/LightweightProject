@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import {
+  And,
   DataSource,
   EntityManager,
   FindOneOptions,
@@ -21,7 +22,12 @@ import { hash } from "@server/utils/hasher";
 import TokensService from "@server/tokens/tokens.service";
 import { v4 as uuidv4 } from "uuid";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
-import { LocalSignUpDto, LocalVerificationEmailDto } from "@server/auth/dto/auth.dto";
+import {
+  LocalPasswordForgotDto,
+  LocalPasswordResetDto,
+  LocalSignUpDto,
+  LocalVerificationEmailDto,
+} from "@server/auth/dto/auth.dto";
 
 @Injectable()
 export default class AuthService {
@@ -428,6 +434,43 @@ export default class AuthService {
     }
 
     return user;
+  }
+
+  async localPasswordForgot(localPasswordForgotDto: LocalPasswordForgotDto): Promise<void> {
+    const { email } = localPasswordForgotDto;
+
+    const user: UserEntity | null = await this.userService.findUser({
+      relations: ["authentications"],
+      select: {
+        id: true,
+        authentications: {
+          id: true,
+        },
+      },
+      where: {
+        email,
+        authentications: {
+          provider: AuthenticationProvider.LOCAL,
+          metadata: {
+            local: {
+              isEmailVerified: true,
+              password: And(Not(IsNull()), Not("")),
+            },
+          },
+          refreshToken: Not(IsNull()),
+        },
+      },
+    });
+    if (!user) {
+      // Do not explicitly throw an error in this place;
+      // For security reasons, it is better not to say, that the user has not been found, to avoid going through email addresses.
+      // Return http status code 200 in controller instead;
+      return;
+    }
+  }
+
+  async localPasswordReset(localPasswordResetDto: LocalPasswordResetDto): Promise<void> {
+    const { token, password } = localPasswordResetDto;
   }
 
   // async authAccordingToStrategy(

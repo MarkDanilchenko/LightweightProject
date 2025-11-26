@@ -13,8 +13,8 @@ class LocalVerificationEmailDto extends createZodDto(localVerificationEmailSchem
 
 class LocalSignInDto extends createZodDto(localSignInSchema) {}
 
-class LocalForgotPasswordDto extends createZodDto(localForgotPasswordSchema) {}
+class LocalPasswordForgotDto extends createZodDto(localForgotPasswordSchema) {}
 
-class LocalResetPasswordDto extends createZodDto(localResetPasswordSchema) {}
+class LocalPasswordResetDto extends createZodDto(localResetPasswordSchema) {}
 
-export { LocalSignUpDto, LocalSignInDto, LocalVerificationEmailDto, LocalForgotPasswordDto, LocalResetPasswordDto };
+export { LocalSignUpDto, LocalSignInDto, LocalVerificationEmailDto, LocalPasswordForgotDto, LocalPasswordResetDto };
