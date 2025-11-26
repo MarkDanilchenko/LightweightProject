@@ -160,7 +160,7 @@ export default class AuthController {
   })
   @ApiBody({ type: LocalForgotPasswordDto })
   @UsePipes(ZodValidationPipe)
-  async forgotPassword(@Body() localForgotPasswordDto: LocalForgotPasswordDto): Promise<void> {}
+  async localForgotPassword(@Body() localForgotPasswordDto: LocalForgotPasswordDto): Promise<void> {}
 
   @Post("local/password/reset")
   @ApiOperation({
@@ -177,7 +177,7 @@ export default class AuthController {
   })
   @ApiBody({ type: LocalResetPasswordDto })
   @UsePipes(ZodValidationPipe)
-  async resetPassword(@Body() localResetPasswordDto: LocalResetPasswordDto): Promise<void> {}
+  async localResetPassword(@Body() localResetPasswordDto: LocalResetPasswordDto): Promise<void> {}
 
   @Post("signout")
   @ApiOperation({
