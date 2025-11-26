@@ -57,7 +57,7 @@ export default class AuthController {
     await this.authService.localSignUp(localSignUpDto);
   }
 
-  @Get("local/verification/email")
+  @Post("local/verification/email")
   @ApiOperation({
     summary: "Verify email for local authentication",
     description: "Verify the User's email during local sign up workflow.",
@@ -67,6 +67,10 @@ export default class AuthController {
     description:
       "Redirect to the home client page (frontend-app) after successful email verification." +
       "If varification was failed - redirect back to the sign in page.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
   })
   @ApiQuery({ type: LocalVerificationEmailDtoClass })
   @UsePipes(ZodValidationPipe)
@@ -97,6 +101,10 @@ export default class AuthController {
   @ApiResponse({
     status: 200,
     description: "User signed in successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
   })
   @ApiResponse({
     status: 401,
@@ -150,7 +158,7 @@ export default class AuthController {
     res.status(200).send();
   }
 
-  @Get("refresh")
+  @Post("refresh")
   @ApiOperation({
     summary: "Refresh access token",
     description: "Refresh access token using related to the user refresh token in database.",
