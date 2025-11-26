@@ -52,10 +52,10 @@ class AuthLocalCreatedEventClass extends BaseEventClass implements AuthLocalCrea
   }
 }
 
-const eventRegistry = {
+const eventsRegistry = {
   [EventName.AUTH_LOCAL_CREATED]: AuthLocalCreatedEventClass,
   [EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT]: AuthLocalEmailVerificationSentEventClass,
   [EventName.AUTH_LOCAL_EMAIL_VERIFICATION_VERIFIED]: AuthLocalEmailVerificationVerifiedEventClass,
 };
 
-export { eventRegistry };
+export { eventsRegistry };

@@ -1,5 +1,5 @@
 import { Injectable } from "@nestjs/common";
-import { eventRegistry } from "@server/events/events.factory";
+import { eventsRegistry } from "@server/events/events.factory";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import EventEntity from "@server/events/events.entity";
 import { DataSource, EntityManager, Repository } from "typeorm";
@@ -8,7 +8,7 @@ import { EventType } from "@server/events/types/events.types";
 @Injectable()
 export default class EventsService {
   private readonly dataSource: DataSource;
-  private readonly eventRegistry = eventRegistry;
+  private readonly eventsRegistry = eventsRegistry;
 
   constructor(
     @InjectDataSource()
@@ -24,18 +24,18 @@ export default class EventsService {
    *
    * @template K - The type of the event's name.
    * @param {K} name - The name of the events to be created
-   * @param {...ConstructorParameters<(typeof eventRegistry)[K]> extends [any, ...infer Rest] ? Rest : never} payload - The arguments for the events.
+   * @param {...ConstructorParameters<(typeof eventsRegistry)[K]> extends [any, ...infer Rest] ? Rest : never} payload - The arguments for the events.
    *
-   * @returns {InstanceType<(typeof eventRegistry)[K]>} The events instance.
+   * @returns {InstanceType<(typeof eventsRegistry)[K]>} The events instance.
    */
-  buildInstance<K extends keyof typeof eventRegistry>(
+  buildInstance<K extends keyof typeof eventsRegistry>(
     name: K,
-    ...payload: ConstructorParameters<(typeof eventRegistry)[K]> extends [any, ...infer Rest] ? Rest : never
-  ): InstanceType<(typeof eventRegistry)[K]> {
-    const EventClass = this.eventRegistry[name];
+    ...payload: ConstructorParameters<(typeof eventsRegistry)[K]> extends [any, ...infer Rest] ? Rest : never
+  ): InstanceType<(typeof eventsRegistry)[K]> {
+    const EventClass = this.eventsRegistry[name];
 
     // eslint-disable-next-line
-    return new (EventClass as new (name: K, ...payload: any[]) => InstanceType<(typeof eventRegistry)[K]>)(
+    return new (EventClass as new (name: K, ...payload: any[]) => InstanceType<(typeof eventsRegistry)[K]>)(
       name,
       ...payload,
     );

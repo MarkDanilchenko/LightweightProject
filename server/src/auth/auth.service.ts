@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import {
   And,
@@ -28,6 +28,8 @@ import {
   LocalSignUpDto,
   LocalVerificationEmailDto,
 } from "@server/auth/dto/auth.dto";
+import { RMQ_MICROSERVICE } from "@server/constants";
+import { ClientProxy } from "@nestjs/microservices";
 
 @Injectable()
 export default class AuthService {
@@ -42,6 +44,7 @@ export default class AuthService {
     dataSource: DataSource,
     @InjectRepository(AuthenticationEntity)
     private readonly authenticationRepository: Repository<AuthenticationEntity>,
+    @Inject(RMQ_MICROSERVICE) private readonly rmqMicroserviceClient: ClientProxy,
     tokensService: TokensService,
     userService: UsersService,
     eventsService: EventsService,
@@ -162,7 +165,7 @@ export default class AuthService {
         });
         await manager.save(authentication);
 
-        this.eventEmitter.emit(
+        this.rmqMicroserviceClient.emit(
           EventName.AUTH_LOCAL_CREATED,
           this.eventsService.buildInstance(EventName.AUTH_LOCAL_CREATED, user.id, authentication.id, {
             username,
@@ -207,7 +210,7 @@ export default class AuthService {
         });
         await manager.save(authentication);
 
-        this.eventEmitter.emit(
+        this.rmqMicroserviceClient.emit(
           EventName.AUTH_LOCAL_CREATED,
           this.eventsService.buildInstance(EventName.AUTH_LOCAL_CREATED, user.id, authentication.id, {
             username,

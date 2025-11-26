@@ -1,30 +1,20 @@
-import { Inject, Injectable } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
 import {
-  AuthLocalCreatedEvent,
   AuthLocalEmailVerificationSentEvent,
   AuthLocalEmailVerificationVerifiedEvent,
   EventName,
 } from "@server/events/interfaces/events.interfaces";
-import { ClientProxy } from "@nestjs/microservices";
 import EventsService from "@server/events/events.service";
 import { EntityManager } from "typeorm";
-import { RMQ_MICROSERVICE } from "@server/constants";
 
 @Injectable()
 export default class EventsConsumer {
   private readonly eventsService: EventsService;
 
-  constructor(
-    @Inject(RMQ_MICROSERVICE)
-    private readonly rmqMicroserviceClient: ClientProxy,
-    eventsService: EventsService,
-  ) {
+  constructor(eventsService: EventsService) {
     this.eventsService = eventsService;
   }
-
-  // Use `.emit()` for events that do not require a response (fire-and-forget).
-  // If needed a response from a microservice - use `.send()'.
 
   @OnEvent(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT)
   /**
@@ -60,17 +50,5 @@ export default class EventsConsumer {
     manager?: EntityManager,
   ): Promise<void> {
     await this.eventsService.createEvent(payload, manager);
-  }
-
-  @OnEvent(EventName.AUTH_LOCAL_CREATED)
-  /**
-   * Handle the AUTH_LOCAL_CREATED event.
-   * This event is emitted by the local authentication service when a user is created.
-   * It contains the user's metadata and is used to notify other services that a user has been created.
-   *
-   * @param {AuthLocalCreatedEvent} payload - The events payload containing the user's metadata.
-   */
-  handleAuthLocalCreated(payload: AuthLocalCreatedEvent): void {
-    this.rmqMicroserviceClient.emit(EventName.AUTH_LOCAL_CREATED, payload);
   }
 }

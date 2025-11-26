@@ -15,15 +15,6 @@ import { RMQ_MICROSERVICE } from "@server/constants";
     EventEmitterModule.forRoot({
       verboseMemoryLeak: true,
     }),
-    ClientsModule.registerAsync([
-      {
-        name: RMQ_MICROSERVICE,
-        inject: [ConfigService],
-        useFactory: (configService: ConfigService) => {
-          return configService.get<AppConfiguration["rabbitmqConfiguration"]>("rabbitmqConfiguration")!;
-        },
-      },
-    ]),
   ],
   controllers: [],
   providers: [EventsService, EventsConsumer],
