@@ -1,7 +1,6 @@
 import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import {
-  And,
   DataSource,
   EntityManager,
   FindOneOptions,
@@ -255,11 +254,11 @@ export default class AuthService {
 
     const accessToken: string = await this.tokensService.generate(
       { userId, provider, jwti: uuidv4() },
-      this.tokensService.jwtAccessTokenExpiresIn,
+      { expiresIn: this.tokensService.jwtAccessTokenExpiresIn },
     );
     const refreshToken: string = await this.tokensService.generate(
       { userId, provider },
-      this.tokensService.jwtRefreshTokenExpiresIn,
+      { expiresIn: this.tokensService.jwtRefreshTokenExpiresIn },
     );
 
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
@@ -322,11 +321,11 @@ export default class AuthService {
 
     const accessToken: string = await this.tokensService.generate(
       { userId: user.id, provider: AuthenticationProvider.LOCAL, jwti: uuidv4() },
-      this.tokensService.jwtAccessTokenExpiresIn,
+      { expiresIn: this.tokensService.jwtAccessTokenExpiresIn },
     );
     const refreshToken: string = await this.tokensService.generate(
       { userId: user.id, provider: AuthenticationProvider.LOCAL },
-      this.tokensService.jwtRefreshTokenExpiresIn,
+      { expiresIn: this.tokensService.jwtRefreshTokenExpiresIn },
     );
 
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
@@ -372,7 +371,7 @@ export default class AuthService {
    * @returns {Promise<{ accessToken: string }>} - A promise that resolves with the new access token.
    */
   async refreshAccessToken(accessToken: string): Promise<{ accessToken: string }> {
-    const payload: TokenPayload = await this.tokensService.verify(accessToken, true);
+    const payload: TokenPayload = await this.tokensService.verify(accessToken, { ignoreExpiration: true });
     if (!payload) {
       throw new UnauthorizedException("Authentication failed.");
     }
@@ -403,7 +402,7 @@ export default class AuthService {
 
     const newAccessToken: string = await this.tokensService.generate(
       { userId, provider, jwti: uuidv4() },
-      this.tokensService.jwtAccessTokenExpiresIn,
+      { expiresIn: this.tokensService.jwtAccessTokenExpiresIn },
     );
 
     return { accessToken: newAccessToken };

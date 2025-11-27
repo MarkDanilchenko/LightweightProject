@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { JwtService } from "@nestjs/jwt";
+import { JwtService, JwtSignOptions, JwtVerifyOptions } from "@nestjs/jwt";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
 import RedisService from "@server/services/redis/redis.service";
@@ -29,25 +29,25 @@ export default class TokensService {
    * Generates a jwt with the given payload and expiresIn.
    *
    * @param {TokenPayload} payload The payload to sign.
-   * @param {string} [expiresIn] The time until the token expires. Defaults to 1 day.
+   * @param {JwtSignOptions} [options] The options to use for generating the jwt. Defaults to { expiresIn: "1d" }.
    *
    * @returns {Promise<string>} A promise that resolves with the generated jwt.
    */
-  async generate(payload: TokenPayload, expiresIn?: string): Promise<string> {
-    return this.jwtService.signAsync(payload, { expiresIn: expiresIn || "1d" });
+  async generate(payload: TokenPayload, options: JwtSignOptions = { expiresIn: "1d" }): Promise<string> {
+    return this.jwtService.signAsync(payload, options);
   }
 
   /**
    * Verifies the given jwt.
    *
    * @param {string} token The token to verify.
-   * @param {boolean} [ignoreExpiration] Whether to ignore the expiration time of the token. Defaults to false.
+   * @param {JwtVerifyOptions} [options] The options to use for verifying the jwt. Defaults to { ignoreExpiration: false }.
    *
    * @returns {Promise<TokenPayload>} A promise that resolves with the verified token payload
    * or rejects with an UnauthorizedException if the token is invalid or expired.
    */
-  async verify(token: string, ignoreExpiration = false): Promise<TokenPayload> {
-    return this.jwtService.verifyAsync<TokenPayload>(token, { ignoreExpiration });
+  async verify(token: string, options: JwtVerifyOptions = { ignoreExpiration: false }): Promise<TokenPayload> {
+    return this.jwtService.verifyAsync<TokenPayload>(token, options);
   }
 
   /**
