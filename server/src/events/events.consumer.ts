@@ -3,6 +3,7 @@ import { OnEvent } from "@nestjs/event-emitter";
 import {
   AuthLocalEmailVerificationSentEvent,
   AuthLocalEmailVerifiedEvent,
+  AuthLocalPasswordResetedEvent,
   AuthLocalPasswordResetSentEvent,
   EventName,
 } from "@server/events/interfaces/events.interfaces";
@@ -65,6 +66,21 @@ export default class EventsConsumer {
     payload: AuthLocalPasswordResetSentEvent,
     manager?: EntityManager,
   ): Promise<void> {
+    await this.eventsService.createEvent(payload, manager);
+  }
+
+  /**
+   * Handle the AUTH_LOCAL_PASSWORD_RESETED event.
+   * This event is emitted by the local authentication service when a user's password is reseted.
+   * It contains the user's metadata and is used to create a new event in database for the account history purpose.
+   *
+   * @param {AuthLocalPasswordResetedEvent} payload - The events payload containing the user's metadata.
+   * @param {EntityManager} [manager] - The entity manager to use. If not provided, a new transaction will be started.
+   *
+   * @returns {Promise<void>} A promise that resolves when the event has been handled.
+   */
+  @OnEvent(EventName.AUTH_LOCAL_PASSWORD_RESETED)
+  async handleAuthLocalPasswordReseted(payload: AuthLocalPasswordResetedEvent, manager?: EntityManager): Promise<void> {
     await this.eventsService.createEvent(payload, manager);
   }
 }

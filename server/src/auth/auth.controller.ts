@@ -154,10 +154,6 @@ export default class AuthController {
     status: 400,
     description: "Invalid request.",
   })
-  @ApiResponse({
-    status: 404,
-    description: "User not found.",
-  })
   @ApiBody({ type: LocalPasswordForgotDto })
   @UsePipes(ZodValidationPipe)
   async localPasswordForgot(
@@ -181,6 +177,10 @@ export default class AuthController {
   @ApiResponse({
     status: 400,
     description: "Invalid request.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Invalid token.",
   })
   @ApiBody({ type: LocalPasswordResetDto })
   @UsePipes(ZodValidationPipe)

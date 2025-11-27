@@ -463,7 +463,6 @@ export default class AuthService {
         email,
         authentications: {
           provider: AuthenticationProvider.LOCAL,
-          refreshToken: Not(IsNull()),
         },
       },
     });
@@ -488,8 +487,70 @@ export default class AuthService {
     );
   }
 
+  /**
+   * Resets the password for a user with a given token.
+   *
+   * @param {LocalPasswordResetDto} localPasswordResetDto - The data transfer object containing the token and the new password.
+   *
+   * @returns {Promise<void>} A promise that resolves when the password has been successfully reseted.
+   */
   async localPasswordReset(localPasswordResetDto: LocalPasswordResetDto): Promise<void> {
     const { token, password } = localPasswordResetDto;
+
+    const { userId, provider } = await this.tokensService.decode(token);
+    if (!userId && !provider) {
+      throw new BadRequestException("Token is invalid.");
+    }
+
+    const user: UserEntity | null = await this.userService.findUser({
+      relations: ["authentications"],
+      select: {
+        id: true,
+        authentications: {
+          id: true,
+          metadata: true,
+        },
+      },
+      where: {
+        id: userId,
+        authentications: {
+          provider,
+        },
+      },
+    });
+    if (!user) {
+      throw new BadRequestException("Token is invalid.");
+    } else if (!user.authentications[0].metadata?.local?.isEmailVerified) {
+      throw new BadRequestException("Email is not verified yet.");
+    }
+
+    const currentPassword: string = user.authentications[0].metadata?.local?.password;
+    await this.tokensService.verify(token, {
+      secret: currentPassword,
+    });
+
+    const newHashedPassword: string = await hash(password);
+
+    await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
+      await this.updateAuthentication(
+        { provider, userId, id: user.authentications[0].id },
+        {
+          metadata: {
+            local: {
+              ...user.authentications[0].metadata.local,
+              password: newHashedPassword,
+            },
+          },
+        },
+        manager,
+      );
+
+      this.eventEmitter.emit(
+        EventName.AUTH_LOCAL_PASSWORD_RESETED,
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_PASSWORD_RESETED, userId, user.authentications[0].id),
+        manager,
+      );
+    });
   }
 
   // async authAccordingToStrategy(

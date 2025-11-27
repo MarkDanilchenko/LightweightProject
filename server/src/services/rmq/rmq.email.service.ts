@@ -150,7 +150,7 @@ export class RmqEmailService {
     }
     const currentPassword = authentication.metadata.local?.password as string;
 
-    // Generate a jwt with the user's password as the secret, because of one link = 1 attempt to change password;
+    // Generate a jwt with the current user's password as the secret, because further: one jwt link = 1 attempt to change password;
     const token: string = await this.tokensService.generate(
       { userId, provider: AuthenticationProvider.LOCAL },
       { expiresIn: "15m", secret: currentPassword },

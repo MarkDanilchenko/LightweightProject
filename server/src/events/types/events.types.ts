@@ -4,6 +4,7 @@ import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   AuthLocalPasswordResetSentEvent,
+  AuthLocalPasswordResetedEvent,
 } from "@server/events/interfaces/events.interfaces";
 
 type EventType =
@@ -11,6 +12,7 @@ type EventType =
   | AuthLocalEmailVerifiedEvent
   | AuthLocalCreatedEvent
   | AuthLocalPasswordResetEvent
-  | AuthLocalPasswordResetSentEvent;
+  | AuthLocalPasswordResetSentEvent
+  | AuthLocalPasswordResetedEvent;
 
 export { EventType };

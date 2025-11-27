@@ -25,6 +25,7 @@ interface AuthLocalPasswordResetEvent extends BaseEvent {
   email: string;
 }
 interface AuthLocalPasswordResetSentEvent extends BaseEvent {}
+interface AuthLocalPasswordResetedEvent extends BaseEvent {}
 
 export {
   EventName,
@@ -34,4 +35,5 @@ export {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   AuthLocalPasswordResetSentEvent,
+  AuthLocalPasswordResetedEvent,
 };

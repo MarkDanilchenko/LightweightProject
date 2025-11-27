@@ -2,6 +2,7 @@ import {
   AuthLocalCreatedEvent,
   AuthLocalEmailVerificationSentEvent,
   AuthLocalEmailVerifiedEvent,
+  AuthLocalPasswordResetedEvent,
   AuthLocalPasswordResetEvent,
   AuthLocalPasswordResetSentEvent,
   BaseEvent,
@@ -77,12 +78,20 @@ class AuthLocalPasswordResetSentEventClass extends BaseEventClass implements Aut
   }
 }
 
+// Auth Local Password Reseted Event;
+class AuthLocalPasswordResetedEventClass extends BaseEventClass implements AuthLocalPasswordResetedEvent {
+  constructor(name: BaseEvent["name"], userId: BaseEvent["userId"], modelId: BaseEvent["modelId"]) {
+    super(name, userId, modelId);
+  }
+}
+
 const eventsRegistry = {
   [EventName.AUTH_LOCAL_CREATED]: AuthLocalCreatedEventClass,
   [EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT]: AuthLocalEmailVerificationSentEventClass,
   [EventName.AUTH_LOCAL_EMAIL_VERIFIED]: AuthLocalEmailVerifiedEventClass,
   [EventName.AUTH_LOCAL_PASSWORD_RESET]: AuthLocalPasswordResetEventClass,
   [EventName.AUTH_LOCAL_PASSWORD_RESET_SENT]: AuthLocalPasswordResetSentEventClass,
+  [EventName.AUTH_LOCAL_PASSWORD_RESETED]: AuthLocalPasswordResetedEventClass,
 };
 
 export { eventsRegistry };
