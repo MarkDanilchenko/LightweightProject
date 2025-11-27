@@ -5,7 +5,20 @@ import AppConfiguration from "./interfaces/appConfiguration.interfaces";
 import { utilities as nestWinstonModuleUtilities } from "nest-winston";
 import { Transport } from "@nestjs/microservices";
 
-dotenv.config({ path: path.join(process.cwd(), "../.env") });
+function getEnvPath(): string {
+  const outOfDistEnvPath: string = path.join(__dirname, "../../../../.env");
+  const fallbackEnvPath: string = path.join(__dirname, "../../../.env");
+
+  try {
+    require.resolve(outOfDistEnvPath);
+
+    return outOfDistEnvPath;
+  } catch {
+    return fallbackEnvPath;
+  }
+}
+
+dotenv.config({ path: getEnvPath() });
 
 export default (): AppConfiguration => {
   const {
