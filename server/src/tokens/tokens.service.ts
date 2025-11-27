@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService, JwtSignOptions, JwtVerifyOptions } from "@nestjs/jwt";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
@@ -47,7 +47,30 @@ export default class TokensService {
    * or rejects with an UnauthorizedException if the token is invalid or expired.
    */
   async verify(token: string, options: JwtVerifyOptions = { ignoreExpiration: false }): Promise<TokenPayload> {
-    return this.jwtService.verifyAsync<TokenPayload>(token, options);
+    try {
+      const { ...args } = await this.jwtService.verifyAsync<TokenPayload>(token, options);
+
+      return args;
+    } catch (error) {
+      if (error.name === "TokenExpiredError") {
+        throw new UnauthorizedException("Token expired");
+      }
+
+      throw new UnauthorizedException("Invalid token");
+    }
+  }
+
+  /**
+   * Decodes a jwt back into its payload without verifying it.
+   *
+   * @param {string} token The jwt to decode.
+   *
+   * @returns {TokenPayload} The decoded token payload.
+   */
+  decode(token: string): TokenPayload {
+    const { ...args } = this.jwtService.decode<TokenPayload>(token);
+
+    return args;
   }
 
   /**
