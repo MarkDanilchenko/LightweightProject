@@ -4,6 +4,9 @@ enum EventName {
   AUTH_LOCAL_EMAIL_VERIFICATION_SENT = "auth.local.email-verification.sent",
   AUTH_LOCAL_EMAIL_VERIFIED = "auth.local.email.verified",
   AUTH_LOCAL_CREATED = "auth.local.created",
+  AUTH_LOCAL_PASSWORD_RESET = "auth.local.password-reset",
+  AUTH_LOCAL_PASSWORD_RESET_SENT = "auth.local.password-reset.sent",
+  AUTH_LOCAL_PASSWORD_RESETED = "auth.local.password.reseted",
 }
 
 interface BaseEvent {
@@ -17,6 +20,11 @@ interface AuthLocalEmailVerifiedEvent extends BaseEvent {}
 interface AuthLocalCreatedEvent extends BaseEvent {
   metadata: NonNullable<NonNullable<AuthMetadata["local"]>["temporaryInfo"]> & { email: string };
 }
+interface AuthLocalPasswordResetEvent extends BaseEvent {
+  username: string;
+  email: string;
+}
+interface AuthLocalPasswordResetSentEvent extends BaseEvent {}
 
 export {
   EventName,
@@ -24,4 +32,6 @@ export {
   AuthLocalEmailVerificationSentEvent,
   AuthLocalEmailVerifiedEvent,
   AuthLocalCreatedEvent,
+  AuthLocalPasswordResetEvent,
+  AuthLocalPasswordResetSentEvent,
 };
