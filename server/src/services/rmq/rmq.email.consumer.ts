@@ -1,7 +1,11 @@
 import { Controller, Logger, LoggerService } from "@nestjs/common";
 import { RmqEmailService } from "@server/services/rmq/rmq.email.service";
 import { Ctx, MessagePattern, Payload, RmqContext } from "@nestjs/microservices";
-import { AuthLocalCreatedEvent, EventName } from "@server/events/interfaces/events.interfaces";
+import {
+  AuthLocalCreatedEvent,
+  AuthLocalPasswordResetEvent,
+  EventName,
+} from "@server/events/interfaces/events.interfaces";
 
 /**
  * Controller that handles incoming RabbitMQ messages for email-related events.
@@ -41,6 +45,35 @@ export class RmqEmailConsumer {
       channel.nack(originalMsg);
 
       this.logger.error("🚀 ~ RmqEmailController ~ handleAuthCreatedLocal ~ error:", error);
+    }
+  }
+
+  /**
+   * Handles the AUTH_LOCAL_PASSWORD_RESET event from the message queue.
+   * This method processes password reset events by sending a password reset email
+   * to the user with a password reset link.
+   *
+   * @param {AuthLocalPasswordResetEvent} payload - The event payload containing user details and metadata
+   * @param {RmqContext} context - The RabbitMQ context for message acknowledgment
+   *
+   * @returns {Promise<void>} A promise that resolves when the email is processed
+   */
+  @MessagePattern(EventName.AUTH_LOCAL_PASSWORD_RESET)
+  async handleAuthLocalPasswordReset(
+    @Payload() payload: AuthLocalPasswordResetEvent,
+    @Ctx() context: RmqContext,
+  ): Promise<void> {
+    const channel = context.getChannelRef();
+    const originalMsg = context.getMessage();
+
+    try {
+      await this.rmqEmailService.sendPasswordResetEmail(payload);
+
+      channel.ack(originalMsg);
+    } catch (error) {
+      channel.nack(originalMsg);
+
+      this.logger.error("🚀 ~ RmqEmailController ~ handleAuthLocalPasswordReset ~ error:", error);
     }
   }
 }

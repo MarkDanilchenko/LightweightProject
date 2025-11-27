@@ -18,7 +18,7 @@ export default class EventEntity extends BaseEntity {
   @PrimaryGeneratedColumn("uuid")
   id: string;
 
-  @Column({ type: "enum", enum: EventName })
+  @Column({ type: "varchar" })
   name: EventName;
 
   @Column({

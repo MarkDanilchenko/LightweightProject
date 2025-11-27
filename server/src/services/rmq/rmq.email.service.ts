@@ -2,7 +2,11 @@ import * as path from "node:path";
 import * as fs from "node:fs";
 import * as ejs from "ejs";
 import { Injectable } from "@nestjs/common";
-import { AuthLocalCreatedEvent, EventName } from "@server/events/interfaces/events.interfaces";
+import {
+  AuthLocalCreatedEvent,
+  AuthLocalPasswordResetEvent,
+  EventName,
+} from "@server/events/interfaces/events.interfaces";
 import { ConfigService } from "@nestjs/config";
 import { Transporter } from "nodemailer";
 import { MailOptions } from "nodemailer/lib/smtp-pool";
@@ -106,6 +110,75 @@ export class RmqEmailService {
       this.eventEmitter.emit(
         EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT,
         this.eventsService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT, userId, modelId),
+        manager,
+      );
+
+      // Send an email after any successful database operations;
+      await this.transporter.sendMail(mailOptions);
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * Sends an email with a password reset link to the user.
+   * The email contains a link with a jwt token, which is valid for 15 minutes.
+   *
+   * @param {AuthLocalPasswordResetEvent} payload - The event containing the user's information.
+   *
+   * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
+   */
+  async sendPasswordResetEmail(payload: AuthLocalPasswordResetEvent): Promise<void> {
+    // First, verify, that the appropriate template exists;
+    const passwordResetTemplatePath: string = path.resolve(process.cwd(), "templates/localPasswordReset.ejs");
+    await fs.promises.access(passwordResetTemplatePath, fs.constants.R_OK);
+
+    const { userId, modelId, username, email } = payload;
+    const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
+    // Callback should redirect user to the client password reset page, not directly to the server!;
+    const { baseUrl } = this.configService.get<AppConfiguration["clientConfiguration"]>("clientConfiguration")!;
+
+    const authentication: AuthenticationEntity | null = await this.authService.findAuthenticationByPk(modelId);
+    if (!authentication) {
+      throw new Error("Authentication not found");
+    }
+    const currentPassword = authentication.metadata.local?.password as string;
+
+    // Generate a jwt with the user's password as the secret, because of one link = 1 attempt to change password;
+    const token: string = await this.tokensService.generate(
+      { userId, provider: AuthenticationProvider.LOCAL },
+      { expiresIn: "15m", secret: currentPassword },
+    );
+    // TODO: callbackUrl should be implemented on the client (frontend-app);
+    const callbackUrl: string = `${baseUrl}/local/password/reset?token=${token}`;
+    const html: string = await ejs.renderFile(passwordResetTemplatePath, {
+      username,
+      callbackUrl,
+    });
+    const mailOptions: MailOptions = {
+      from,
+      to: email,
+      subject: "Password Reset",
+      text: "Please, click on the link below and follow the instructions to reset your password.",
+      html,
+    };
+
+    // Start transaction with creating event and sending email;
+    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    const manager: EntityManager = queryRunner.manager;
+
+    try {
+      this.eventEmitter.emit(
+        EventName.AUTH_LOCAL_PASSWORD_RESET_SENT,
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_PASSWORD_RESET_SENT, userId, modelId),
         manager,
       );
 

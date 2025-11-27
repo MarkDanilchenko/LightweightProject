@@ -438,6 +438,13 @@ export default class AuthService {
     return user;
   }
 
+  /**
+   * Sends an email with reset password instructions to the user.
+   *
+   * @param {LocalPasswordForgotDto} localPasswordForgotDto - The data transfer object containing the user's email.
+   *
+   * @returns {Promise<void>} A promise that resolves when the email with reset password instructions has been successfully sent.
+   */
   async localPasswordForgot(localPasswordForgotDto: LocalPasswordForgotDto): Promise<void> {
     const { email } = localPasswordForgotDto;
 
@@ -445,20 +452,17 @@ export default class AuthService {
       relations: ["authentications"],
       select: {
         id: true,
+        username: true,
+        email: true,
         authentications: {
           id: true,
+          metadata: true,
         },
       },
       where: {
         email,
         authentications: {
           provider: AuthenticationProvider.LOCAL,
-          metadata: {
-            local: {
-              isEmailVerified: true,
-              password: And(Not(IsNull()), Not("")),
-            },
-          },
           refreshToken: Not(IsNull()),
         },
       },
@@ -468,7 +472,20 @@ export default class AuthService {
       // For security reasons, it is better not to say, that the user has not been found, to avoid going through email addresses.
       // Return http status code 200 in controller instead;
       return;
+    } else if (!user.authentications[0].metadata?.local?.isEmailVerified) {
+      throw new BadRequestException(`Email "${email}" is not verified yet.`);
     }
+
+    this.rmqMicroserviceClient.emit(
+      EventName.AUTH_LOCAL_PASSWORD_RESET,
+      this.eventsService.buildInstance(
+        EventName.AUTH_LOCAL_PASSWORD_RESET,
+        user.id,
+        user.authentications[0].id,
+        user.username!,
+        user.email,
+      ),
+    );
   }
 
   async localPasswordReset(localPasswordResetDto: LocalPasswordResetDto): Promise<void> {
