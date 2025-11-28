@@ -7,6 +7,10 @@ import {
   AuthLocalPasswordResetedEvent,
 } from "@server/events/interfaces/events.interfaces";
 
+type MetadataEmail = {
+  email: string;
+};
+
 type EventType =
   | AuthLocalEmailVerificationSentEvent
   | AuthLocalEmailVerifiedEvent
@@ -15,4 +19,4 @@ type EventType =
   | AuthLocalPasswordResetSentEvent
   | AuthLocalPasswordResetedEvent;
 
-export { EventType };
+export { EventType, MetadataEmail };

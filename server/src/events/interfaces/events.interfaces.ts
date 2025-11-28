@@ -1,4 +1,5 @@
 import { AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
+import { MetadataEmail } from "@server/events/types/events.types";
 
 enum EventName {
   AUTH_LOCAL_EMAIL_VERIFICATION_SENT = "auth.local.email-verification.sent",
@@ -16,26 +17,20 @@ interface BaseEvent {
 }
 
 interface AuthLocalEmailVerificationSentEvent extends BaseEvent {
-  metadata: {
-    email: string;
-  };
+  metadata: MetadataEmail;
 }
 interface AuthLocalEmailVerifiedEvent extends BaseEvent {
-  metadata: {
-    email: string;
-  };
+  metadata: MetadataEmail;
 }
 interface AuthLocalCreatedEvent extends BaseEvent {
-  metadata: NonNullable<NonNullable<AuthMetadata["local"]>["temporaryInfo"]> & { email: string };
+  metadata: NonNullable<NonNullable<AuthMetadata["local"]>["temporaryInfo"]> & MetadataEmail;
 }
 interface AuthLocalPasswordResetEvent extends BaseEvent {
   username: string;
   email: string;
 }
 interface AuthLocalPasswordResetSentEvent extends BaseEvent {
-  metadata: {
-    email: string;
-  };
+  metadata: MetadataEmail;
 }
 interface AuthLocalPasswordResetedEvent extends BaseEvent {}
 

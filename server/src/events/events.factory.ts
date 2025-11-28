@@ -8,6 +8,7 @@ import {
   BaseEvent,
   EventName,
 } from "@server/events/interfaces/events.interfaces";
+import { MetadataEmail } from "@server/events/types/events.types";
 
 // Base Event;
 class BaseEventClass implements BaseEvent {
@@ -24,13 +25,13 @@ class BaseEventClass implements BaseEvent {
 
 // Auth Local Email Verification Sent Event;
 class AuthLocalEmailVerificationSentEventClass extends BaseEventClass implements AuthLocalEmailVerificationSentEvent {
-  public readonly metadata: { email: string };
+  public readonly metadata: MetadataEmail;
 
   constructor(
     name: BaseEvent["name"],
     userId: BaseEvent["userId"],
     modelId: BaseEvent["modelId"],
-    metadata: { email: string },
+    metadata: MetadataEmail,
   ) {
     super(name, userId, modelId);
 
@@ -40,13 +41,13 @@ class AuthLocalEmailVerificationSentEventClass extends BaseEventClass implements
 
 // Auth Local Email Verified Event;
 class AuthLocalEmailVerifiedEventClass extends BaseEventClass implements AuthLocalEmailVerifiedEvent {
-  public readonly metadata: { email: string };
+  public readonly metadata: MetadataEmail;
 
   constructor(
     name: BaseEvent["name"],
     userId: BaseEvent["userId"],
     modelId: BaseEvent["modelId"],
-    metadata: { email: string },
+    metadata: MetadataEmail,
   ) {
     super(name, userId, modelId);
 
@@ -91,13 +92,13 @@ class AuthLocalPasswordResetEventClass extends BaseEventClass implements AuthLoc
 
 // Auth Local Password Reset Sent Event;
 class AuthLocalPasswordResetSentEventClass extends BaseEventClass implements AuthLocalPasswordResetSentEvent {
-  public readonly metadata: { email: string };
+  public readonly metadata: MetadataEmail;
 
   constructor(
     name: BaseEvent["name"],
     userId: BaseEvent["userId"],
     modelId: BaseEvent["modelId"],
-    metadata: { email: string },
+    metadata: MetadataEmail,
   ) {
     super(name, userId, modelId);
 
