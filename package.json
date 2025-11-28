@@ -111,15 +111,25 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
+    "rootDir": "./server/src",
     "testRegex": ".*\\.spec\\.ts$",
     "transform": {
-      "^.+\\.(t|j)s$": "ts-jest"
+      "^.+\\.(t|j)s$": [
+        "ts-jest",
+        {
+          "tsconfig": "./tsconfig.json"
+        }
+      ]
+    },
+    "moduleNameMapper": {
+      "^@server/(.*)": "<rootDir>/$1",
+      "^@shared/(.*)": "<rootDir>/../../shared/$1"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "**/!(*.spec).(t|j)s",
+      "server/src/**/*.(t|j)s"
     ],
-    "coverageDirectory": "../coverage",
+    "coverageDirectory": "./coverage/server",
     "testEnvironment": "node"
   },
   "browserslist": [
