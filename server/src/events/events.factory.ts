@@ -24,15 +24,33 @@ class BaseEventClass implements BaseEvent {
 
 // Auth Local Email Verification Sent Event;
 class AuthLocalEmailVerificationSentEventClass extends BaseEventClass implements AuthLocalEmailVerificationSentEvent {
-  constructor(name: BaseEvent["name"], userId: BaseEvent["userId"], modelId: BaseEvent["modelId"]) {
+  public readonly metadata: { email: string };
+
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: { email: string },
+  ) {
     super(name, userId, modelId);
+
+    this.metadata = metadata;
   }
 }
 
 // Auth Local Email Verified Event;
 class AuthLocalEmailVerifiedEventClass extends BaseEventClass implements AuthLocalEmailVerifiedEvent {
-  constructor(name: BaseEvent["name"], userId: BaseEvent["userId"], modelId: BaseEvent["modelId"]) {
+  public readonly metadata: { email: string };
+
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: { email: string },
+  ) {
     super(name, userId, modelId);
+
+    this.metadata = metadata;
   }
 }
 
@@ -73,8 +91,17 @@ class AuthLocalPasswordResetEventClass extends BaseEventClass implements AuthLoc
 
 // Auth Local Password Reset Sent Event;
 class AuthLocalPasswordResetSentEventClass extends BaseEventClass implements AuthLocalPasswordResetSentEvent {
-  constructor(name: BaseEvent["name"], userId: BaseEvent["userId"], modelId: BaseEvent["modelId"]) {
+  public readonly metadata: { email: string };
+
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: { email: string },
+  ) {
     super(name, userId, modelId);
+
+    this.metadata = metadata;
   }
 }
 

@@ -15,8 +15,16 @@ interface BaseEvent {
   modelId: string;
 }
 
-interface AuthLocalEmailVerificationSentEvent extends BaseEvent {}
-interface AuthLocalEmailVerifiedEvent extends BaseEvent {}
+interface AuthLocalEmailVerificationSentEvent extends BaseEvent {
+  metadata: {
+    email: string;
+  };
+}
+interface AuthLocalEmailVerifiedEvent extends BaseEvent {
+  metadata: {
+    email: string;
+  };
+}
 interface AuthLocalCreatedEvent extends BaseEvent {
   metadata: NonNullable<NonNullable<AuthMetadata["local"]>["temporaryInfo"]> & { email: string };
 }
@@ -24,7 +32,11 @@ interface AuthLocalPasswordResetEvent extends BaseEvent {
   username: string;
   email: string;
 }
-interface AuthLocalPasswordResetSentEvent extends BaseEvent {}
+interface AuthLocalPasswordResetSentEvent extends BaseEvent {
+  metadata: {
+    email: string;
+  };
+}
 interface AuthLocalPasswordResetedEvent extends BaseEvent {}
 
 export {

@@ -239,10 +239,15 @@ export default class AuthService {
     }
 
     const authentication: AuthenticationEntity | null = await this.findAuthentication({
-      where: {
-        userId,
-        provider,
+      relations: { user: true },
+      select: {
+        id: true,
+        userId: true,
+        provider: true,
+        metadata: true,
+        user: { id: true, email: true },
       },
+      where: { userId, provider },
     });
     if (!authentication) {
       throw new NotFoundException("Authentication not found.");
@@ -279,10 +284,7 @@ export default class AuthService {
       // Set refreshToken to null for all other user's authentications;
       await this.updateAuthentication(
         { userId, provider: Not(AuthenticationProvider.LOCAL) },
-        {
-          refreshToken: null,
-          lastAccessedAt: () => "lastAccessedAt",
-        },
+        { refreshToken: null, lastAccessedAt: () => "lastAccessedAt" },
         manager,
       );
 
@@ -291,7 +293,9 @@ export default class AuthService {
 
       this.eventEmitter.emit(
         EventName.AUTH_LOCAL_EMAIL_VERIFIED,
-        this.eventsService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFIED, userId, authentication.id),
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFIED, userId, authentication.id, {
+          email: authentication.user.email,
+        }),
         manager,
       );
     });

@@ -109,7 +109,9 @@ export class RmqEmailService {
 
       this.eventEmitter.emit(
         EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT,
-        this.eventsService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT, userId, modelId),
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT, userId, modelId, {
+          email: metadata.email,
+        }),
         manager,
       );
 
@@ -178,7 +180,7 @@ export class RmqEmailService {
     try {
       this.eventEmitter.emit(
         EventName.AUTH_LOCAL_PASSWORD_RESET_SENT,
-        this.eventsService.buildInstance(EventName.AUTH_LOCAL_PASSWORD_RESET_SENT, userId, modelId),
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_PASSWORD_RESET_SENT, userId, modelId, { email }),
         manager,
       );
 
