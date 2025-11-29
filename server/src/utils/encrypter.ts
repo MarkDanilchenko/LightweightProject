@@ -29,6 +29,15 @@ function encrypt(strToEncrypt: string): string {
  * @returns {string} The decrypted string.
  */
 function decrypt(strToDecrypt: string): string {
+  if (
+    !strToDecrypt ||
+    strToDecrypt.length === 0 ||
+    strToDecrypt.indexOf(":") === -1 ||
+    strToDecrypt.split(":").length !== 2
+  ) {
+    throw new Error("Invalid encrypted string format");
+  }
+
   const secretKey = Buffer.from(AppConfiguration().serverConfiguration.commonSecret, "hex");
 
   const [ivHex, encryptedHex] = strToDecrypt.split(":");

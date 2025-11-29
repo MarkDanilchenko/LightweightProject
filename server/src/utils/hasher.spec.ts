@@ -8,6 +8,8 @@ jest.mock("crypto", () => ({
 }));
 
 describe("Hasher Utility", (): void => {
+  const keylen = 64;
+
   afterAll((): void => {
     jest.restoreAllMocks();
   });
@@ -15,7 +17,6 @@ describe("Hasher Utility", (): void => {
   describe("hash function", (): void => {
     let mockScrypt: jest.Mock;
     let toHash: string;
-    const keylen = 64;
 
     beforeAll((): void => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -67,7 +68,6 @@ describe("Hasher Utility", (): void => {
     let mockScrypt: jest.Mock;
     let mockTimingSafeEqual: jest.Mock;
     let toHash: string;
-    const keylen = 64;
 
     beforeAll((): void => {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
