@@ -2,24 +2,17 @@ import { Response } from "express";
 import { setCookie, clearCookie } from "./cookie";
 
 describe("Cookie Utility", (): void => {
-  afterAll((): void => {
-    jest.restoreAllMocks();
-  });
-
   describe("setCookie", (): void => {
     let mockResponse: Partial<Response>;
     let mockCookie: jest.Mock;
 
     beforeEach((): void => {
-      mockCookie = jest.fn();
+      jest.clearAllMocks();
 
+      mockCookie = jest.fn();
       mockResponse = {
         cookie: mockCookie,
       };
-    });
-
-    afterEach((): void => {
-      jest.clearAllMocks();
     });
 
     it("should set a cookie with default options", (): void => {
@@ -73,15 +66,12 @@ describe("Cookie Utility", (): void => {
     let mockClearCookie: jest.Mock;
 
     beforeEach((): void => {
-      mockClearCookie = jest.fn();
+      jest.clearAllMocks();
 
+      mockClearCookie = jest.fn();
       mockResponse = {
         clearCookie: mockClearCookie,
       };
-    });
-
-    afterEach((): void => {
-      jest.clearAllMocks();
     });
 
     it("should clear a cookie", (): void => {

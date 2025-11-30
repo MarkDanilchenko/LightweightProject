@@ -10,10 +10,6 @@ jest.mock("crypto", () => ({
 describe("Hasher Utility", (): void => {
   const keylen = 64;
 
-  afterAll((): void => {
-    jest.restoreAllMocks();
-  });
-
   describe("hash function", (): void => {
     let mockScrypt: jest.Mock;
     let toHash: string;

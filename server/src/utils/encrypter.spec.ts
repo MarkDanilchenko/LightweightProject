@@ -10,10 +10,6 @@ jest.mock("crypto", () => ({
 describe("Encrypter Utility", (): void => {
   const algorithm = "aes-256-cbc";
 
-  afterAll((): void => {
-    jest.restoreAllMocks();
-  });
-
   describe("encrypt function", (): void => {
     let mockCreateCipheriv: jest.Mock;
     const strToEncrypt = "testString";
