@@ -23,10 +23,10 @@
     "typeorm:show": "npm run typeorm migration:show -- -d ./server/src/configs/typeorm.configuration.ts",
     "format:server": "prettier --write ./server/src/**/*.ts ./server/test/**/*.ts ./server/migrations/**/*.ts && eslint ./server/src/**/*.ts ./server/test/**/*.ts ./server/migrations/**/*.ts --fix",
     "clear:server:data": "rm -rf ./server/dist",
-    "test:unit": "jest",
-    "test:e2e": "jest --config ./server/test/jest-e2e.json",
-    "test:unit:cov": "jest --coverage",
-    "test:e2e:cov": "jest --config ./server/test/jest-e2e.json --coverage"
+    "test:unit": "NODE_ENV=test jest",
+    "test:e2e": "NODE_ENV=test jest --config ./server/test/jest-e2e.json",
+    "test:unit:cov": "NODE_ENV=test jest --coverage",
+    "test:e2e:cov": "NODE_ENV=test jest --config ./server/test/jest-e2e.json --coverage"
   },
   "dependencies": {
     "@anatine/zod-nestjs": "^2.0.12",
@@ -43,6 +43,7 @@
     "@nestjs/typeorm": "^11.0.0",
     "@node-saml/passport-saml": "^5.1.0",
     "@types/nodemailer": "^7.0.1",
+    "@types/pg": "^8.15.6",
     "amqp-connection-manager": "^5.0.0",
     "amqplib": "^0.10.9",
     "axios": "1.11.0",

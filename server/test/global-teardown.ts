@@ -10,5 +10,9 @@ const logger = new Logger("GlobalTeardown");
  * @returns {Promise<void>} A promise that resolves when the global teardown is complete.
  */
 export default async function globalTeardown(): Promise<void> {
+  logger.log("Global teardown started");
+
+  // Nothing to do here.
+
   logger.log("Global teardown completed");
 }
