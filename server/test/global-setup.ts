@@ -1,5 +1,7 @@
 import { Logger } from "@nestjs/common";
 
+const logger = new Logger("GlobalSetup");
+
 /**
  * Global setup function for Jest.
  * This function is called once before all tests are executed.
@@ -8,5 +10,5 @@ import { Logger } from "@nestjs/common";
  * @returns {Promise<void>} A promise that resolves when the setup is complete.
  */
 export default async function globalSetup(): Promise<void> {
-  Logger.log("Global setup", "Jest");
+  logger.log("Global setup started");
 }

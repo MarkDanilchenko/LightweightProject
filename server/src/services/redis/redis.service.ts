@@ -11,7 +11,7 @@ export default class RedisService implements OnModuleInit {
   }
 
   onModuleInit(): void {
-    this.logger.log("🚀 ~ RedisService ~ onModuleInit ~ Redis service initialized");
+    this.logger.log("Redis service initialized");
   }
 
   private validateKey(key: string | Buffer): void {

@@ -44,7 +44,7 @@ export class RmqEmailConsumer {
     } catch (error) {
       channel.nack(originalMsg);
 
-      this.logger.error("🚀 ~ RmqEmailController ~ handleAuthCreatedLocal ~ error:", error);
+      this.logger.error("RmqEmailConsumer ~ handleAuthCreatedLocal", error);
     }
   }
 
@@ -73,7 +73,7 @@ export class RmqEmailConsumer {
     } catch (error) {
       channel.nack(originalMsg);
 
-      this.logger.error("🚀 ~ RmqEmailController ~ handleAuthLocalPasswordReset ~ error:", error);
+      this.logger.error("RmqEmailConsumer ~ handleAuthLocalPasswordReset", error);
     }
   }
 }

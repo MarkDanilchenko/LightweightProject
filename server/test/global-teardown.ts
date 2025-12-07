@@ -1,5 +1,7 @@
 import { Logger } from "@nestjs/common";
 
+const logger = new Logger("GlobalTeardown");
+
 /**
  * Global teardown function for Jest.
  * This function is called after all tests have finished.
@@ -8,5 +10,5 @@ import { Logger } from "@nestjs/common";
  * @returns {Promise<void>} A promise that resolves when the global teardown is complete.
  */
 export default async function globalTeardown(): Promise<void> {
-  Logger.log("Global teardown", "Jest");
+  logger.log("Global teardown completed");
 }
