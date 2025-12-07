@@ -1,9 +1,23 @@
 {
   "moduleFileExtensions": ["js", "json", "ts"],
   "rootDir": ".",
-  "testEnvironment": "node",
-  "testRegex": ".e2e-spec.ts$",
+  "testRegex": ".*\\.e2e-spec\\.ts$",
   "transform": {
-    "^.+\\.(t|j)s$": "ts-jest"
-  }
+    "^.+\\.(t|j)s$": [
+      "ts-jest",
+      {
+        "tsconfig": "<rootDir>/../tsconfig.json"
+      }
+    ]
+  },
+  "moduleNameMapper": {
+    "^@server/(.*)": "<rootDir>/../src/$1",
+    "^@shared/(.*)": "<rootDir>/../../shared/$1"
+  },
+  "collectCoverageFrom": ["**/!(*.spec|*.e2e-spec).(t|j)s", "<rootDir>/../src/**/*.(t|j)s"],
+  "globalSetup": "<rootDir>/global-setup.ts",
+  "globalTeardown": "<rootDir>/global-teardown.ts",
+  "coverageDirectory": "<rootDir>/../coverage/e2e",
+  "testEnvironment": "node",
+  "timeout": 30000
 }

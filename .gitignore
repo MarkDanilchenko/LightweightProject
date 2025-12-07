@@ -3,7 +3,7 @@ package-lock.json
 **/media
 **/*.pdf
 **/*.sql
-**/db_data/
+**/db_data*/
 **/redis_data/
 **/rabbitmq_data/
 compose.development.yaml

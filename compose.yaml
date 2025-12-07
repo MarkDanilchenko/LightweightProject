@@ -16,6 +16,24 @@ services:
       timeout: 5s
       retries: 3
 
+  db_test:
+    restart: always
+    image: postgres:16.4
+    container_name: db_test
+    ports:
+      - ${TEST_DATABASE_PORT}:${DATABASE_PORT}
+    environment:
+      POSTGRES_USER: ${TEST_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${TEST_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${TEST_POSTGRES_DB}
+    volumes:
+      - ./db_data_test:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "psql -U ${TEST_POSTGRES_USER} -d ${TEST_POSTGRES_DB} -c 'SELECT 1' || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   redis:
     restart: always
     image: redis:8.2.2
@@ -72,6 +90,8 @@ services:
 
 volumes:
   db_data:
+    driver: local
+  db_data_test:
     driver: local
   init:
     driver: local

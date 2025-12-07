@@ -4,15 +4,55 @@ import * as winston from "winston";
 import AppConfiguration from "./interfaces/appConfiguration.interfaces";
 import { utilities as nestWinstonModuleUtilities } from "nest-winston";
 import { Transport } from "@nestjs/microservices";
+import { Logger } from "@nestjs/common";
 
+const logger = new Logger("AppConfiguration");
+
+/**
+ * Returns the path to the .env file, depending on the NODE_ENV mode (development | test | production).
+ *
+ * @returns {string} The path to the .env file.
+ */
 function getEnvPath(): string {
-  const outOfDistEnvPath: string = path.join(__dirname, "../../../../.env");
-  const fallbackEnvPath: string = path.join(__dirname, "../../../.env");
+  const node_env: string | undefined = process.env.NODE_ENV || "development";
+  let distEnvPath: string;
+  let fallbackEnvPath: string;
+
+  switch (node_env) {
+    case "development":
+    case "test": {
+      distEnvPath = path.join(__dirname, "../../../../.env");
+      fallbackEnvPath = path.join(__dirname, "../../../.env");
+
+      break;
+    }
+
+    case "production": {
+      // TODO: Add production env;
+      distEnvPath = "";
+      fallbackEnvPath = "";
+
+      break;
+    }
+
+    default: {
+      distEnvPath = "";
+      fallbackEnvPath = "";
+
+      break;
+    }
+  }
+
+  if (!distEnvPath || !fallbackEnvPath) {
+    logger.error("NODE_ENV mode is not supported. Please, set NODE_ENV to 'development' | 'test' | 'production'");
+
+    process.exit(1);
+  }
 
   try {
-    require.resolve(outOfDistEnvPath);
+    require.resolve(distEnvPath);
 
-    return outOfDistEnvPath;
+    return distEnvPath;
   } catch {
     return fallbackEnvPath;
   }
