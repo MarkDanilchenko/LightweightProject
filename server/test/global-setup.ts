@@ -3,6 +3,7 @@ import * as fs from "fs";
 import * as path from "node:path";
 import { Logger } from "@nestjs/common";
 import { Client } from "pg";
+import { execSync } from "node:child_process";
 
 const logger = new Logger("GlobalSetup");
 
@@ -19,18 +20,16 @@ export default async function globalSetup(): Promise<void> {
   // 1.
   // Connect to the test DB and drop it, if exists;
   // This one is needed to start e2e tests on clean state;
-  const { TEST_DATABASE_HOST, TEST_DATABASE_PORT, TEST_POSTGRES_DB, TEST_POSTGRES_USER, TEST_POSTGRES_PASSWORD } =
+  const { TEST_DATABASE_HOST, TEST_DATABASE_PORT, TEST_DATABASE_NAME, TEST_DATABASE_USER, TEST_DATABASE_PASSWORD } =
     dotenv.parse(fs.readFileSync(path.join(__dirname, "../../.env")));
   if (
     !TEST_DATABASE_HOST ||
     !TEST_DATABASE_PORT ||
-    !TEST_POSTGRES_DB ||
-    !TEST_POSTGRES_USER ||
-    !TEST_POSTGRES_PASSWORD
+    !TEST_DATABASE_NAME ||
+    !TEST_DATABASE_USER ||
+    !TEST_DATABASE_PASSWORD
   ) {
-    logger.error(
-      "TEST_DATABASE_HOST, TEST_DATABASE_PORT, TEST_POSTGRES_DB, TEST_POSTGRES_USER, TEST_POSTGRES_PASSWORD are not set in the .env file",
-    );
+    logger.error("Test variables are not set properly in the .env file");
 
     process.exit(1);
   }
@@ -39,14 +38,14 @@ export default async function globalSetup(): Promise<void> {
     host: TEST_DATABASE_HOST,
     port: Number(TEST_DATABASE_PORT),
     database: "postgres", // Connect to the default DB, because of attempt to drop the test DB;
-    user: TEST_POSTGRES_USER,
-    password: TEST_POSTGRES_PASSWORD,
+    user: TEST_DATABASE_USER,
+    password: TEST_DATABASE_PASSWORD,
   });
   await pgClient.connect();
 
   try {
-    await pgClient.query(`DROP DATABASE IF EXISTS "${TEST_POSTGRES_DB}"`);
-    await pgClient.query(`CREATE DATABASE "${TEST_POSTGRES_DB}"`);
+    await pgClient.query(`DROP DATABASE IF EXISTS "${TEST_DATABASE_NAME}"`);
+    await pgClient.query(`CREATE DATABASE "${TEST_DATABASE_NAME}"`);
   } catch (error) {
     logger.error("Failed to drop or create the test database", error);
 
@@ -56,8 +55,12 @@ export default async function globalSetup(): Promise<void> {
   }
 
   // 2.
-  // Run all migrations on the test DB;
+  // Run all migrations on the created test DB;
   try {
+    execSync("npm run build:server && npm run typeorm:run", {
+      stdio: "inherit",
+      cwd: process.cwd(),
+    });
   } catch (error) {
     logger.error("Failed to run migrations on the test database", error);
 

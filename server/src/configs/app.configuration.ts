@@ -62,6 +62,7 @@ dotenv.config({ path: getEnvPath() });
 
 export default (): AppConfiguration => {
   const {
+    NODE_ENV,
     DATABASE_NAME,
     DATABASE_USER,
     DATABASE_PASSWORD,
@@ -113,6 +114,11 @@ export default (): AppConfiguration => {
     REDIS_KEY_PREFIX,
     CLIENT_HOST,
     CLIENT_PORT,
+    TEST_DATABASE_HOST,
+    TEST_DATABASE_PORT,
+    TEST_DATABASE_NAME,
+    TEST_DATABASE_USER,
+    TEST_DATABASE_PASSWORD,
   } = process.env;
 
   const serverConfiguration: AppConfiguration["serverConfiguration"] = {
@@ -177,6 +183,17 @@ export default (): AppConfiguration => {
     migrations: [process.cwd() + "/server/**/migrations/*.js"],
     applicationName: "LightweightProject",
   };
+
+  const dbConfigurationTest: Partial<AppConfiguration["dbConfiguration"]> = {
+    host: TEST_DATABASE_HOST || "127.0.0.1",
+    port: Number(TEST_DATABASE_PORT) || 5433,
+    database: TEST_DATABASE_NAME,
+    username: TEST_DATABASE_USER,
+    password: TEST_DATABASE_PASSWORD,
+  };
+  if (NODE_ENV === "test") {
+    Object.assign(dbConfiguration, dbConfigurationTest);
+  }
 
   const jwtConfiguration: AppConfiguration["jwtConfiguration"] = {
     secret: JWT_SECRET!,
