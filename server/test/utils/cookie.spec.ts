@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { setCookie, clearCookie } from "./cookie";
+import { setCookie, clearCookie } from "@server/utils/cookie";
 
 describe("Cookie Utility", (): void => {
   describe("setCookie", (): void => {

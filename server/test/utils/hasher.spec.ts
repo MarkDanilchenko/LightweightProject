@@ -1,4 +1,4 @@
-import { hash, verifyHash } from "./hasher";
+import { hash, verifyHash } from "@server/utils/hasher";
 
 // Mock the crypto module;
 jest.mock("crypto", () => ({

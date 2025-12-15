@@ -1,4 +1,4 @@
-import { encrypt, decrypt } from "./encrypter";
+import { encrypt, decrypt } from "@server/utils/encrypter";
 
 // Mock the crypto module;
 jest.mock("crypto", () => ({

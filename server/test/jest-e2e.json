@@ -14,10 +14,27 @@
     "^@server/(.*)": "<rootDir>/../src/$1",
     "^@shared/(.*)": "<rootDir>/../../shared/$1"
   },
-  "collectCoverageFrom": ["**/!(*.spec|*.e2e-spec).(t|j)s", "<rootDir>/../src/**/*.(t|j)s"],
+  "collectCoverageFrom": [
+    "**/*.(t|j)s",
+    "!**/coverage/**",
+    "!**/dist/**",
+    "!**/insomnia/**",
+    "!**/migrations/**",
+    "!**/templates/**",
+    "!**/test/**"
+  ],
+  "coverageDirectory": "<rootDir>/../coverage",
+  "coverageReporters": ["html"],
+  "coverageThreshold": {
+    "global": {
+      "branches": 80,
+      "functions": 80,
+      "lines": 80,
+      "statements": 80
+    }
+  },
   "globalSetup": "<rootDir>/global-setup.ts",
   "globalTeardown": "<rootDir>/global-teardown.ts",
-  "coverageDirectory": "<rootDir>/../coverage/e2e",
   "testEnvironment": "node",
   "timeout": 30000
 }
