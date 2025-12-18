@@ -16,8 +16,8 @@ describe("Cookie Utility", (): void => {
     });
 
     it("should set a cookie with default options", (): void => {
-      const cookieName = "test-cookie";
-      const cookieValue = "test-value";
+      const cookieName = "tests-cookie";
+      const cookieValue = "tests-value";
 
       setCookie(mockResponse as Response, cookieName, cookieValue);
 
@@ -30,8 +30,8 @@ describe("Cookie Utility", (): void => {
     });
 
     it("should set a cookie with custom secure option", (): void => {
-      const cookieName = "test-cookie";
-      const cookieValue = "test-value";
+      const cookieName = "tests-cookie";
+      const cookieValue = "tests-value";
       const secure = false;
 
       setCookie(mockResponse as Response, cookieName, cookieValue, secure);
@@ -75,7 +75,7 @@ describe("Cookie Utility", (): void => {
     });
 
     it("should clear a cookie", (): void => {
-      const cookieName = "test-cookie";
+      const cookieName = "tests-cookie";
 
       clearCookie(mockResponse as Response, cookieName);
 

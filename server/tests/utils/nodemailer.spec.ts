@@ -17,8 +17,8 @@ jest.mock("@server/configs/app.configuration", () => ({
     smtpConfiguration: {
       host: "smtp.example.com",
       port: 587,
-      username: "test@example.com",
-      password: "test-password",
+      username: "tests@example.com",
+      password: "tests-password",
       from: "noreply@example.com",
     },
   })),
@@ -37,8 +37,8 @@ describe("Nodemailer Utility", (): void => {
       port: 587,
       secure: false, // Since port is not 465
       auth: {
-        user: "test@example.com",
-        pass: "test-password",
+        user: "tests@example.com",
+        pass: "tests-password",
       },
     });
     expect(createTransport).toHaveBeenCalledTimes(1);
@@ -55,8 +55,8 @@ describe("Nodemailer Utility", (): void => {
     (appConfiguration as jest.Mock).mockReturnValueOnce({
       smtpConfiguration: {
         port: 587,
-        username: "test@example.com",
-        password: "test-password",
+        username: "tests@example.com",
+        password: "tests-password",
         from: "noreply@example.com",
       },
     });
@@ -76,8 +76,8 @@ describe("Nodemailer Utility", (): void => {
       smtpConfiguration: {
         host: "smtp.example.com",
         port: 465,
-        username: "test@example.com",
-        password: "test-password",
+        username: "tests@example.com",
+        password: "tests-password",
         from: "noreply@example.com",
       },
     });
@@ -91,8 +91,8 @@ describe("Nodemailer Utility", (): void => {
         port: 465,
         secure: true,
         auth: {
-          user: "test@example.com",
-          pass: "test-password",
+          user: "tests@example.com",
+          pass: "tests-password",
         },
       });
       expect(createTransport).toHaveBeenCalledTimes(1);

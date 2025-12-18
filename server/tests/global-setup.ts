@@ -18,7 +18,7 @@ export default async function globalSetup(): Promise<void> {
   logger.log("Global setup started");
 
   // 1.
-  // Connect to the test DB and drop it, if exists;
+  // Connect to the tests DB and drop it, if exists;
   // This one is needed to start e2e tests on clean state;
   const { TEST_DATABASE_HOST, TEST_DATABASE_PORT, TEST_DATABASE_NAME, TEST_DATABASE_USER, TEST_DATABASE_PASSWORD } =
     dotenv.parse(fs.readFileSync(path.join(__dirname, "../../.env")));
@@ -37,7 +37,7 @@ export default async function globalSetup(): Promise<void> {
   const pgClient: Client = new Client({
     host: TEST_DATABASE_HOST,
     port: Number(TEST_DATABASE_PORT),
-    database: "postgres", // Connect to the default DB, because of attempt to drop the test DB;
+    database: "postgres", // Connect to the default DB, because of attempt to drop the tests DB;
     user: TEST_DATABASE_USER,
     password: TEST_DATABASE_PASSWORD,
   });
@@ -47,7 +47,7 @@ export default async function globalSetup(): Promise<void> {
     await pgClient.query(`DROP DATABASE IF EXISTS "${TEST_DATABASE_NAME}"`);
     await pgClient.query(`CREATE DATABASE "${TEST_DATABASE_NAME}"`);
   } catch (error) {
-    logger.error("Failed to drop or create the test database", error);
+    logger.error("Failed to drop or create the tests database", error);
 
     process.exit(1);
   } finally {
@@ -55,14 +55,14 @@ export default async function globalSetup(): Promise<void> {
   }
 
   // 2.
-  // Run all migrations on the created test DB;
+  // Run all migrations on the created tests DB;
   try {
     execSync("npm run build:server && npm run typeorm:run", {
       stdio: "inherit",
       cwd: process.cwd(),
     });
   } catch (error) {
-    logger.error("Failed to run migrations on the test database", error);
+    logger.error("Failed to run migrations on the tests database", error);
 
     process.exit(1);
   }
