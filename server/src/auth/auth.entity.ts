@@ -1,5 +1,4 @@
 import {
-  BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
@@ -11,17 +10,23 @@ import {
 } from "typeorm";
 import UserEntity from "@server/users/users.entity";
 import { AuthenticationProvider, AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
+import { IsDate, IsOptional, IsString, IsUUID } from "class-validator";
+import { Type } from "class-transformer";
+import CommonEntity from "@server/common/common.entity";
 
 @Entity({ name: "authentications", schema: "public" })
 @Index(["userId", "provider"], { unique: true })
-export default class AuthenticationEntity extends BaseEntity {
+export default class AuthenticationEntity extends CommonEntity {
   @PrimaryGeneratedColumn("uuid")
+  @IsUUID()
   id: string;
 
   @Column({ type: "uuid" })
+  @IsUUID()
   userId: string;
 
   @Column({ type: "enum", enum: AuthenticationProvider })
+  @IsString()
   provider: AuthenticationProvider;
 
   @Column({
@@ -29,6 +34,8 @@ export default class AuthenticationEntity extends BaseEntity {
     nullable: true,
     comment: "app generated refresh token",
   })
+  @IsString()
+  @IsOptional()
   refreshToken?: string | null;
 
   @Column({
@@ -36,15 +43,18 @@ export default class AuthenticationEntity extends BaseEntity {
     default: {},
     comment: "additional authentication metadata",
   })
+  @Type(() => Object)
   metadata: AuthMetadata;
 
   @CreateDateColumn({ type: "timestamptz" })
+  @IsDate()
   createdAt: Date;
 
   @UpdateDateColumn({
     type: "timestamptz",
     comment: `the last time the authentication was accessed, similar to "updatedAt"`,
   })
+  @IsDate()
   lastAccessedAt: Date;
 
   // associations
@@ -54,5 +64,6 @@ export default class AuthenticationEntity extends BaseEntity {
     nullable: false,
   })
   @JoinColumn({ name: "userId", referencedColumnName: "id" })
+  @Type(() => UserEntity)
   user: UserEntity;
 }
