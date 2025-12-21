@@ -1,5 +1,5 @@
 {
-  "name": "LightweightProject",
+  "name": "lightweightproject",
   "version": "1.0.0",
   "description": "This is a lightweight NodeJS project for training, learning and practicing.",
   "author": "https://github.com/MarkDanilchenko/LightweightProject",
@@ -20,6 +20,7 @@
     "typeorm:run": "npm run typeorm migration:run -- -d ./server/src/configs/typeorm.configuration.ts",
     "typeorm:revert": "npm run typeorm migration:revert -- -d ./server/src/configs/typeorm.configuration.ts",
     "typeorm:generate": "npm run typeorm migration:generate -- -d ./server/src/configs/typeorm.configuration.ts",
+    "typeorm:check": "npm run typeorm migration:generate -- -d ./server/src/configs/typeorm.configuration.ts ./server/migrations/check",
     "typeorm:show": "npm run typeorm migration:show -- -d ./server/src/configs/typeorm.configuration.ts",
     "format:server": "prettier --write ./server/src/**/*.ts server/tests/**/*.ts ./server/migrations/**/*.ts && eslint ./server/src/**/*.ts server/tests/**/*.ts ./server/migrations/**/*.ts --fix",
     "clear:server:data": "rm -rf ./server/dist",
@@ -27,8 +28,6 @@
     "test:e2e": "NODE_ENV=test jest --config server/tests/jest-e2e.json",
     "test:unit:cov": "NODE_ENV=test jest --coverage",
     "test:e2e:cov": "NODE_ENV=test jest --config server/tests/jest-e2e.json --coverage",
-    "test:unit:clear": "rm -rf ./server/coverage/unit",
-    "test:e2e:clear": "rm -rf ./server/coverage/e2e",
     "test:clear": "rm -rf ./server/coverage"
   },
   "dependencies": {

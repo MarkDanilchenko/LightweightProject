@@ -15,7 +15,6 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "moduleResolution": "Bundler",
     "baseUrl": "./",
     "paths": {
       "@server/*": ["server/src/*"],
