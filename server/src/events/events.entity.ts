@@ -1,7 +1,7 @@
 import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { EventName } from "@server/events/interfaces/events.interfaces";
 import UserEntity from "@server/users/users.entity";
-import { IsDate, IsString, IsUUID } from "class-validator";
+import { IsDate, IsEnum, IsString, IsUUID } from "class-validator";
 import { Type } from "class-transformer";
 import CommonEntity from "@server/common/common.entity";
 
@@ -15,6 +15,7 @@ export default class EventEntity extends CommonEntity {
 
   @Column({ type: "varchar" })
   @IsString()
+  @IsEnum(EventName)
   name: EventName;
 
   @Column({

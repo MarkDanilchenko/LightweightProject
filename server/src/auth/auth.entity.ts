@@ -10,7 +10,7 @@ import {
 } from "typeorm";
 import UserEntity from "@server/users/users.entity";
 import { AuthenticationProvider, AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
-import { IsDate, IsOptional, IsString, IsUUID } from "class-validator";
+import { IsDate, IsEnum, IsOptional, IsString, IsUUID } from "class-validator";
 import { Type } from "class-transformer";
 import CommonEntity from "@server/common/common.entity";
 
@@ -27,6 +27,7 @@ export default class AuthenticationEntity extends CommonEntity {
 
   @Column({ type: "enum", enum: AuthenticationProvider })
   @IsString()
+  @IsEnum(AuthenticationProvider)
   provider: AuthenticationProvider;
 
   @Column({

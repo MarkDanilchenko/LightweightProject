@@ -6,8 +6,6 @@ import { EventName } from "@server/events/interfaces/events.interfaces";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
 import appConfiguration from "@server/configs/app.configuration";
 
-// Factory functions: used to create fake data for testing with real database connection and queries;
-
 // FakeFactory functions: used to create fake data for testing in memory
 // without creating an instance of the entity and so without using real database connection and queries;
 
@@ -117,6 +115,8 @@ function buildEventFakeFactory(relations?: { userId?: string; modelId?: string }
 
   return event;
 }
+
+// Factory functions: used to create fake data for testing with real database connection and queries;
 
 // function buildUserFactory(userProps?: Partial<UserEntity>): UserEntity {}
 
