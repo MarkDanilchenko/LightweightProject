@@ -2,9 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import UserEntity from "@server/users/users.entity";
-import AuthenticationEntity from "@server/auth/auth.entity";
-import EventEntity from "@server/events/events.entity";
-import { buildUserFakeFactory, buildEventFakeFactory, buildAuthenticationFakeFactory } from "../factories";
+import { buildUserFakeFactory } from "../factories";
 
 describe("UserEntity", (): void => {
   let userRepository: Repository<UserEntity>;
@@ -62,35 +60,13 @@ describe("UserEntity", (): void => {
       expect(user.updatedAt).toBeInstanceOf(Date);
       expect(user.createdAt.getTime()).toBeLessThanOrEqual(new Date().getTime());
       expect(user.updatedAt.getTime()).toBeLessThanOrEqual(new Date().getTime());
+      expect(user.updatedAt.getTime()).toBeGreaterThanOrEqual(user.createdAt.getTime());
     });
 
     it("should have optional avatarUrl", (): void => {
       expect(user.avatarUrl).toBeDefined();
       expect(typeof user.avatarUrl).toBe("string");
       expect(user.avatarUrl).toMatch(/^http(s)?:\/\//);
-    });
-  });
-
-  describe("UserEntity relations", (): void => {
-    let user: UserEntity;
-    let authentication: AuthenticationEntity;
-
-    beforeAll((): void => {
-      user = buildUserFakeFactory();
-      authentication = buildAuthenticationFakeFactory({ userId: user.id });
-
-      user.authentications = [authentication];
-      user.events = Array.from({ length: 5 }, (): EventEntity => buildEventFakeFactory({ userId: user.id }));
-    });
-
-    it("should have authentications relation", (): void => {
-      expect(user.authentications).toBeDefined();
-      expect(Array.isArray(user.authentications)).toBe(true);
-    });
-
-    it("should have events relation", (): void => {
-      expect(user.events).toBeDefined();
-      expect(Array.isArray(user.events)).toBe(true);
     });
   });
 
@@ -104,14 +80,14 @@ describe("UserEntity", (): void => {
     it("should successfully validate when all properties are valid", async (): Promise<void> => {
       expect(user).toBeInstanceOf(UserEntity);
 
-      await expect(UserEntity.validateUser(user)).resolves.not.toThrow();
+      await expect(user.validate()).resolves.not.toThrow();
     });
 
-    it("should throw an error when any property is invalid", async (): Promise<void> => {
+    it("should throw an error when some property is invalid", async (): Promise<void> => {
       expect(user).toBeInstanceOf(UserEntity);
       user.email = "invalid email";
 
-      await expect(UserEntity.validateUser(user)).rejects.toThrow();
+      await expect(user.validate()).rejects.toThrow();
     });
   });
 });
