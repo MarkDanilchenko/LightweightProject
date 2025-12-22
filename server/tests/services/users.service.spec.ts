@@ -52,6 +52,12 @@ describe("UsersService", (): void => {
     jest.clearAllMocks();
   });
 
+  it("should be defined", (): void => {
+    expect(mockService).toBeDefined();
+    expect(mockUserRepository).toBeDefined();
+    expect(dataSource).toBeDefined();
+  });
+
   describe("findUserByPk", (): void => {
     it("should find a user by a primary key", async (): Promise<void> => {
       mockUserRepository.findOneBy.mockResolvedValue(mockUser);
