@@ -130,6 +130,8 @@
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s",
+      "!**/*.module.(t|j)s",
+      "!**/src/configs/**",
       "!**/coverage/**",
       "!**/dist/**",
       "!**/insomnia/**",
