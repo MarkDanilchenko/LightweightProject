@@ -2,7 +2,7 @@ import { Repository } from "typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { buildAuthenticationFakeFactory } from "../factories";
+import { buildAuthenticationFakeFactory } from "../../factories";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
 
 describe("Authentication Entity", (): void => {

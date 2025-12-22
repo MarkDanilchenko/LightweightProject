@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import UserEntity from "@server/users/users.entity";
-import { buildUserFakeFactory } from "../factories";
+import { buildUserFakeFactory } from "../../factories";
 
 describe("UserEntity", (): void => {
   let userRepository: Repository<UserEntity>;

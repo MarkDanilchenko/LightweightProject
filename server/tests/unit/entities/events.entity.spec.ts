@@ -2,7 +2,7 @@ import { Repository } from "typeorm";
 import EventEntity from "@server/events/events.entity";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { buildEventFakeFactory } from "../factories";
+import { buildEventFakeFactory } from "../../factories";
 import { EventName } from "@server/events/interfaces/events.interfaces";
 
 describe("EventsEntity", (): void => {

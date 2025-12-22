@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import UsersController from "@server/users/users.controller";
 import UsersService from "@server/users/users.service";
 import UserEntity from "@server/users/users.entity";
-import { buildUserFakeFactory } from "../factories";
+import { buildUserFakeFactory } from "../../factories";
 
 describe("UsersController", (): void => {
   let controller: UsersController;
