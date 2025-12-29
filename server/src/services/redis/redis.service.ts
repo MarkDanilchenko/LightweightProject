@@ -10,6 +10,19 @@ export default class RedisService {
     this.logger = new Logger(RedisService.name);
   }
 
+  /**
+   * Validates a Redis key according to Redis key rules.
+   *
+   * @private
+   * @param {string | Buffer} key - The key to validate. Can be a string or Buffer.
+   * @throws {BadRequestException} Throws an exception if the key is invalid for any of the following reasons:
+   *   - Key is not a string or Buffer
+   *   - Key is an empty string or Buffer
+   *   - Key exceeds the maximum allowed byte length (REDIS_KEY_MAX_BYTE_LEN)
+   *   - Key contains dangerous characters (null byte, newline, carriage return, etc.)
+   *
+   * @returns {void} Will throw a BadRequestException if validation fails, otherwise - returns nothing.
+   */
   private validateKey(key: string | Buffer): void {
     try {
       if (typeof key !== "string" && !Buffer.isBuffer(key)) {
