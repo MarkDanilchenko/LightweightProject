@@ -75,10 +75,10 @@ interface AuthMetadata {
     verificationConfirmedAt?: Date;
     callbackUrl?: string;
     temporaryInfo?: {
-      username: string;
-      firstName?: string;
-      lastName?: string;
-      avatarUrl?: string;
+      username?: string | null;
+      firstName?: string | null;
+      lastName?: string | null;
+      avatarUrl?: string | null;
     };
   };
   google?: Record<string, any>;

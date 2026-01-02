@@ -26,7 +26,7 @@ interface AuthLocalCreatedEvent extends BaseEvent {
   metadata: NonNullable<NonNullable<AuthMetadata["local"]>["temporaryInfo"]> & MetadataEmail;
 }
 interface AuthLocalPasswordResetEvent extends BaseEvent {
-  username: string;
+  username?: string | null;
   email: string;
 }
 interface AuthLocalPasswordResetSentEvent extends BaseEvent {
