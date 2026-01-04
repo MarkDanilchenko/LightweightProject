@@ -7,7 +7,7 @@ import EventEntity from "@server/events/events.entity";
 import { ClientsModule } from "@nestjs/microservices";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
-import { RMQ_MICROSERVICE } from "@server/constants";
+import { RMQ_MICROSERVICE } from "@server/configs/constants";
 
 @Module({
   imports: [

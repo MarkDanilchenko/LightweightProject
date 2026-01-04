@@ -27,7 +27,7 @@ import {
   LocalSignUpDto,
   LocalVerificationEmailDto,
 } from "@server/auth/dto/auth.dto";
-import { RMQ_MICROSERVICE } from "@server/constants";
+import { RMQ_MICROSERVICE } from "@server/configs/constants";
 import { ClientProxy } from "@nestjs/microservices";
 
 @Injectable()

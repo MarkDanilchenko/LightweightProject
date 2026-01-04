@@ -3,7 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
 import RedisService from "@server/services/redis/redis.service";
 import Redis from "ioredis";
-import { REDIS_CLIENT } from "@server/constants";
+import { REDIS_CLIENT } from "@server/configs/constants";
 
 @Global()
 @Module({

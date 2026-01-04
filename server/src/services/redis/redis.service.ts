@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, Logger, LoggerService } from "@nestjs/common";
-import { REDIS_CLIENT, REDIS_KEY_MAX_BYTE_LEN, REDIS_KEY_TTL_SEC } from "@server/constants";
+import { REDIS_CLIENT, REDIS_KEY_MAX_BYTE_LEN, REDIS_KEY_TTL_SEC } from "@server/configs/constants";
 import Redis from "ioredis";
 
 @Injectable()
