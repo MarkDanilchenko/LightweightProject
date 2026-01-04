@@ -1,6 +1,6 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { RmqEmailConsumer } from "@server/services/rmq/rmq.email.consumer";
-import { RmqEmailService } from "@server/services/rmq/rmq.email.service";
+import RmqEmailConsumer from "@server/services/rmq/rmq.email.consumer";
+import RmqEmailService from "@server/services/rmq/rmq.email.service";
 import { RmqContext } from "@nestjs/microservices";
 import {
   AuthLocalCreatedEvent,
@@ -15,8 +15,6 @@ import AuthenticationEntity from "@server/auth/auth.entity";
 describe("RmqEmailConsumer", (): void => {
   let consumer: RmqEmailConsumer;
   let logger: jest.SpyInstance;
-  let user: UserEntity;
-  let authentication: AuthenticationEntity;
 
   const mockRmqEmailService = {
     sendWelcomeVerificationEmail: jest.fn(),
@@ -34,9 +32,6 @@ describe("RmqEmailConsumer", (): void => {
   } as unknown as RmqContext;
 
   beforeEach(async (): Promise<void> => {
-    user = buildUserFakeFactory();
-    authentication = buildAuthenticationFakeFactory({ userId: user.id });
-
     const testingModule: TestingModule = await Test.createTestingModule({
       controllers: [RmqEmailConsumer],
       providers: [
@@ -60,9 +55,14 @@ describe("RmqEmailConsumer", (): void => {
   });
 
   describe("handleAuthLocalCreated", (): void => {
+    let user: UserEntity;
+    let authentication: AuthenticationEntity;
     let payload: AuthLocalCreatedEvent;
 
     beforeAll((): void => {
+      user = buildUserFakeFactory();
+      authentication = buildAuthenticationFakeFactory({ userId: user.id });
+
       payload = {
         name: EventName.AUTH_LOCAL_CREATED,
         userId: user.id,
@@ -97,9 +97,14 @@ describe("RmqEmailConsumer", (): void => {
   });
 
   describe("handleAuthLocalPasswordReset", (): void => {
+    let user: UserEntity;
+    let authentication: AuthenticationEntity;
     let payload: AuthLocalPasswordResetEvent;
 
     beforeAll((): void => {
+      user = buildUserFakeFactory();
+      authentication = buildAuthenticationFakeFactory({ userId: user.id });
+
       payload = {
         name: EventName.AUTH_LOCAL_PASSWORD_RESET,
         userId: user.id,

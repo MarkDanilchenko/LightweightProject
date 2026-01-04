@@ -22,7 +22,7 @@ import AuthService from "@server/auth/auth.service";
 import TokensService from "@server/tokens/tokens.service";
 
 @Injectable()
-export class RmqEmailService {
+export default class RmqEmailService {
   private readonly configService: ConfigService;
   private readonly dataSource: DataSource;
   private readonly transporter: Transporter;

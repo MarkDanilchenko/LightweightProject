@@ -16,15 +16,14 @@ describe("RedisService", (): void => {
     somekey3: "5f1YX4L",
   };
   const mockStringValue = "mockedString - nvELw63S";
+  const mockedRedisClient = {
+    get: jest.fn(),
+    setex: jest.fn().mockResolvedValue("OK"),
+    exists: jest.fn().mockResolvedValue(1),
+    del: jest.fn().mockResolvedValue(1),
+  };
 
   beforeEach(async (): Promise<void> => {
-    const mockedRedisClient = {
-      get: jest.fn(),
-      setex: jest.fn().mockResolvedValue("OK"),
-      exists: jest.fn().mockResolvedValue(1),
-      del: jest.fn().mockResolvedValue(1),
-    };
-
     const testingModule: TestingModule = await Test.createTestingModule({
       providers: [
         RedisService,

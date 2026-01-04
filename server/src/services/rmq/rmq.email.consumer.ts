@@ -1,5 +1,5 @@
 import { Controller, Logger, LoggerService } from "@nestjs/common";
-import { RmqEmailService } from "@server/services/rmq/rmq.email.service";
+import RmqEmailService from "@server/services/rmq/rmq.email.service";
 import { Ctx, MessagePattern, Payload, RmqContext } from "@nestjs/microservices";
 import {
   AuthLocalCreatedEvent,
@@ -13,7 +13,7 @@ import {
  * and delegating them to the appropriate email service methods.
  */
 @Controller()
-export class RmqEmailConsumer {
+export default class RmqEmailConsumer {
   private readonly logger: LoggerService;
   private readonly rmqEmailService: RmqEmailService;
 

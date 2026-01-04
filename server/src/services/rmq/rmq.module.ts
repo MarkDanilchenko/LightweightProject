@@ -1,6 +1,6 @@
 import { Global, Module } from "@nestjs/common";
-import { RmqEmailService } from "@server/services/rmq/rmq.email.service";
-import { RmqEmailConsumer } from "@server/services/rmq/rmq.email.consumer";
+import RmqEmailService from "@server/services/rmq/rmq.email.service";
+import RmqEmailConsumer from "@server/services/rmq/rmq.email.consumer";
 import AuthModule from "@server/auth/auth.module";
 import EventsModule from "@server/events/events.module";
 import { ClientsModule } from "@nestjs/microservices";
