@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { createTransport } from "nodemailer";
 import appConfiguration from "@server/configs/app.configuration";
 
@@ -45,7 +46,6 @@ describe("Nodemailer Utility", (): void => {
   });
 
   it("should throw an error if SMTP host is missing", (): void => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const originalProcessExit = process.exit;
     const mockProcessExit = jest.fn().mockImplementationOnce((code: number): void => {
       throw new Error(`Process exited with code ${code}`);
@@ -114,7 +114,6 @@ describe("Nodemailer Utility", (): void => {
   });
 
   it("should throw error, if verify of the transporter configuration fails", (): void => {
-    // eslint-disable-next-line @typescript-eslint/unbound-method
     const originalProcessExit = process.exit;
     const mockProcessExit = jest.fn().mockImplementationOnce((code: number): void => {
       throw new Error(`Process exited with code ${code}`);

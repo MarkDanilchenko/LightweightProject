@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import * as fs from "node:fs";
 import * as ejs from "ejs";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -148,20 +149,13 @@ describe("RmqEmailService", (): void => {
       await rmqEmailService.sendWelcomeVerificationEmail(payload);
 
       expect(fs.promises.access).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(authService.findAuthenticationByPk).toHaveBeenCalledWith(payload.modelId);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(tokensService.generate).toHaveBeenCalled();
       expect(ejs.renderFile).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(authService.updateAuthentication).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(eventEmitter.emit).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(transporter.sendMail).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockQueryRunner.rollbackTransaction).not.toHaveBeenCalled();
     });
 
@@ -181,9 +175,8 @@ describe("RmqEmailService", (): void => {
       jest.spyOn(transporter, "sendMail").mockRejectedValue(new Error("Send mail failed"));
 
       await expect(rmqEmailService.sendWelcomeVerificationEmail(payload)).rejects.toThrow("Send mail failed");
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockQueryRunner.commitTransaction).not.toHaveBeenCalled();
     });
   });
@@ -218,11 +211,8 @@ describe("RmqEmailService", (): void => {
       await rmqEmailService.sendPasswordResetEmail(payload);
 
       expect(fs.promises.access).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(authService.findAuthenticationByPk).toHaveBeenCalledWith(payload.modelId);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(tokensService.generate).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(tokensService.generate).toHaveBeenCalledWith(
         {
           userId: user.id,
@@ -234,13 +224,9 @@ describe("RmqEmailService", (): void => {
         },
       );
       expect(ejs.renderFile).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(eventEmitter.emit).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(transporter.sendMail).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockQueryRunner.commitTransaction).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockQueryRunner.rollbackTransaction).not.toHaveBeenCalled();
     });
 
@@ -261,9 +247,7 @@ describe("RmqEmailService", (): void => {
 
       await expect(rmqEmailService.sendPasswordResetEmail(payload)).rejects.toThrow("Send mail failed");
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockQueryRunner.rollbackTransaction).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockQueryRunner.commitTransaction).not.toHaveBeenCalled();
     });
   });

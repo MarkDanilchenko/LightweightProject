@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
@@ -80,9 +81,7 @@ describe("TokensService", (): void => {
       delete mockTokenPayload.iat;
       const result: string = await tokensService.generate(mockTokenPayload);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(jwtService.signAsync).toHaveBeenCalledTimes(1);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(jwtService.signAsync).toHaveBeenCalledWith(mockTokenPayload, { expiresIn: "1d" });
       expect(result).toBe(mockToken);
     });
@@ -93,9 +92,7 @@ describe("TokensService", (): void => {
       delete mockTokenPayload.iat;
       await tokensService.generate(mockTokenPayload, customOptions);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(jwtService.signAsync).toHaveBeenCalledTimes(1);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(jwtService.signAsync).toHaveBeenCalledWith(mockTokenPayload, customOptions);
     });
   });
@@ -104,9 +101,7 @@ describe("TokensService", (): void => {
     it("should verify a valid token", async (): Promise<void> => {
       const result: TokenPayload = await tokensService.verify(mockToken);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(jwtService.verifyAsync).toHaveBeenCalledTimes(1);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(jwtService.verifyAsync).toHaveBeenCalledWith(mockToken, { ignoreExpiration: false });
       expect(result).toEqual(mockTokenPayload);
     });
@@ -130,9 +125,7 @@ describe("TokensService", (): void => {
     it("should decode a token without verification", (): void => {
       const result: TokenPayload = tokensService.decode(mockToken);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(jwtService.decode).toHaveBeenCalledTimes(1);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(jwtService.decode).toHaveBeenCalledWith(mockToken);
       expect(result).toEqual(mockTokenPayload);
     });
@@ -146,9 +139,7 @@ describe("TokensService", (): void => {
 
       const result: boolean = await tokensService.isBlacklisted(jwti);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(redisService.exists).toHaveBeenCalledTimes(1);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(redisService.exists).toHaveBeenCalledWith(jwti);
       expect(result).toBe(exists);
     });
@@ -161,9 +152,7 @@ describe("TokensService", (): void => {
 
       await tokensService.addToBlacklist(jwti, exp);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(redisService.set).toHaveBeenCalledTimes(1);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(redisService.set).toHaveBeenCalledWith(
         `blacklist:jwti:${jwti}`,
         jwti,

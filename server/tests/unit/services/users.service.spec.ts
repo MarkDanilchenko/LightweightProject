@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
@@ -64,9 +65,7 @@ describe("UsersService", (): void => {
 
       const result: UserEntity | null = await mockService.findUserByPk(mockUser.id);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockUserRepository.findOneBy).toHaveBeenCalledTimes(1);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ id: mockUser.id });
       expect(result).toEqual(mockUser);
     });
@@ -76,9 +75,7 @@ describe("UsersService", (): void => {
 
       const result: UserEntity | null = await mockService.findUserByPk("7e59edc8-65cf-4817-a70e-2460d6198485");
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockUserRepository.findOneBy).toHaveBeenCalledTimes(1);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockUserRepository.findOneBy).toHaveBeenCalledWith({ id: "7e59edc8-65cf-4817-a70e-2460d6198485" });
       expect(result).toBeNull();
     });
@@ -91,9 +88,7 @@ describe("UsersService", (): void => {
 
       const result: UserEntity | null = await mockService.findUser(options);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockUserRepository.findOne).toHaveBeenCalledTimes(1);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockUserRepository.findOne).toHaveBeenCalledWith(options);
       expect(result).toEqual(mockUser);
     });
@@ -103,9 +98,8 @@ describe("UsersService", (): void => {
       mockUserRepository.findOne.mockResolvedValue(null);
 
       const result: UserEntity | null = await mockService.findUser(options);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(mockUserRepository.findOne).toHaveBeenCalledTimes(1);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockUserRepository.findOne).toHaveBeenCalledWith(options);
       expect(result).toBeNull();
     });
@@ -131,9 +125,7 @@ describe("UsersService", (): void => {
 
       const result: UpdateResult = await mockService.updateUser(whereCondition, values);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(dataSource.transaction).toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(mockEntityManager.update).toHaveBeenCalledWith(UserEntity, whereCondition, values);
       expect(result).toEqual(updateResult);
     });
@@ -145,9 +137,7 @@ describe("UsersService", (): void => {
 
       const result: UpdateResult = await mockService.updateUser(whereCondition, values, providedManager);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(dataSource.transaction).not.toHaveBeenCalled();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(providedManager.update).toHaveBeenCalledWith(UserEntity, whereCondition, values);
       expect(result).toEqual(updateResult);
     });

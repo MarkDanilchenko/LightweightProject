@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from "@nestjs/testing";
 import RedisService from "@server/services/redis/redis.service";
 import Redis from "ioredis";
@@ -50,24 +51,27 @@ describe("RedisService", (): void => {
   describe("get", (): void => {
     it("should return parsed JSON", async (): Promise<void> => {
       redisClient.get.mockResolvedValueOnce(JSON.stringify(mockValue));
+
       const result = await redisService.get<typeof mockValue>(mockKey);
 
       expect(result).toEqual(mockValue);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(redisClient.get).toHaveBeenCalledTimes(1);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(redisClient.get).toHaveBeenCalledWith(mockKey);
     });
 
     it("should return string value as is", async (): Promise<void> => {
       redisClient.get.mockResolvedValueOnce(JSON.stringify(mockStringValue));
+
       const result: string | null = await redisService.get<string>(mockKey);
+
       expect(result).toBe(mockStringValue);
     });
 
     it("should return null for non-existent key", async (): Promise<void> => {
       redisClient.get.mockResolvedValueOnce(null);
+
       const result = await redisService.get("nonexistent:key");
+
       expect(result).toBeNull();
     });
   });
@@ -77,9 +81,7 @@ describe("RedisService", (): void => {
       const result: boolean = await redisService.exists(mockKey);
 
       expect(result).toBeTruthy();
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(redisClient.exists).toHaveBeenCalledTimes(1);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(redisClient.exists).toHaveBeenCalledWith([mockKey]);
     });
 
@@ -87,7 +89,7 @@ describe("RedisService", (): void => {
       redisClient.exists.mockResolvedValueOnce(0);
 
       const result: boolean = await redisService.exists("nonexistent:mocked:key");
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(redisClient.exists).toHaveBeenCalledWith(["nonexistent:mocked:key"]);
       expect(result).toBeFalsy();
     });
@@ -96,7 +98,7 @@ describe("RedisService", (): void => {
       const multipleKeys: string[] = Array.from({ length: 5 }, (_, i) => `${i} - ${faker.string.alphanumeric(10)}`);
 
       await redisService.exists(...multipleKeys);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
+
       expect(redisClient.exists).toHaveBeenCalledWith(multipleKeys);
     });
   });
@@ -105,9 +107,7 @@ describe("RedisService", (): void => {
     it("should delete key", async (): Promise<void> => {
       await redisService.del(mockKey);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(redisClient.del).toHaveBeenCalledTimes(1);
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(redisClient.del).toHaveBeenCalledWith(mockKey);
     });
 
@@ -156,7 +156,6 @@ describe("RedisService", (): void => {
     it("should set value with default TTL", async (): Promise<void> => {
       await redisService.set(mockKey, mockValue);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(redisClient.setex).toHaveBeenCalledWith(mockKey, REDIS_KEY_TTL_SEC, JSON.stringify(mockValue));
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
       expect(() => (redisService as any).validateKey(mockKey)).not.toThrow();
@@ -167,7 +166,6 @@ describe("RedisService", (): void => {
 
       await redisService.set(mockKey, mockValue, customTtl);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(redisClient.setex).toHaveBeenCalledWith(mockKey, customTtl, JSON.stringify(mockValue));
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
       expect(() => (redisService as any).validateKey(mockKey)).not.toThrow();
@@ -176,7 +174,6 @@ describe("RedisService", (): void => {
     it("should set string value without JSON stringify", async (): Promise<void> => {
       await redisService.set(mockKey, mockStringValue);
 
-      // eslint-disable-next-line @typescript-eslint/unbound-method
       expect(redisClient.setex).toHaveBeenCalledWith(mockKey, REDIS_KEY_TTL_SEC, mockStringValue);
       // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
       expect(() => (redisService as any).validateKey(mockKey)).not.toThrow();
