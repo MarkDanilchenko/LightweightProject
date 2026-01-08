@@ -130,7 +130,7 @@
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s",
-      "!**/*.module.(t|j)s",
+      "!**/*.(module|types|interfaces|dto|schema|guard).(t|j)s",
       "!**/src/configs/**",
       "!**/coverage/**",
       "!**/dist/**",

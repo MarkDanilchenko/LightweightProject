@@ -184,8 +184,13 @@ export default class AuthController {
   })
   @ApiBody({ type: LocalPasswordResetDto })
   @UsePipes(ZodValidationPipe)
-  async localPasswordReset(@Body() localPasswordResetDto: LocalPasswordResetDto): Promise<void> {
+  async localPasswordReset(
+    @Body() localPasswordResetDto: LocalPasswordResetDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
     await this.authService.localPasswordReset(localPasswordResetDto);
+
+    res.status(200).send();
   }
 
   @Post("signout")
