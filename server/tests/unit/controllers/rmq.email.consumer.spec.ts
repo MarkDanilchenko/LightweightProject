@@ -1,3 +1,12 @@
+// Mock the nodemailer createTransport before import both RmqEmailConsumer and RmqEmailService;
+jest.mock("nodemailer", () => ({
+  createTransport: jest.fn().mockReturnValue({
+    verify: jest.fn().mockImplementation((callback: (error: Error | null) => void): void => {
+      callback(null);
+    }),
+  }),
+}));
+
 import { Test, TestingModule } from "@nestjs/testing";
 import RmqEmailConsumer from "@server/services/rmq/rmq.email.consumer";
 import RmqEmailService from "@server/services/rmq/rmq.email.service";

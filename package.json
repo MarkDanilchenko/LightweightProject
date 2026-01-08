@@ -24,8 +24,8 @@
     "typeorm:show": "npm run typeorm migration:show -- -d ./server/src/configs/typeorm.configuration.ts",
     "format:server": "prettier --write ./server/src/**/*.ts server/tests/**/*.ts ./server/migrations/**/*.ts && eslint ./server/src/**/*.ts server/tests/**/*.ts ./server/migrations/**/*.ts --fix",
     "clear:server:data": "rm -rf ./server/dist",
-    "test:unit": "NODE_ENV=test jest",
-    "test:e2e": "NODE_ENV=test jest --config server/tests/jest-e2e.json",
+    "test:unit": "NODE_ENV=test jest --detectOpenHandles",
+    "test:e2e": "NODE_ENV=test jest --detectOpenHandles --config server/tests/jest-e2e.json",
     "test:unit:cov": "NODE_ENV=test jest --coverage",
     "test:e2e:cov": "NODE_ENV=test jest --config server/tests/jest-e2e.json --coverage",
     "test:clear": "rm -rf ./server/coverage"
