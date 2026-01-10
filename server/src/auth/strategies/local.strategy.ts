@@ -8,7 +8,7 @@ import { verifyHash } from "@server/utils/hasher";
 
 @Injectable()
 export default class LocalAuthStrategy extends PassportStrategy(Strategy, "localAuthStrategy") {
-  private readonly userService: UsersService;
+  private readonly usersService: UsersService;
 
   constructor(userService: UsersService) {
     super({
@@ -17,12 +17,12 @@ export default class LocalAuthStrategy extends PassportStrategy(Strategy, "local
       passReqToCallback: true, // Put request object into the validate function in some purpose if we need to access it;
     });
 
-    this.userService = userService;
+    this.usersService = userService;
   }
 
   async validate(req: Request, login: string, password: string, done: (...args: unknown[]) => void): Promise<void> {
     // Login can be either an email or a username;
-    const user: UserEntity | null = await this.userService.findUser({
+    const user: UserEntity | null = await this.usersService.findUser({
       relations: ["authentications"],
       select: {
         id: true,
