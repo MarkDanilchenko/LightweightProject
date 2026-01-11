@@ -7,7 +7,7 @@ import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces"
 import appConfiguration from "@server/configs/app.configuration";
 
 // FakeFactory functions: used to create fake data for testing in memory
-// without creating an instance of the entity and so without using real database connection and queries;
+// without creating an instance of the entity in database and so without using real database connection and queries;
 
 function buildUserFakeFactory(): UserEntity {
   const user = new UserEntity();
@@ -25,21 +25,28 @@ function buildUserFakeFactory(): UserEntity {
   return user;
 }
 
-function buildAuthenticationFakeFactory(relations?: { userId?: string }): AuthenticationEntity {
+function buildAuthenticationFakeFactory(
+  options: {
+    userId?: string;
+    provider?: AuthenticationProvider;
+  } = {},
+): AuthenticationEntity {
   const authentication: AuthenticationEntity = new AuthenticationEntity();
 
   authentication.id = faker.string.uuid();
-  authentication.provider = faker.helpers.arrayElement([
-    AuthenticationProvider.GITHUB,
-    AuthenticationProvider.GOOGLE,
-    AuthenticationProvider.KEYCLOAK,
-    AuthenticationProvider.LOCAL,
-  ]);
+  authentication.provider =
+    options.provider ??
+    faker.helpers.arrayElement([
+      AuthenticationProvider.GITHUB,
+      AuthenticationProvider.GOOGLE,
+      AuthenticationProvider.KEYCLOAK,
+      AuthenticationProvider.LOCAL,
+    ]);
   authentication.refreshToken =
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"; // random jwt from https://www.jwt.io/
   authentication.createdAt = faker.date.past();
   authentication.lastAccessedAt = faker.date.recent();
-  authentication.userId = relations?.userId ?? faker.string.uuid();
+  authentication.userId = options.userId ?? faker.string.uuid();
 
   switch (authentication.provider) {
     case AuthenticationProvider.LOCAL: {
@@ -96,7 +103,7 @@ function buildAuthenticationFakeFactory(relations?: { userId?: string }): Authen
   return authentication;
 }
 
-function buildEventFakeFactory(relations?: { userId?: string; modelId?: string }): EventEntity {
+function buildEventFakeFactory(options: { userId?: string; modelId?: string } = {}): EventEntity {
   const event = new EventEntity();
 
   event.id = faker.string.uuid();
@@ -110,8 +117,8 @@ function buildEventFakeFactory(relations?: { userId?: string; modelId?: string }
   ]);
   event.metadata = {};
   event.createdAt = faker.date.past();
-  event.userId = relations?.userId ?? faker.string.uuid();
-  event.modelId = relations?.modelId ?? faker.string.uuid();
+  event.userId = options.userId ?? faker.string.uuid();
+  event.modelId = options.modelId ?? faker.string.uuid();
 
   return event;
 }
