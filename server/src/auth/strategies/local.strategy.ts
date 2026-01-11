@@ -43,7 +43,7 @@ export default class LocalAuthStrategy extends PassportStrategy(Strategy, "local
         },
       ],
     });
-    if (!user) {
+    if (!user || !user.authentications?.length) {
       return done(new UnauthorizedException("Authentication failed. User not found."), false);
     }
 
