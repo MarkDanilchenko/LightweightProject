@@ -1,8 +1,8 @@
 {
   "name": "lightweightproject",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "This is a lightweight NodeJS project for training, learning and practicing.",
-  "author": "https://github.com/MarkDanilchenko/LightweightProject",
+  "author": "https://github.com/MarkDanilchenko",
   "private": true,
   "license": "UNLICENSED",
   "type": "commonjs",
