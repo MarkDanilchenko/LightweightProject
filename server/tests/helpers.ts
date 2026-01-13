@@ -1,25 +1,32 @@
-/**
- * Generates a static JWT token for testing purposes, that contains the following payload:
- * {
- *   "sub": "1234567890",
- *   "name": "John Doe",
- *   "admin": true,
- *   "iat": 1516239022
- * }
- *
- * @returns {string} A pre-defined JWT token that can be used in test cases.
- */
-function randomValidJwt(): string {
-  return "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30";
-}
+import * as jwt from "jsonwebtoken";
+import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
+import { JwtSignOptions } from "@nestjs/jwt";
+import { faker } from "@faker-js/faker";
+import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+
+const secretKey = "aFEo3Q8YBou-secretJwtKeyForTesting-FzM1sHSsEF3";
 
 /**
- * Generates a JWT token for testing purposes, that is not valid.
+ * Generates random valid JWT token for testing purposes.
+ * @param {TokenPayload} [payload] - The payload to be used in the token.
+ * @param {JwtSignOptions} [options] - The options to be used in the token.
  *
- * @returns {string} A JWT token that can be used in test cases.
+ * @returns {string} JWT token that can be used in test cases.
  */
-function notValidJwt(): string {
-  return randomValidJwt() + ".invalid";
+function randomValidJwt(
+  payload: TokenPayload = {
+    userId: faker.string.uuid(),
+    provider: faker.helpers.arrayElement([
+      AuthenticationProvider.GITHUB,
+      AuthenticationProvider.GOOGLE,
+      AuthenticationProvider.KEYCLOAK,
+      AuthenticationProvider.LOCAL,
+    ]),
+    jwti: faker.string.uuid(),
+  },
+  options: JwtSignOptions = { expiresIn: "1d" },
+): string {
+  return jwt.sign(payload, secretKey, options);
 }
 
-export { randomValidJwt, notValidJwt };
+export { randomValidJwt };

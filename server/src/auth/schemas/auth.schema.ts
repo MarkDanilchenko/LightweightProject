@@ -89,7 +89,9 @@ const localForgotPasswordSchema = z
 
 const localResetPasswordSchema = z
   .object({
-    token: z.string().openapi({ title: "Token", description: "Token.", example: "Token in jwt format" }),
+    token: z
+      .string()
+      .openapi({ title: "Token", description: "Token with short ttl (15 minutes).", example: "Token in jwt format" }),
     password: localSignUpSchema.shape.password,
   })
   .openapi({

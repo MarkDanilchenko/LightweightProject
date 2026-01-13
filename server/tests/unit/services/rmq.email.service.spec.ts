@@ -1,15 +1,4 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-
-// Mock the nodemailer createTransport before import both RmqEmailConsumer and RmqEmailService;
-jest.mock("nodemailer", () => ({
-  createTransport: jest.fn().mockReturnValue({
-    verify: jest.fn().mockImplementation((callback: (error: Error | null) => void): void => {
-      callback(null);
-    }),
-    sendMail: jest.fn(),
-  }),
-}));
-
 import * as fs from "node:fs";
 import * as ejs from "ejs";
 import { Test, TestingModule } from "@nestjs/testing";
@@ -29,6 +18,16 @@ import UserEntity from "@server/users/users.entity";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import transporter from "@server/utils/nodemailer";
 import { buildAuthenticationFakeFactory, buildUserFakeFactory } from "../../factories";
+
+// Mock the nodemailer createTransport before import both RmqEmailConsumer and RmqEmailService;
+jest.mock("nodemailer", () => ({
+  createTransport: jest.fn().mockReturnValue({
+    verify: jest.fn().mockImplementation((callback: (error: Error | null) => void): void => {
+      callback(null);
+    }),
+    sendMail: jest.fn(),
+  }),
+}));
 
 describe("RmqEmailService", (): void => {
   let rmqEmailService: RmqEmailService;

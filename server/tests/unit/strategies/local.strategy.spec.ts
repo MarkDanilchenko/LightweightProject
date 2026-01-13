@@ -1,9 +1,4 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-
-jest.mock("@server/utils/hasher", () => ({
-  verifyHash: jest.fn(),
-}));
-
 import { Test, TestingModule } from "@nestjs/testing";
 import { PassportModule } from "@nestjs/passport";
 import { UnauthorizedException } from "@nestjs/common";
@@ -15,6 +10,10 @@ import { buildAuthenticationFakeFactory, buildUserFakeFactory } from "../../fact
 import { faker } from "@faker-js/faker";
 import { verifyHash } from "@server/utils/hasher";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+
+jest.mock("@server/utils/hasher", () => ({
+  verifyHash: jest.fn(),
+}));
 
 describe("LocalAuthStrategy", (): void => {
   let localAuthStrategy: LocalAuthStrategy;

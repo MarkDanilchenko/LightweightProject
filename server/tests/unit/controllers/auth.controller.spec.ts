@@ -1,9 +1,4 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-jest.mock("@server/utils/cookie", () => ({
-  setCookie: jest.fn(),
-  clearCookie: jest.fn(),
-}));
-
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
 import { Response } from "express";
@@ -21,7 +16,14 @@ import UserEntity from "@server/users/users.entity";
 import { RequestWithSignedCookies, RequestWithTokenPayload, RequestWithUser } from "@server/common/types/common.types";
 import { UnauthorizedException } from "@nestjs/common";
 import { setCookie, clearCookie } from "@server/utils/cookie";
+import { randomValidJwt } from "../../helpers";
 import { v4 as uuidv4 } from "uuid";
+import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+
+jest.mock("@server/utils/cookie", () => ({
+  setCookie: jest.fn(),
+  clearCookie: jest.fn(),
+}));
 
 describe("AuthController", (): void => {
   let authController: AuthController;
@@ -130,8 +132,16 @@ describe("AuthController", (): void => {
 
   describe("localVerificationEmail", (): void => {
     it("should set cookie and redirect on success", async (): Promise<void> => {
-      const dto: LocalVerificationEmailDto = { token: "valid-token-in-jwt-format" };
-      const tokenData = { accessToken: "new-access-token" };
+      const dto: LocalVerificationEmailDto = {
+        token: randomValidJwt({ userId: user.id, provider: AuthenticationProvider.LOCAL }),
+      };
+      const tokenData = {
+        accessToken: randomValidJwt({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+          jwti: uuidv4(),
+        }),
+      };
 
       authService.localVerificationEmail.mockResolvedValue(tokenData);
 
@@ -143,7 +153,7 @@ describe("AuthController", (): void => {
     });
 
     it("should redirect with error on failure", async (): Promise<void> => {
-      const dto: LocalVerificationEmailDto = { token: "invalid-token-in-jwt-format" };
+      const dto: LocalVerificationEmailDto = { token: "invalid-jwt-token" };
       const error = new Error("Invalid token");
 
       authService.localVerificationEmail.mockRejectedValue(error);
@@ -162,7 +172,13 @@ describe("AuthController", (): void => {
     it("should set cookie and send 200 on success", async (): Promise<void> => {
       const req = { user } as RequestWithUser;
       const dto: LocalSignInDto = { login: user.username as string, password: "Test1234!_" };
-      const tokenData = { accessToken: "access-token" };
+      const tokenData = {
+        accessToken: randomValidJwt({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+          jwti: uuidv4(),
+        }),
+      };
 
       authService.localSignIn.mockResolvedValue(tokenData);
 
@@ -205,7 +221,10 @@ describe("AuthController", (): void => {
 
   describe("localPasswordReset", (): void => {
     it("should call authService.localPasswordReset and return 200", async (): Promise<void> => {
-      const dto: LocalPasswordResetDto = { token: "reset-token-in-jwt-format", password: "Test1234!_new" };
+      const dto: LocalPasswordResetDto = {
+        token: randomValidJwt({ userId: user.id, provider: AuthenticationProvider.LOCAL }, { expiresIn: "15m" }),
+        password: "Test1234!_new",
+      };
 
       await authController.localPasswordReset(dto, mockResponse as Response);
 
@@ -231,10 +250,23 @@ describe("AuthController", (): void => {
   describe("refreshAccessToken", (): void => {
     it("should refresh accessToken from cookie", async (): Promise<void> => {
       const req = {
-        signedCookies: { accessToken: "old-accessToken-in-jwt-format" },
+        signedCookies: {
+          accessToken: randomValidJwt(
+            {
+              userId: user.id,
+              provider: AuthenticationProvider.LOCAL,
+              jwti: uuidv4(),
+            },
+            {
+              notBefore: Math.floor(Date.now() / 1000) + 30, // only after 30 seconds from now this token will be valid;
+            },
+          ),
+        },
         headers: {},
       } as unknown as RequestWithSignedCookies & { headers: { authorization: string | undefined } };
-      const tokenData = { accessToken: "new-accessToken-in-jwt-format" };
+      const tokenData = {
+        accessToken: randomValidJwt({ userId: user.id, provider: AuthenticationProvider.LOCAL, jwti: uuidv4() }),
+      };
 
       authService.refreshAccessToken.mockResolvedValue(tokenData);
 
@@ -261,8 +293,8 @@ describe("AuthController", (): void => {
   });
 
   describe("me", (): void => {
-    it("should return user profile", async (): Promise<void> => {
-      const req = { tokenPayload: { userId: user.id } } as RequestWithTokenPayload;
+    it("should return user profile (test during local authentication)", async (): Promise<void> => {
+      const req = { tokenPayload: { userId: user.id, provider: "local", jwti: uuidv4() } } as RequestWithTokenPayload;
       const profile: Partial<UserEntity> = {
         id: user.id,
         username: user.username,
