@@ -39,7 +39,7 @@ describe("TokensService", (): void => {
     };
 
     const mockConfigService = {
-      get: jest.fn().mockImplementation((value: string): string | null => {
+      get: jest.fn().mockImplementation((value: string): string | undefined => {
         switch (value) {
           case "jwtConfiguration.refreshTokenExpiresIn":
             return "7d";
@@ -47,7 +47,7 @@ describe("TokensService", (): void => {
             return "15m";
 
           default:
-            return null;
+            return undefined;
         }
       }),
     };

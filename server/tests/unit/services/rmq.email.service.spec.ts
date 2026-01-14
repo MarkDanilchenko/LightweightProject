@@ -60,7 +60,7 @@ describe("RmqEmailService", (): void => {
           return { baseUrl: "https://127.0.0.1:3001" };
 
         default:
-          return null;
+          return undefined;
       }
     }),
   };
