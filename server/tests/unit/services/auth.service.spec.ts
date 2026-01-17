@@ -5,7 +5,7 @@ import AuthService from "@server/auth/auth.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { buildAuthenticationFakeFactory, buildUserFakeFactory } from "../../factories";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
-import { DataSource, EntityManager, Repository } from "typeorm";
+import { DataSource, EntityManager, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { ClientProxy } from "@nestjs/microservices";
 import { RMQ_MICROSERVICE } from "@server/configs/constants";
@@ -13,6 +13,7 @@ import TokensService from "@server/tokens/tokens.service";
 import UsersService from "@server/users/users.service";
 import EventsService from "@server/events/events.service";
 import { EventEmitter2 } from "@nestjs/event-emitter";
+import { randomValidJwt } from "../../helpers";
 
 jest.mock("@server/utils/hasher", () => ({
   hash: jest.fn().mockImplementation((password: string): Promise<string> => Promise.resolve("hashed-password")),
@@ -105,5 +106,38 @@ describe("AuthService", (): void => {
 
   it("should be defined", (): void => {
     expect(authService).toBeDefined();
+  });
+
+  describe("updateAuthentication", (): void => {
+    let whereCondition: FindOptionsWhere<AuthenticationEntity>;
+    let values: Record<string, unknown>;
+    let updateResult: UpdateResult;
+
+    beforeEach((): void => {
+      whereCondition = { id: authentication.id };
+      values = { refreshToken: randomValidJwt() };
+      updateResult = { affected: 1, raw: {}, generatedMaps: [] };
+      entityManager.update.mockResolvedValue(updateResult);
+    });
+
+    it("should update authentication via transaction when no manager provided", async (): Promise<void> => {
+      const result: UpdateResult = await authService.updateAuthentication(whereCondition, values);
+
+      expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+      expect(entityManager.update).toHaveBeenCalledWith(AuthenticationEntity, whereCondition, values);
+      expect(result).toEqual(updateResult);
+    });
+
+    it("should use provided manager instead of starting new transaction", async (): Promise<void> => {
+      const providedManager = {
+        update: jest.fn().mockResolvedValue(updateResult),
+      } as unknown as EntityManager;
+
+      const result: UpdateResult = await authService.updateAuthentication(whereCondition, values, providedManager);
+
+      expect(dataSource.transaction).not.toHaveBeenCalled();
+      expect(providedManager.update).toHaveBeenCalledWith(AuthenticationEntity, whereCondition, values);
+      expect(result).toEqual(updateResult);
+    });
   });
 });
