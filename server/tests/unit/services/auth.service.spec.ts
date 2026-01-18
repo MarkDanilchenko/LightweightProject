@@ -5,7 +5,7 @@ import AuthService from "@server/auth/auth.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { buildAuthenticationFakeFactory, buildUserFakeFactory } from "../../factories";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
-import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
+import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Not, Repository, UpdateResult } from "typeorm";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { ClientProxy } from "@nestjs/microservices";
 import { RMQ_MICROSERVICE } from "@server/configs/constants";
@@ -186,7 +186,8 @@ describe("AuthService", (): void => {
     });
 
     it("should return null when authentication not found", async (): Promise<void> => {
-      const options: FindOneOptions<AuthenticationEntity> = { where: { userId: faker.string.uuid() } };
+      const notExistingUuid = faker.string.uuid();
+      const options: FindOneOptions<AuthenticationEntity> = { where: { userId: notExistingUuid } };
 
       authenticationRepository.findOne.mockResolvedValue(null);
 
@@ -341,12 +342,62 @@ describe("AuthService", (): void => {
       authentication.metadata.local!.isEmailVerified = true;
 
       tokensService.verify.mockResolvedValue(payload as TokenPayload);
-
       authenticationRepository.findOne.mockResolvedValue(authentication);
 
       await expect(authService.localVerificationEmail(dto)).rejects.toThrow(
         new BadRequestException("Email has been already verified."),
       );
+    });
+  });
+
+  describe("localSignIn", (): void => {
+    it("should throw UnauthorizedException when user has no authentications", async (): Promise<void> => {
+      user.authentications = [];
+
+      await expect(authService.localSignIn(user)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. Authentication not found."),
+      );
+    });
+
+    it("should throw UnauthorizedException when no verified local authentication", async (): Promise<void> => {
+      authentication.metadata.local!.isEmailVerified = false;
+
+      await expect(authService.localSignIn(user)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. Authentication not found."),
+      );
+    });
+
+    it("should sign in user with verified local authentication", async (): Promise<void> => {
+      authentication.metadata.local!.isEmailVerified = true;
+      const newAccessToken: string = randomValidJwt(
+        { userId: user.id, provider: AuthenticationProvider.LOCAL, jwti: faker.string.uuid() },
+        { expiresIn: tokensService.jwtAccessTokenExpiresIn },
+      );
+      const newRefreshToken: string = randomValidJwt(
+        { userId: user.id, provider: AuthenticationProvider.LOCAL },
+        { expiresIn: tokensService.jwtRefreshTokenExpiresIn },
+      );
+
+      tokensService.generate.mockResolvedValueOnce(newAccessToken).mockResolvedValueOnce(newRefreshToken);
+
+      const result: { accessToken: string } = await authService.localSignIn(user);
+
+      expect(tokensService.generate).toHaveBeenCalledTimes(2);
+      expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+      expect(entityManager.update).toHaveBeenCalledTimes(2);
+      expect(entityManager.update).toHaveBeenNthCalledWith(
+        1,
+        AuthenticationEntity,
+        { id: authentication.id, userId: user.id, provider: AuthenticationProvider.LOCAL },
+        { refreshToken: newRefreshToken },
+      );
+      expect(entityManager.update).toHaveBeenNthCalledWith(
+        2,
+        AuthenticationEntity,
+        { userId: user.id, provider: Not(AuthenticationProvider.LOCAL) },
+        { refreshToken: null, lastAccessedAt: expect.any(Function) },
+      );
+      expect(result).toEqual({ accessToken: newAccessToken });
     });
   });
 });
