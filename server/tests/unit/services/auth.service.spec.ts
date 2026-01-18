@@ -400,4 +400,41 @@ describe("AuthService", (): void => {
       expect(result).toEqual({ accessToken: newAccessToken });
     });
   });
+
+  describe("signOut", (): void => {
+    it("should throw UnauthorizedException when jwti or exp is missing", async (): Promise<void> => {
+      const payload: TokenPayload = {
+        jwti: undefined,
+        exp: undefined,
+        userId: user.id,
+        provider: AuthenticationProvider.LOCAL,
+      } as TokenPayload;
+
+      await expect(authService.signOut(payload)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. Token is invalid."),
+      );
+    });
+
+    it("should add token to blacklist and clear refreshToken", async (): Promise<void> => {
+      const payload: TokenPayload = {
+        jwti: faker.string.uuid(),
+        userId: user.id,
+        provider: AuthenticationProvider.LOCAL,
+        exp: Math.floor(Date.now() / 1_000) + 3_600, // 1 hour from now;
+      } as TokenPayload;
+
+      const updateResult: UpdateResult = { affected: 1, raw: {}, generatedMaps: [] };
+
+      entityManager.update.mockResolvedValue(updateResult);
+
+      await authService.signOut(payload);
+
+      expect(tokensService.addToBlacklist).toHaveBeenCalledWith(payload.jwti, payload.exp);
+      expect(entityManager.update).toHaveBeenCalledWith(
+        AuthenticationEntity,
+        { userId: payload.userId, provider: payload.provider },
+        { refreshToken: null },
+      );
+    });
+  });
 });
