@@ -16,7 +16,9 @@ import { EventEmitter2 } from "@nestjs/event-emitter";
 import { randomValidJwt } from "../../helpers";
 import { faker } from "@faker-js/faker";
 import { EventName } from "@server/events/interfaces/events.interfaces";
-import { BadRequestException } from "@nestjs/common";
+import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
+import { LocalVerificationEmailDto } from "@server/auth/dto/auth.dto";
 
 jest.mock("@server/utils/hasher", () => ({
   hash: jest.fn().mockImplementation((password: string): Promise<string> => Promise.resolve("hashed-password")),
@@ -118,7 +120,12 @@ describe("AuthService", (): void => {
 
     beforeEach((): void => {
       whereCondition = { id: authentication.id };
-      values = { refreshToken: randomValidJwt() };
+      values = {
+        refreshToken: randomValidJwt(
+          { userId: user.id, provider: AuthenticationProvider.LOCAL },
+          { expiresIn: tokensService.jwtRefreshTokenExpiresIn },
+        ),
+      };
       updateResult = { affected: 1, raw: {}, generatedMaps: [] };
       entityManager.update.mockResolvedValue(updateResult);
     });
@@ -156,6 +163,7 @@ describe("AuthService", (): void => {
 
     it("should return null when authentication not found", async (): Promise<void> => {
       const notExistingUuid = faker.string.uuid();
+
       authenticationRepository.findOneBy.mockResolvedValue(null);
 
       const result: AuthenticationEntity | null = await authService.findAuthenticationByPk(notExistingUuid);
@@ -168,6 +176,7 @@ describe("AuthService", (): void => {
   describe("findAuthentication", (): void => {
     it("should find authentication with options", async (): Promise<void> => {
       const options: FindOneOptions<AuthenticationEntity> = { where: { userId: user.id } };
+
       authenticationRepository.findOne.mockResolvedValue(authentication);
 
       const result: AuthenticationEntity | null = await authService.findAuthentication(options);
@@ -178,6 +187,7 @@ describe("AuthService", (): void => {
 
     it("should return null when authentication not found", async (): Promise<void> => {
       const options: FindOneOptions<AuthenticationEntity> = { where: { userId: faker.string.uuid() } };
+
       authenticationRepository.findOne.mockResolvedValue(null);
 
       const result: AuthenticationEntity | null = await authService.findAuthentication(options);
@@ -258,6 +268,85 @@ describe("AuthService", (): void => {
           password: authentication.metadata.local!.password!,
         }),
       ).rejects.toThrow(new BadRequestException("Already signed up. Email verification is required to proceed."));
+    });
+  });
+
+  describe("localVerificationEmail", (): void => {
+    let dto: LocalVerificationEmailDto;
+    let payload: Partial<TokenPayload>;
+
+    beforeEach((): void => {
+      dto = {
+        token: randomValidJwt({ userId: user.id, provider: AuthenticationProvider.LOCAL }, { expiresIn: "1d" }),
+      };
+      payload = {
+        userId: user.id,
+        provider: AuthenticationProvider.LOCAL,
+      };
+    });
+
+    it("should verify email and return access token", async (): Promise<void> => {
+      authentication.metadata.local!.isEmailVerified = false;
+      authentication.user = user;
+      const newAccessToken: string = randomValidJwt(
+        { userId: user.id, provider: AuthenticationProvider.LOCAL, jwti: faker.string.uuid() },
+        { expiresIn: tokensService.jwtAccessTokenExpiresIn },
+      );
+      const newRefreshToken: string = randomValidJwt(
+        { userId: user.id, provider: AuthenticationProvider.LOCAL },
+        { expiresIn: tokensService.jwtRefreshTokenExpiresIn },
+      );
+
+      tokensService.verify.mockResolvedValue(payload as TokenPayload);
+      authenticationRepository.findOne.mockResolvedValue(authentication);
+      tokensService.generate.mockResolvedValueOnce(newAccessToken).mockResolvedValueOnce(newRefreshToken);
+
+      const result: { accessToken: string } = await authService.localVerificationEmail(dto);
+
+      expect(tokensService.verify).toHaveBeenCalledWith(dto.token);
+      expect(authenticationRepository.findOne).toHaveBeenCalled();
+      expect(dataSource.transaction).toHaveBeenCalled();
+      expect(entityManager.update).toHaveBeenCalledTimes(2);
+      expect(usersService.updateUser).toHaveBeenCalledWith(
+        { id: user.id },
+        authentication.metadata.local?.temporaryInfo ?? {},
+        entityManager,
+      );
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        EventName.AUTH_LOCAL_EMAIL_VERIFIED,
+        expect.any(Object),
+        entityManager,
+      );
+      expect(result).toEqual({ accessToken: newAccessToken });
+    });
+
+    it("should throw UnauthorizedException when token is invalid", async (): Promise<void> => {
+      tokensService.verify.mockResolvedValue({} as TokenPayload);
+
+      await expect(authService.localVerificationEmail(dto)).rejects.toThrow(
+        new UnauthorizedException("Invalid or expired token."),
+      );
+    });
+
+    it("should throw NotFoundException when authentication not found", async (): Promise<void> => {
+      tokensService.verify.mockResolvedValue(payload as TokenPayload);
+      authenticationRepository.findOne.mockResolvedValue(null);
+
+      await expect(authService.localVerificationEmail(dto)).rejects.toThrow(
+        new NotFoundException("Authentication not found."),
+      );
+    });
+
+    it("should throw BadRequestException when email was already verified", async (): Promise<void> => {
+      authentication.metadata.local!.isEmailVerified = true;
+
+      tokensService.verify.mockResolvedValue(payload as TokenPayload);
+
+      authenticationRepository.findOne.mockResolvedValue(authentication);
+
+      await expect(authService.localVerificationEmail(dto)).rejects.toThrow(
+        new BadRequestException("Email has been already verified."),
+      );
     });
   });
 });
