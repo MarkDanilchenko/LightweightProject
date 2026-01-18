@@ -5,7 +5,16 @@ import AuthService from "@server/auth/auth.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { buildAuthenticationFakeFactory, buildUserFakeFactory } from "../../factories";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
-import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Not, Repository, UpdateResult } from "typeorm";
+import {
+  DataSource,
+  EntityManager,
+  FindOneOptions,
+  FindOptionsWhere,
+  IsNull,
+  Not,
+  Repository,
+  UpdateResult,
+} from "typeorm";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { ClientProxy } from "@nestjs/microservices";
 import { RMQ_MICROSERVICE } from "@server/configs/constants";
@@ -434,6 +443,136 @@ describe("AuthService", (): void => {
         AuthenticationEntity,
         { userId: payload.userId, provider: payload.provider },
         { refreshToken: null },
+      );
+    });
+  });
+
+  describe("refreshAccessToken", (): void => {
+    let oldAccessToken: string;
+
+    beforeEach((): void => {
+      oldAccessToken = randomValidJwt(undefined, {
+        expiresIn: tokensService.jwtAccessTokenExpiresIn,
+        notBefore: Math.floor(Date.now() / 1000) + 30, // only after 30 seconds from now this token will be valid - consider that it is invalid;
+      });
+    });
+
+    afterEach((): void => {
+      jest.clearAllMocks();
+    });
+
+    it("should throw UnauthorizedException when payload is falsy", async (): Promise<void> => {
+      tokensService.verify.mockResolvedValue(null as unknown as TokenPayload);
+
+      await expect(authService.refreshAccessToken(oldAccessToken)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed."),
+      );
+    });
+
+    it("should throw UnauthorizedException when required fields are missing", async (): Promise<void> => {
+      const payload = { jwti: undefined, userId: undefined, provider: undefined } as unknown as TokenPayload;
+
+      tokensService.verify.mockResolvedValue(payload);
+
+      await expect(authService.refreshAccessToken(oldAccessToken)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. Token is invalid."),
+      );
+    });
+
+    it("should throw UnauthorizedException when token is blacklisted", async (): Promise<void> => {
+      const payload: TokenPayload = {
+        jwti: faker.string.uuid(),
+        userId: user.id,
+        provider: AuthenticationProvider.LOCAL,
+      };
+
+      tokensService.verify.mockResolvedValue(payload);
+      tokensService.isBlacklisted.mockResolvedValue(true);
+
+      await expect(authService.refreshAccessToken(oldAccessToken)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. Token is invalid."),
+      );
+    });
+
+    it("should throw UnauthorizedException when authentication with refresh token not found", async (): Promise<void> => {
+      const payload: TokenPayload = {
+        jwti: faker.string.uuid(),
+        userId: user.id,
+        provider: AuthenticationProvider.LOCAL,
+      };
+
+      tokensService.verify.mockResolvedValue(payload);
+      tokensService.isBlacklisted.mockResolvedValue(false);
+
+      authenticationRepository.findOne.mockResolvedValue(null);
+
+      await expect(authService.refreshAccessToken(oldAccessToken)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. User is not signed in."),
+      );
+    });
+
+    it("should generate new access token when refresh token is valid", async (): Promise<void> => {
+      const payload: TokenPayload = {
+        jwti: faker.string.uuid(),
+        userId: user.id,
+        provider: AuthenticationProvider.LOCAL,
+      };
+      const newAccessToken: string = randomValidJwt(payload, {
+        expiresIn: tokensService.jwtAccessTokenExpiresIn,
+      });
+
+      tokensService.verify.mockResolvedValueOnce(payload).mockResolvedValueOnce({} as TokenPayload);
+      tokensService.isBlacklisted.mockResolvedValue(false);
+
+      // Consider, that authentication is found and has a valid refresh token;
+      authenticationRepository.findOne.mockResolvedValue(authentication);
+      tokensService.generate.mockResolvedValue(newAccessToken);
+
+      const result: { accessToken: string } = await authService.refreshAccessToken(oldAccessToken);
+
+      expect(authenticationRepository.findOne).toHaveBeenCalledWith({
+        where: {
+          userId: payload.userId,
+          provider: payload.provider,
+          refreshToken: Not(IsNull()),
+        },
+      });
+      expect(tokensService.verify).toHaveBeenCalledTimes(2);
+      expect(tokensService.generate).toHaveBeenCalledWith(
+        { userId: payload.userId, provider: payload.provider, jwti: expect.any(String) },
+        { expiresIn: tokensService.jwtAccessTokenExpiresIn },
+      );
+      expect(result).toEqual({ accessToken: newAccessToken });
+    });
+  });
+
+  describe("retrieveProfile", (): void => {
+    it("should return user profile when user exists", async (): Promise<void> => {
+      usersService.findUser.mockResolvedValue(user);
+
+      const result: Partial<UserEntity> = await authService.retrieveProfile(user.id);
+
+      expect(usersService.findUser).toHaveBeenCalledWith({
+        select: {
+          id: true,
+          username: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          avatarUrl: true,
+          createdAt: true,
+          updatedAt: true,
+        },
+        where: { id: user.id },
+      });
+      expect(result).toEqual(user);
+    });
+
+    it("should throw UnauthorizedException when user does not exist", async (): Promise<void> => {
+      usersService.findUser.mockResolvedValue(null);
+
+      await expect(authService.retrieveProfile(user.id)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. User is not found."),
       );
     });
   });
