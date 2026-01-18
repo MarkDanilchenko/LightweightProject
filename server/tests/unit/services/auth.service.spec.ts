@@ -27,7 +27,7 @@ import { faker } from "@faker-js/faker";
 import { EventName } from "@server/events/interfaces/events.interfaces";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
-import { LocalVerificationEmailDto } from "@server/auth/dto/auth.dto";
+import { LocalPasswordForgotDto, LocalVerificationEmailDto } from "@server/auth/dto/auth.dto";
 
 jest.mock("@server/utils/hasher", () => ({
   hash: jest.fn().mockImplementation((password: string): Promise<string> => Promise.resolve("hashed-password")),
@@ -574,6 +574,33 @@ describe("AuthService", (): void => {
       await expect(authService.retrieveProfile(user.id)).rejects.toThrow(
         new UnauthorizedException("Authentication failed. User is not found."),
       );
+    });
+  });
+
+  describe("localPasswordForgot", (): void => {
+    it("should silently return when user was not found", async (): Promise<void> => {
+      usersService.findUser.mockResolvedValue(null);
+
+      await expect(authService.localPasswordForgot({ email: user.email })).resolves.toBeUndefined();
+      expect(rmqMicroserviceClient.emit).not.toHaveBeenCalled();
+    });
+
+    it("should throw BadRequestException when email is not verified", async (): Promise<void> => {
+      authentication.metadata.local!.isEmailVerified = false;
+
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(authService.localPasswordForgot({ email: user.email })).rejects.toThrow(
+        new BadRequestException(`Email "${user.email}" is not verified yet.`),
+      );
+    });
+
+    it("should emit password reset event when user found and email verified", async (): Promise<void> => {
+      usersService.findUser.mockResolvedValue(user);
+
+      await authService.localPasswordForgot({ email: user.email });
+
+      expect(rmqMicroserviceClient.emit).toHaveBeenCalledWith(EventName.AUTH_LOCAL_PASSWORD_RESET, expect.any(Object));
     });
   });
 });
