@@ -136,7 +136,6 @@ export default class AuthService {
           select: { id: true },
           where: { username },
         });
-
         if (isUsernameTaken) {
           throw new BadRequestException("Username is already taken.");
         }

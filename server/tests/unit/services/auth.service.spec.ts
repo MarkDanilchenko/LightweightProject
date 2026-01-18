@@ -5,7 +5,7 @@ import AuthService from "@server/auth/auth.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { buildAuthenticationFakeFactory, buildUserFakeFactory } from "../../factories";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
-import { DataSource, EntityManager, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
+import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { ClientProxy } from "@nestjs/microservices";
 import { RMQ_MICROSERVICE } from "@server/configs/constants";
@@ -14,6 +14,9 @@ import UsersService from "@server/users/users.service";
 import EventsService from "@server/events/events.service";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { randomValidJwt } from "../../helpers";
+import { faker } from "@faker-js/faker";
+import { EventName } from "@server/events/interfaces/events.interfaces";
+import { BadRequestException } from "@nestjs/common";
 
 jest.mock("@server/utils/hasher", () => ({
   hash: jest.fn().mockImplementation((password: string): Promise<string> => Promise.resolve("hashed-password")),
@@ -138,6 +141,123 @@ describe("AuthService", (): void => {
       expect(dataSource.transaction).not.toHaveBeenCalled();
       expect(providedManager.update).toHaveBeenCalledWith(AuthenticationEntity, whereCondition, values);
       expect(result).toEqual(updateResult);
+    });
+  });
+
+  describe("findAuthenticationByPk", (): void => {
+    it("should find authentication by primary key", async (): Promise<void> => {
+      authenticationRepository.findOneBy.mockResolvedValue(authentication);
+
+      const result: AuthenticationEntity | null = await authService.findAuthenticationByPk(authentication.id);
+
+      expect(authenticationRepository.findOneBy).toHaveBeenCalledWith({ id: authentication.id });
+      expect(result).toEqual(authentication);
+    });
+
+    it("should return null when authentication not found", async (): Promise<void> => {
+      const notExistingUuid = faker.string.uuid();
+      authenticationRepository.findOneBy.mockResolvedValue(null);
+
+      const result: AuthenticationEntity | null = await authService.findAuthenticationByPk(notExistingUuid);
+
+      expect(authenticationRepository.findOneBy).toHaveBeenCalledWith({ id: notExistingUuid });
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("findAuthentication", (): void => {
+    it("should find authentication with options", async (): Promise<void> => {
+      const options: FindOneOptions<AuthenticationEntity> = { where: { userId: user.id } };
+      authenticationRepository.findOne.mockResolvedValue(authentication);
+
+      const result: AuthenticationEntity | null = await authService.findAuthentication(options);
+
+      expect(authenticationRepository.findOne).toHaveBeenCalledWith(options);
+      expect(result).toEqual(authentication);
+    });
+
+    it("should return null when authentication not found", async (): Promise<void> => {
+      const options: FindOneOptions<AuthenticationEntity> = { where: { userId: faker.string.uuid() } };
+      authenticationRepository.findOne.mockResolvedValue(null);
+
+      const result: AuthenticationEntity | null = await authService.findAuthentication(options);
+
+      expect(authenticationRepository.findOne).toHaveBeenCalledWith(options);
+      expect(result).toBeNull();
+    });
+  });
+
+  describe("localSignUp", (): void => {
+    it("should create user and authentication when user does not exist", async (): Promise<void> => {
+      usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+      (entityManager.create as jest.Mock)
+        .mockReturnValueOnce({ id: user.id, email: user.email })
+        .mockReturnValueOnce(authentication);
+
+      await authService.localSignUp({
+        username: user.username!,
+        firstName: user.firstName!,
+        lastName: user.lastName!,
+        email: user.email,
+        avatarUrl: user.avatarUrl!,
+        password: authentication.metadata.local!.password!,
+      });
+
+      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(entityManager.create).toHaveBeenCalledTimes(2);
+      expect(entityManager.save).toHaveBeenCalledTimes(2);
+      expect(rmqMicroserviceClient.emit).toHaveBeenCalledWith(EventName.AUTH_LOCAL_CREATED, expect.any(Object));
+    });
+
+    it("should throw BadRequestException when username already taken", async (): Promise<void> => {
+      usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce({ id: user.id } as UserEntity);
+
+      await expect(
+        authService.localSignUp({
+          username: user.username!,
+          firstName: user.firstName!,
+          lastName: user.lastName!,
+          email: user.email,
+          avatarUrl: user.avatarUrl!,
+          password: authentication.metadata.local!.password!,
+        }),
+      ).rejects.toThrow(new BadRequestException("Username is already taken."));
+    });
+
+    it("should throw BadRequestException when local auth already verified", async (): Promise<void> => {
+      authentication.metadata.local!.isEmailVerified = true;
+
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(
+        authService.localSignUp({
+          username: user.username!,
+          firstName: user.firstName!,
+          lastName: user.lastName!,
+          email: user.email,
+          avatarUrl: user.avatarUrl!,
+          password: authentication.metadata.local!.password!,
+        }),
+      ).rejects.toThrow(
+        new BadRequestException("Already signed up. Please, sign in with local authentication credentials."),
+      );
+    });
+
+    it("should throw BadRequestException when local auth exists but not verified", async (): Promise<void> => {
+      authentication.metadata.local!.isEmailVerified = false;
+
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(
+        authService.localSignUp({
+          username: user.username!,
+          firstName: user.firstName!,
+          lastName: user.lastName!,
+          email: user.email,
+          avatarUrl: user.avatarUrl!,
+          password: authentication.metadata.local!.password!,
+        }),
+      ).rejects.toThrow(new BadRequestException("Already signed up. Email verification is required to proceed."));
     });
   });
 });
