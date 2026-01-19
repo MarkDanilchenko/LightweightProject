@@ -1,15 +1,15 @@
 import * as jwt from "jsonwebtoken";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
-import { JwtSignOptions } from "@nestjs/jwt";
 import { faker } from "@faker-js/faker";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
 
-const secretKey = "aFEo3Q8YBou-secretJwtKeyForTesting-FzM1sHSsEF3";
+const testSecretOrPrivateKey = "aFEo3Q8YBou-secretJwtKeyForTesting-FzM1sHSsEF3";
 
 /**
  * Generates random valid JWT token for testing purposes.
  * @param {TokenPayload} [payload] - The payload to be used in the token.
  * @param {JwtSignOptions} [options] - The options to be used in the token.
+ * @param {string} [secretOrPrivateKey] - The secret or private key to be used in the token.
  *
  * @returns {string} JWT token that can be used in test cases.
  */
@@ -24,9 +24,10 @@ function randomValidJwt(
     ]),
     jwti: faker.string.uuid(),
   },
-  options: JwtSignOptions = { expiresIn: "1d" },
+  options: jwt.SignOptions = { expiresIn: "1d" },
+  secretOrPrivateKey: string = testSecretOrPrivateKey,
 ): string {
-  return jwt.sign(payload, secretKey, options);
+  return jwt.sign(payload, secretOrPrivateKey, options);
 }
 
 export { randomValidJwt };

@@ -500,8 +500,8 @@ export default class AuthService {
   async localPasswordReset(localPasswordResetDto: LocalPasswordResetDto): Promise<void> {
     const { token, password } = localPasswordResetDto;
 
-    const { userId, provider } = await this.tokensService.decode(token);
-    if (!userId && !provider) {
+    const { userId, provider } = this.tokensService.decode(token);
+    if (!userId || !provider) {
       throw new BadRequestException("Token is invalid.");
     }
 
@@ -528,9 +528,7 @@ export default class AuthService {
     }
 
     const currentPassword: string = user.authentications[0].metadata?.local?.password;
-    await this.tokensService.verify(token, {
-      secret: currentPassword,
-    });
+    await this.tokensService.verify(token, { secret: currentPassword });
 
     const newHashedPassword: string = await hash(password);
 
