@@ -4,7 +4,7 @@ import AuthenticationEntity from "@server/auth/auth.entity";
 import AuthService from "@server/auth/auth.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { buildAuthenticationFakeFactory, buildUserFakeFactory } from "../../factories";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider, AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
 import {
   DataSource,
   EntityManager,
@@ -27,7 +27,7 @@ import { faker } from "@faker-js/faker";
 import { EventName } from "@server/events/interfaces/events.interfaces";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
-import { LocalPasswordForgotDto, LocalVerificationEmailDto } from "@server/auth/dto/auth.dto";
+import { LocalPasswordResetDto, LocalVerificationEmailDto } from "@server/auth/dto/auth.dto";
 
 jest.mock("@server/utils/hasher", () => ({
   hash: jest.fn().mockImplementation((password: string): Promise<string> => Promise.resolve("hashed-password")),
@@ -601,6 +601,85 @@ describe("AuthService", (): void => {
       await authService.localPasswordForgot({ email: user.email });
 
       expect(rmqMicroserviceClient.emit).toHaveBeenCalledWith(EventName.AUTH_LOCAL_PASSWORD_RESET, expect.any(Object));
+    });
+  });
+
+  describe("localPasswordReset", (): void => {
+    const newPassword = "FwwGjwC5qjO";
+    let dto: LocalPasswordResetDto;
+
+    beforeEach((): void => {
+      dto = {
+        token: randomValidJwt(
+          { userId: user.id, provider: AuthenticationProvider.LOCAL },
+          { expiresIn: "15m" },
+          authentication.metadata.local!.password,
+        ),
+        password: newPassword,
+      };
+    });
+
+    afterEach((): void => {
+      jest.clearAllMocks();
+    });
+
+    it("should throw BadRequestException when token is invalid after decode", async (): Promise<void> => {
+      tokensService.decode.mockReturnValue(
+        expect.objectContaining({ userId: undefined, provider: undefined }) as TokenPayload,
+      );
+
+      await expect(authService.localPasswordReset(dto)).rejects.toThrow(new BadRequestException("Token is invalid."));
+    });
+
+    it("should throw BadRequestException when user not found", async (): Promise<void> => {
+      const decoded: TokenPayload = { userId: user.id, provider: AuthenticationProvider.LOCAL };
+
+      tokensService.decode.mockReturnValue(decoded);
+      usersService.findUser.mockResolvedValue(null);
+
+      await expect(authService.localPasswordReset(dto)).rejects.toThrow(new BadRequestException("Token is invalid."));
+    });
+
+    it("should throw BadRequestException when email is not verified", async (): Promise<void> => {
+      const decoded: TokenPayload = { userId: user.id, provider: AuthenticationProvider.LOCAL };
+      authentication.metadata.local!.isEmailVerified = false;
+
+      tokensService.decode.mockReturnValue(decoded);
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(authService.localPasswordReset(dto)).rejects.toThrow(
+        new BadRequestException("Email is not verified yet."),
+      );
+    });
+
+    it("should reset password, update authentication and emit event", async (): Promise<void> => {
+      const decoded: TokenPayload = { userId: user.id, provider: AuthenticationProvider.LOCAL };
+      const updateResult: UpdateResult = { affected: 1, raw: {}, generatedMaps: [] };
+      authentication.metadata.local!.isEmailVerified = true;
+
+      tokensService.decode.mockReturnValue(decoded);
+      usersService.findUser.mockResolvedValue(user);
+      tokensService.verify.mockResolvedValue({} as TokenPayload);
+      entityManager.update.mockResolvedValue(updateResult);
+
+      await authService.localPasswordReset(dto);
+
+      expect(tokensService.verify).toHaveBeenCalledWith(dto.token, { secret: authentication.metadata.local!.password });
+      expect(dataSource.transaction).toHaveBeenCalled();
+      expect(entityManager.update).toHaveBeenCalledWith(
+        AuthenticationEntity,
+        { provider: decoded.provider, userId: decoded.userId, id: authentication.id },
+        expect.objectContaining({
+          metadata: expect.objectContaining({
+            local: expect.objectContaining({ password: "hashed-password" }) as AuthMetadata["local"],
+          }) as AuthMetadata,
+        }),
+      );
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        EventName.AUTH_LOCAL_PASSWORD_RESETED,
+        expect.any(Object),
+        entityManager,
+      );
     });
   });
 });
