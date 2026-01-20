@@ -4,15 +4,17 @@ import { setCookie, clearCookie } from "@server/utils/cookie";
 describe("Cookie Utility", (): void => {
   describe("setCookie", (): void => {
     let mockResponse: Partial<Response>;
-    let mockCookie: jest.Mock;
+    let mockCookie: jest.MockedFunction<Response["cookie"]>;
 
     beforeEach((): void => {
-      jest.clearAllMocks();
-
       mockCookie = jest.fn();
       mockResponse = {
         cookie: mockCookie,
       };
+    });
+
+    afterEach((): void => {
+      jest.clearAllMocks();
     });
 
     it("should set a cookie with default options", (): void => {
@@ -45,7 +47,7 @@ describe("Cookie Utility", (): void => {
     });
 
     it("should handle different value types", (): void => {
-      const testCases: { value: any; type: string }[] = [
+      const testCases = [
         { value: "string", type: "string" },
         { value: 123, type: "number" },
         { value: true, type: "boolean" },
@@ -56,6 +58,7 @@ describe("Cookie Utility", (): void => {
 
       testCases.forEach(({ value, type }): void => {
         setCookie(mockResponse as Response, `test-${type}`, value);
+
         expect(mockCookie).toHaveBeenCalledWith(`test-${type}`, value, expect.any(Object));
       });
     });
@@ -63,15 +66,17 @@ describe("Cookie Utility", (): void => {
 
   describe("clearCookie", (): void => {
     let mockResponse: Partial<Response>;
-    let mockClearCookie: jest.Mock;
+    let mockClearCookie: jest.MockedFunction<Response["clearCookie"]>;
 
     beforeEach((): void => {
-      jest.clearAllMocks();
-
       mockClearCookie = jest.fn();
       mockResponse = {
         clearCookie: mockClearCookie,
       };
+    });
+
+    afterEach((): void => {
+      jest.clearAllMocks();
     });
 
     it("should clear a cookie", (): void => {
@@ -87,6 +92,7 @@ describe("Cookie Utility", (): void => {
 
       cookieNames.forEach((name: string): void => {
         clearCookie(mockResponse as Response, name);
+
         expect(mockClearCookie).toHaveBeenCalledWith(name);
       });
     });

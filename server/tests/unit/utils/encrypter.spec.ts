@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { encrypt, decrypt } from "@server/utils/encrypter";
 
 // Mock the crypto module;
@@ -11,22 +12,20 @@ describe("Encrypter Utility", (): void => {
   const algorithm = "aes-256-cbc";
 
   describe("encrypt function", (): void => {
-    let mockCreateCipheriv: jest.Mock;
-    const strToEncrypt = "testString";
+    const strToEncrypt = "XZdVBFiOqfB";
     const mockCipher = {
       update: jest.fn().mockReturnValue("encrypted"),
       final: jest.fn().mockReturnValue("-string"),
     };
-
-    beforeAll((): void => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      mockCreateCipheriv = require("crypto").createCipheriv as jest.Mock;
-    });
+    let mockCreateCipheriv: jest.MockedFunction<any>;
 
     beforeEach((): void => {
-      jest.clearAllMocks();
-
+      mockCreateCipheriv = require("crypto").createCipheriv as jest.MockedFunction<any>;
       mockCreateCipheriv.mockReturnValue(mockCipher);
+    });
+
+    afterEach((): void => {
+      jest.clearAllMocks();
     });
 
     it("should encrypt a string and return it in the correct format", (): void => {
@@ -43,30 +42,29 @@ describe("Encrypter Utility", (): void => {
       encrypt(strToEncrypt);
 
       const secretKeyArg = mockCreateCipheriv.mock.calls[0][1];
+
       expect(secretKeyArg).toBeInstanceOf(Buffer);
     });
   });
 
   describe("decrypt function", (): void => {
-    let mockCreateDecipheriv: jest.Mock;
     const encryptedString = "74657374697631323334353637383930:encrypted-string";
     const mockDecipher = {
       update: jest.fn().mockReturnValue("decrypted"),
       final: jest.fn().mockReturnValue("-string"),
     };
-
-    beforeAll((): void => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      mockCreateDecipheriv = require("crypto").createDecipheriv as jest.Mock;
-    });
+    let mockCreateDecipheriv: jest.MockedFunction<any>;
 
     beforeEach((): void => {
-      jest.clearAllMocks();
-
+      mockCreateDecipheriv = require("crypto").createDecipheriv as jest.MockedFunction<any>;
       mockCreateDecipheriv.mockReturnValue(mockDecipher);
     });
 
-    it("should decrypt a string that was previously encrypted", (): void => {
+    afterEach((): void => {
+      jest.clearAllMocks();
+    });
+
+    it("should decrypt an encrypted string", (): void => {
       const result: string = decrypt(encryptedString);
 
       expect(mockCreateDecipheriv).toHaveBeenCalledWith(algorithm, expect.any(Buffer), expect.any(Buffer));
@@ -76,16 +74,15 @@ describe("Encrypter Utility", (): void => {
     });
 
     it("should throw an error for invalid encrypted string format", (): void => {
-      expect(() => decrypt("invalid-format")).toThrow("Invalid encrypted string format");
+      expect((): string => decrypt("invalid-format")).toThrow("Invalid encrypted string format");
     });
 
     it("should handle decryption errors gracefully", (): void => {
-      const error = new Error("Decryption failed");
       mockDecipher.update.mockImplementationOnce(() => {
-        throw error;
+        throw new Error("Decryption failed");
       });
 
-      expect(() => decrypt(encryptedString)).toThrow("Decryption failed");
+      expect((): string => decrypt(encryptedString)).toThrow("Decryption failed");
     });
   });
 });
