@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+import crypto from "crypto";
 import { hash, verifyHash } from "@server/utils/hasher";
 
 // Mock the crypto module;
@@ -11,22 +13,19 @@ describe("Hasher Utility", (): void => {
   const keylen = 64;
 
   describe("hash function", (): void => {
-    let mockScrypt: jest.Mock;
-    let toHash: string;
-
-    beforeAll((): void => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      mockScrypt = require("crypto").scrypt as jest.Mock;
-      toHash = "Test-password_12345";
-    });
+    const toHash = "ghDkHXrKI";
+    const mockScrypt = require("crypto").scrypt as jest.MockedFunction<typeof crypto.scrypt>;
 
     beforeEach((): void => {
-      jest.clearAllMocks();
-
       mockScrypt.mockImplementation((...args: any[]): void => {
         const callback = args[args.length - 1];
+
         callback(null, Buffer.from("xRewhBtmbIpMsJ3vdn724aIKnlcMOAsi"));
       });
+    });
+
+    afterEach((): void => {
+      jest.clearAllMocks();
     });
 
     it("should call scrypt with correct parameters", async (): Promise<void> => {
@@ -51,8 +50,10 @@ describe("Hasher Utility", (): void => {
 
     it("should throw an error if scrypt fails", async (): Promise<void> => {
       const error = new Error("Scrypt failed");
+
       mockScrypt.mockImplementationOnce((...args: any[]): void => {
         const callback = args[args.length - 1];
+
         callback(error, undefined);
       });
 
@@ -61,50 +62,44 @@ describe("Hasher Utility", (): void => {
   });
 
   describe("verifyHash function", () => {
-    let mockScrypt: jest.Mock;
-    let mockTimingSafeEqual: jest.Mock;
-    let toHash: string;
-
-    beforeAll((): void => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      mockScrypt = require("crypto").scrypt as jest.Mock;
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      mockTimingSafeEqual = require("crypto").timingSafeEqual as jest.Mock;
-      toHash = "Test-password_12345";
-    });
+    const toHash = "VCmEC7q0CS";
+    const mockScrypt = require("crypto").scrypt as jest.MockedFunction<typeof crypto.scrypt>;
+    const mockTimingSafeEqual = require("crypto").timingSafeEqual as jest.MockedFunction<typeof crypto.timingSafeEqual>;
 
     beforeEach((): void => {
-      jest.clearAllMocks();
-
       mockScrypt.mockImplementation((...args: any[]): void => {
         const callback = args[args.length - 1];
+
         callback(null, Buffer.from("xRewhBtmbIpMsJ3vdn724aIKnlcMOAsi"));
       });
     });
 
+    afterEach((): void => {
+      jest.clearAllMocks();
+    });
+
     it("should return true for matching hash", async (): Promise<void> => {
       mockTimingSafeEqual.mockReturnValueOnce(true);
-      const storedHash: string = await hash(toHash);
 
+      const storedHash: string = await hash(toHash);
       const result: boolean = await verifyHash(toHash, storedHash);
 
-      expect(result).toBe(true);
       expect(mockTimingSafeEqual).toHaveBeenCalled();
+      expect(result).toBe(true);
     });
 
     it("should return false for non-matching hash", async (): Promise<void> => {
       mockTimingSafeEqual.mockReturnValueOnce(false);
-      const storedHash: string = await hash(toHash);
 
+      const storedHash: string = await hash(toHash);
       const result: boolean = await verifyHash(toHash, storedHash.slice(0, -1) + "A");
 
-      expect(result).toBe(false);
       expect(mockTimingSafeEqual).toHaveBeenCalled();
+      expect(result).toBe(false);
     });
 
     it("should return false for different length hashes", async (): Promise<void> => {
       const storedHash: string = await hash(toHash);
-
       const result: boolean = await verifyHash(toHash, storedHash.slice(0, -1));
 
       expect(mockTimingSafeEqual).not.toHaveBeenCalled();
@@ -113,14 +108,15 @@ describe("Hasher Utility", (): void => {
 
     it("should throw an error if scrypt fails during verification", async (): Promise<void> => {
       const storedHash: string = await hash(toHash);
-
       const error = new Error("Hashing failed");
-      mockScrypt.mockImplementationOnce((...args: any[]) => {
+
+      mockScrypt.mockImplementationOnce((...args: any[]): void => {
         const callback = args[args.length - 1];
+
         callback(error);
       });
 
-      await expect(verifyHash(toHash, storedHash)).rejects.toThrow("Hashing failed");
+      await expect(verifyHash(toHash, storedHash)).rejects.toThrow(error);
     });
 
     it("should use the common secret from app configuration", async (): Promise<void> => {
@@ -128,6 +124,7 @@ describe("Hasher Utility", (): void => {
 
       // Check that the salt is created from the common secret
       const saltArg = mockScrypt.mock.calls[0][1];
+
       expect(saltArg).toBeInstanceOf(Buffer);
       expect(saltArg).toHaveLength(32);
     });

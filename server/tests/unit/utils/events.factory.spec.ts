@@ -5,13 +5,8 @@ import UserEntity from "@server/users/users.entity";
 import AuthenticationEntity from "@server/auth/auth.entity";
 
 describe("EventsFactory", (): void => {
-  let user: UserEntity;
-  let authentication: AuthenticationEntity;
-
-  beforeAll((): void => {
-    user = buildUserFakeFactory();
-    authentication = buildAuthenticationFakeFactory({ userId: user.id });
-  });
+  const user: UserEntity = buildUserFakeFactory();
+  const authentication: AuthenticationEntity = buildAuthenticationFakeFactory({ userId: user.id });
 
   it("should have entries for all event names", (): void => {
     Object.values(EventName).forEach((eventName: EventName): void => {
