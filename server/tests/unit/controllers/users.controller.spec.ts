@@ -5,13 +5,9 @@ import UserEntity from "@server/users/users.entity";
 import { buildUserFakeFactory } from "../../factories";
 
 describe("UsersController", (): void => {
+  const mockUser: UserEntity = buildUserFakeFactory();
   let controller: UsersController;
   let service: jest.Mocked<UsersService>;
-  let mockUser: UserEntity;
-
-  beforeAll((): void => {
-    mockUser = buildUserFakeFactory();
-  });
 
   beforeEach(async (): Promise<void> => {
     const mockUsersService = {
@@ -22,16 +18,11 @@ describe("UsersController", (): void => {
 
     const testingModule: TestingModule = await Test.createTestingModule({
       controllers: [UsersController],
-      providers: [
-        {
-          provide: UsersService,
-          useValue: mockUsersService,
-        },
-      ],
+      providers: [{ provide: UsersService, useValue: mockUsersService }],
     }).compile();
 
     controller = testingModule.get<UsersController>(UsersController);
-    service = testingModule.get<UsersService>(UsersService) as jest.Mocked<UsersService>;
+    service = testingModule.get<jest.Mocked<UsersService>>(UsersService);
   });
 
   afterEach((): void => {

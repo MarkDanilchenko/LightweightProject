@@ -10,17 +10,12 @@ import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces"
 import { faker } from "@faker-js/faker";
 
 describe("JwtStrategy", (): void => {
+  const jwtSecret = "test-jwt-secret-yvqAYoIT";
+  const mockDone: jest.MockedFunction<(...args: unknown[]) => void> = jest.fn();
+  let payload: TokenPayload;
   let jwtStrategy: JwtStrategy;
   let configService: jest.Mocked<ConfigService>;
   let tokensService: jest.Mocked<TokensService>;
-  let mockDone: jest.Mocked<(...args: unknown[]) => void>;
-  let payload: TokenPayload;
-
-  const jwtSecret = "test-jwt-secret-yvqAYoIT";
-
-  beforeAll((): void => {
-    mockDone = jest.fn();
-  });
 
   beforeEach(async (): Promise<void> => {
     const mockTokensService = { isBlacklisted: jest.fn() };
@@ -38,8 +33,8 @@ describe("JwtStrategy", (): void => {
       }),
     };
     payload = {
-      userId: faker.string.uuid(),
       provider: AuthenticationProvider.LOCAL,
+      userId: faker.string.uuid(),
       jwti: faker.string.uuid(),
     };
 
@@ -79,7 +74,7 @@ describe("JwtStrategy", (): void => {
       );
     });
 
-    it("should throw UnauthorizedException when jwti is missing", async (): Promise<void> => {
+    it("should throw UnauthorizedException when jwti is missing or invalid in payload", async (): Promise<void> => {
       delete payload.jwti;
 
       await expect(jwtStrategy.validate(payload, mockDone)).rejects.toThrow(

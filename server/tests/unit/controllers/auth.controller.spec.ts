@@ -26,16 +26,41 @@ jest.mock("@server/utils/cookie", () => ({
 }));
 
 describe("AuthController", (): void => {
+  const user: UserEntity = buildUserFakeFactory();
   let authController: AuthController;
   let authService: jest.Mocked<AuthService>;
-  let user: UserEntity;
   let mockResponse: Partial<Response>;
 
-  beforeAll((): void => {
-    user = buildUserFakeFactory();
-  });
-
   beforeEach(async (): Promise<void> => {
+    const mockAuthService = {
+      localSignUp: jest.fn(),
+      localVerificationEmail: jest.fn(),
+      localSignIn: jest.fn(),
+      localPasswordForgot: jest.fn(),
+      localPasswordReset: jest.fn(),
+      signOut: jest.fn(),
+      refreshAccessToken: jest.fn(),
+      retrieveProfile: jest.fn(),
+    };
+
+    const mockConfigService = {
+      get: jest.fn((key: string) => {
+        switch (key) {
+          case "serverConfiguration.https": {
+            return true;
+          }
+
+          case "clientConfiguration.baseUrl": {
+            return "https://127.0.0.1:3001";
+          }
+
+          default: {
+            return null;
+          }
+        }
+      }),
+    };
+
     mockResponse = {
       status: jest.fn().mockReturnThis(),
       send: jest.fn(),
@@ -45,39 +70,8 @@ describe("AuthController", (): void => {
     const testingModule: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
       providers: [
-        {
-          provide: AuthService,
-          useValue: {
-            localSignUp: jest.fn(),
-            localVerificationEmail: jest.fn(),
-            localSignIn: jest.fn(),
-            localPasswordForgot: jest.fn(),
-            localPasswordReset: jest.fn(),
-            signOut: jest.fn(),
-            refreshAccessToken: jest.fn(),
-            retrieveProfile: jest.fn(),
-          },
-        },
-        {
-          provide: ConfigService,
-          useValue: {
-            get: jest.fn((key: string) => {
-              switch (key) {
-                case "serverConfiguration.https": {
-                  return true;
-                }
-
-                case "clientConfiguration.baseUrl": {
-                  return "https://127.0.0.1:3001";
-                }
-
-                default: {
-                  return null;
-                }
-              }
-            }),
-          },
-        },
+        { provide: AuthService, useValue: mockAuthService },
+        { provide: ConfigService, useValue: mockConfigService },
       ],
     }).compile();
 
@@ -252,11 +246,7 @@ describe("AuthController", (): void => {
       const req = {
         signedCookies: {
           accessToken: randomValidJwt(
-            {
-              userId: user.id,
-              provider: AuthenticationProvider.LOCAL,
-              jwti: uuidv4(),
-            },
+            { userId: user.id, provider: AuthenticationProvider.LOCAL, jwti: uuidv4() },
             {
               notBefore: Math.floor(Date.now() / 1000) + 30, // only after 30 seconds from now this token will be valid;
             },
@@ -305,6 +295,7 @@ describe("AuthController", (): void => {
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       };
+
       authService.retrieveProfile.mockResolvedValue(profile);
 
       const result: Partial<UserEntity> = await authController.me(req);

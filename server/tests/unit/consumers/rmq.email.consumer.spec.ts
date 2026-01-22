@@ -1,12 +1,4 @@
-// Mock the nodemailer createTransport before import both RmqEmailConsumer and RmqEmailService;
-jest.mock("nodemailer", () => ({
-  createTransport: jest.fn().mockReturnValue({
-    verify: jest.fn().mockImplementation((callback: (error: Error | null) => void): void => {
-      callback(null);
-    }),
-  }),
-}));
-
+/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from "@nestjs/testing";
 import RmqEmailConsumer from "@server/services/rmq/rmq.email.consumer";
 import RmqEmailService from "@server/services/rmq/rmq.email.service";
@@ -21,37 +13,43 @@ import UserEntity from "@server/users/users.entity";
 import { buildAuthenticationFakeFactory, buildUserFakeFactory } from "../../factories";
 import AuthenticationEntity from "@server/auth/auth.entity";
 
+jest.mock("nodemailer", () => ({
+  createTransport: jest.fn().mockReturnValue({
+    verify: jest.fn().mockImplementation((callback: (error: Error | null) => void): void => {
+      callback(null);
+    }),
+  }),
+}));
+
 describe("RmqEmailConsumer", (): void => {
-  let consumer: RmqEmailConsumer;
-  let logger: jest.SpyInstance;
-
-  const mockRmqEmailService = {
-    sendWelcomeVerificationEmail: jest.fn(),
-    sendPasswordResetEmail: jest.fn(),
-  };
-
-  const mockChannel = {
-    ack: jest.fn(),
-    nack: jest.fn(),
-  };
-
+  const mockChannel = { ack: jest.fn(), nack: jest.fn() };
   const mockRmqContext = {
     getChannelRef: () => mockChannel,
     getMessage: () => jest.fn().mockImplementation((): void => {}),
   } as unknown as RmqContext;
+  let rmqEmailConsumer: RmqEmailConsumer;
+  let rmqEmailService: jest.Mocked<RmqEmailService>;
+  let logger: jest.SpyInstance;
+  let user: UserEntity;
+  let authentication: AuthenticationEntity;
 
   beforeEach(async (): Promise<void> => {
+    user = buildUserFakeFactory();
+    authentication = buildAuthenticationFakeFactory({ userId: user.id });
+
+    const mockRmqEmailService = {
+      sendWelcomeVerificationEmail: jest.fn(),
+      sendPasswordResetEmail: jest.fn(),
+    };
+
     const testingModule: TestingModule = await Test.createTestingModule({
       controllers: [RmqEmailConsumer],
-      providers: [
-        {
-          provide: RmqEmailService,
-          useValue: mockRmqEmailService,
-        },
-      ],
+      providers: [{ provide: RmqEmailService, useValue: mockRmqEmailService }],
     }).compile();
 
-    consumer = testingModule.get<RmqEmailConsumer>(RmqEmailConsumer);
+    rmqEmailConsumer = testingModule.get<RmqEmailConsumer>(RmqEmailConsumer);
+    rmqEmailService = testingModule.get<jest.Mocked<RmqEmailService>>(RmqEmailService);
+
     logger = jest.spyOn(Logger.prototype, "error").mockImplementation((): void => {});
   });
 
@@ -60,18 +58,13 @@ describe("RmqEmailConsumer", (): void => {
   });
 
   it("should be defined", (): void => {
-    expect(consumer).toBeDefined();
+    expect(rmqEmailConsumer).toBeDefined();
   });
 
   describe("handleAuthLocalCreated", (): void => {
-    let user: UserEntity;
-    let authentication: AuthenticationEntity;
     let payload: AuthLocalCreatedEvent;
 
     beforeAll((): void => {
-      user = buildUserFakeFactory();
-      authentication = buildAuthenticationFakeFactory({ userId: user.id });
-
       payload = {
         name: EventName.AUTH_LOCAL_CREATED,
         userId: user.id,
@@ -87,33 +80,28 @@ describe("RmqEmailConsumer", (): void => {
     });
 
     it("should send a welcome verification email and ack the message", async (): Promise<void> => {
-      await consumer.handleAuthLocalCreated(payload, mockRmqContext);
+      await rmqEmailConsumer.handleAuthLocalCreated(payload, mockRmqContext);
 
-      expect(mockRmqEmailService.sendWelcomeVerificationEmail).toHaveBeenCalledWith(payload);
+      expect(rmqEmailService.sendWelcomeVerificationEmail).toHaveBeenCalledWith(payload);
       expect(mockChannel.ack).toHaveBeenCalled();
       expect(mockChannel.nack).not.toHaveBeenCalled();
     });
 
     it("should nack the message if sending email fails", async (): Promise<void> => {
-      mockRmqEmailService.sendWelcomeVerificationEmail.mockRejectedValueOnce(new Error("Failed to send email"));
+      rmqEmailService.sendWelcomeVerificationEmail.mockRejectedValueOnce(new Error("Failed to send email"));
 
-      await consumer.handleAuthLocalCreated(payload, mockRmqContext);
+      await rmqEmailConsumer.handleAuthLocalCreated(payload, mockRmqContext);
 
-      expect(mockRmqEmailService.sendWelcomeVerificationEmail).toHaveBeenCalledWith(payload);
+      expect(rmqEmailService.sendWelcomeVerificationEmail).toHaveBeenCalledWith(payload);
       expect(mockChannel.ack).not.toHaveBeenCalled();
       expect(mockChannel.nack).toHaveBeenCalled();
     });
   });
 
   describe("handleAuthLocalPasswordReset", (): void => {
-    let user: UserEntity;
-    let authentication: AuthenticationEntity;
     let payload: AuthLocalPasswordResetEvent;
 
     beforeAll((): void => {
-      user = buildUserFakeFactory();
-      authentication = buildAuthenticationFakeFactory({ userId: user.id });
-
       payload = {
         name: EventName.AUTH_LOCAL_PASSWORD_RESET,
         userId: user.id,
@@ -124,19 +112,19 @@ describe("RmqEmailConsumer", (): void => {
     });
 
     it("should send a password reset email and ack the message", async (): Promise<void> => {
-      await consumer.handleAuthLocalPasswordReset(payload, mockRmqContext);
+      await rmqEmailConsumer.handleAuthLocalPasswordReset(payload, mockRmqContext);
 
-      expect(mockRmqEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(payload);
+      expect(rmqEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(payload);
       expect(mockChannel.ack).toHaveBeenCalled();
       expect(mockChannel.nack).not.toHaveBeenCalled();
     });
 
     it("should nack the message if sending email fails", async (): Promise<void> => {
-      mockRmqEmailService.sendPasswordResetEmail.mockRejectedValueOnce(new Error("Failed to send email"));
+      rmqEmailService.sendPasswordResetEmail.mockRejectedValueOnce(new Error("Failed to send email"));
 
-      await consumer.handleAuthLocalPasswordReset(payload, mockRmqContext);
+      await rmqEmailConsumer.handleAuthLocalPasswordReset(payload, mockRmqContext);
 
-      expect(mockRmqEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(payload);
+      expect(rmqEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(payload);
       expect(mockChannel.ack).not.toHaveBeenCalled();
       expect(mockChannel.nack).toHaveBeenCalled();
     });

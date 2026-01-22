@@ -20,28 +20,19 @@ describe("EventsConsumer", (): void => {
   let user: UserEntity;
   let authentication: AuthenticationEntity;
 
-  const mockEventService = {
-    createEvent: jest.fn(),
-  };
-
   beforeAll((): void => {
     user = buildUserFakeFactory();
     authentication = buildAuthenticationFakeFactory({ userId: user.id });
   });
 
   beforeEach(async (): Promise<void> => {
+    const mockEventService = { createEvent: jest.fn() };
     const testingModule: TestingModule = await Test.createTestingModule({
-      providers: [
-        EventsConsumer,
-        {
-          provide: EventsService,
-          useValue: mockEventService,
-        },
-      ],
+      providers: [EventsConsumer, { provide: EventsService, useValue: mockEventService }],
     }).compile();
 
     eventsConsumer = testingModule.get<EventsConsumer>(EventsConsumer);
-    eventsService = testingModule.get<EventsService>(EventsService) as jest.Mocked<EventsService>;
+    eventsService = testingModule.get<jest.Mocked<EventsService>>(EventsService);
   });
 
   afterEach((): void => {

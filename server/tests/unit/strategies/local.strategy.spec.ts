@@ -16,38 +16,23 @@ jest.mock("@server/utils/hasher", () => ({
 }));
 
 describe("LocalAuthStrategy", (): void => {
+  const mockReq = {} as jest.Mocked<Request>;
+  const mockDone: jest.MockedFunction<(...args: unknown[]) => void> = jest.fn();
   let localAuthStrategy: LocalAuthStrategy;
+  let usersService: jest.Mocked<UsersService>;
   let user: UserEntity;
   let authentication: AuthenticationEntity;
-  let usersService: jest.Mocked<UsersService>;
-  let mockReq: jest.Mocked<Request>;
-  let mockDone: jest.Mocked<(...args: unknown[]) => void>;
   let password: string;
 
-  beforeAll((): void => {
-    mockReq = {} as jest.Mocked<Request>;
-    mockDone = jest.fn();
-  });
-
   beforeEach(async (): Promise<void> => {
-    password = faker.internet.password({ length: 8 });
+    const mockUsersService = { findUser: jest.fn() };
     user = buildUserFakeFactory();
-    authentication = buildAuthenticationFakeFactory({
-      userId: user.id,
-      provider: AuthenticationProvider.LOCAL,
-    });
+    authentication = buildAuthenticationFakeFactory({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+    password = faker.internet.password({ length: 8 });
 
     const testingModule: TestingModule = await Test.createTestingModule({
       imports: [PassportModule],
-      providers: [
-        LocalAuthStrategy,
-        {
-          provide: UsersService,
-          useValue: {
-            findUser: jest.fn(),
-          },
-        },
-      ],
+      providers: [LocalAuthStrategy, { provide: UsersService, useValue: mockUsersService }],
     }).compile();
 
     localAuthStrategy = testingModule.get<LocalAuthStrategy>(LocalAuthStrategy);
@@ -92,7 +77,7 @@ describe("LocalAuthStrategy", (): void => {
           { username: user.email, authentications: { provider: AuthenticationProvider.LOCAL } },
         ],
       });
-      expect(verifyHash).toHaveBeenCalledWith(password, authentication.metadata.local?.password as string);
+      expect(verifyHash).toHaveBeenCalledWith(password, authentication.metadata.local?.password);
       expect(mockDone).toHaveBeenCalledWith(null, user);
     });
 
