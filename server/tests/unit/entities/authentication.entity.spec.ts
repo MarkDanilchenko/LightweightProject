@@ -8,14 +8,9 @@ import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces"
 describe("Authentication Entity", (): void => {
   let authenticationRepository: Repository<AuthenticationEntity>;
 
-  beforeAll(async (): Promise<void> => {
+  beforeEach(async (): Promise<void> => {
     const testingModule: TestingModule = await Test.createTestingModule({
-      providers: [
-        {
-          provide: getRepositoryToken(AuthenticationEntity),
-          useClass: Repository,
-        },
-      ],
+      providers: [{ provide: getRepositoryToken(AuthenticationEntity), useClass: Repository }],
     }).compile();
 
     authenticationRepository = testingModule.get<Repository<AuthenticationEntity>>(
@@ -23,16 +18,16 @@ describe("Authentication Entity", (): void => {
     );
   });
 
+  afterEach((): void => {
+    jest.clearAllMocks();
+  });
+
   it("Authentication repository should be defined", (): void => {
     expect(authenticationRepository).toBeDefined();
   });
 
   describe("AuthenticationEntity structure", (): void => {
-    let authentication: AuthenticationEntity;
-
-    beforeAll((): void => {
-      authentication = buildAuthenticationFakeFactory();
-    });
+    const authentication: AuthenticationEntity = buildAuthenticationFakeFactory();
 
     it("should have an id in uuid v4 format", (): void => {
       expect(authentication.id).toBeDefined();
@@ -80,7 +75,7 @@ describe("Authentication Entity", (): void => {
   describe("AuthenticationEntity validation", (): void => {
     let authentication: AuthenticationEntity;
 
-    beforeAll((): void => {
+    beforeEach((): void => {
       authentication = buildAuthenticationFakeFactory();
     });
 

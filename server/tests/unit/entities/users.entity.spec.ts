@@ -7,17 +7,16 @@ import { buildUserFakeFactory } from "../../factories";
 describe("UserEntity", (): void => {
   let userRepository: Repository<UserEntity>;
 
-  beforeAll(async (): Promise<void> => {
+  beforeEach(async (): Promise<void> => {
     const testingModule: TestingModule = await Test.createTestingModule({
-      providers: [
-        {
-          provide: getRepositoryToken(UserEntity),
-          useClass: Repository,
-        },
-      ],
+      providers: [{ provide: getRepositoryToken(UserEntity), useClass: Repository }],
     }).compile();
 
     userRepository = testingModule.get<Repository<UserEntity>>(getRepositoryToken(UserEntity));
+  });
+
+  afterEach((): void => {
+    jest.clearAllMocks();
   });
 
   it("User repository should be defined", (): void => {
@@ -25,11 +24,7 @@ describe("UserEntity", (): void => {
   });
 
   describe("UserEntity structure", (): void => {
-    let user: UserEntity;
-
-    beforeAll((): void => {
-      user = buildUserFakeFactory();
-    });
+    const user: UserEntity = buildUserFakeFactory();
 
     it("should have an id in uuid v4 format", (): void => {
       expect(user.id).toBeDefined();
@@ -73,7 +68,7 @@ describe("UserEntity", (): void => {
   describe("UserEntity validation", (): void => {
     let user: UserEntity;
 
-    beforeAll((): void => {
+    beforeEach((): void => {
       user = buildUserFakeFactory();
     });
 

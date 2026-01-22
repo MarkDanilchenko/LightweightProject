@@ -8,17 +8,16 @@ import { EventName } from "@server/events/interfaces/events.interfaces";
 describe("EventsEntity", (): void => {
   let eventRepository: Repository<EventEntity>;
 
-  beforeAll(async (): Promise<void> => {
+  beforeEach(async (): Promise<void> => {
     const testingModule: TestingModule = await Test.createTestingModule({
-      providers: [
-        {
-          provide: getRepositoryToken(EventEntity),
-          useClass: Repository,
-        },
-      ],
+      providers: [{ provide: getRepositoryToken(EventEntity), useClass: Repository }],
     }).compile();
 
     eventRepository = testingModule.get<Repository<EventEntity>>(getRepositoryToken(EventEntity));
+  });
+
+  afterEach((): void => {
+    jest.clearAllMocks();
   });
 
   it("Event repository should be defined", (): void => {
@@ -26,11 +25,7 @@ describe("EventsEntity", (): void => {
   });
 
   describe("EventsEntity structure", (): void => {
-    let event: EventEntity;
-
-    beforeAll((): void => {
-      event = buildEventFakeFactory();
-    });
+    const event: EventEntity = buildEventFakeFactory();
 
     it("should have an id in uuid v4 format", (): void => {
       expect(event.id).toBeDefined();
@@ -70,11 +65,7 @@ describe("EventsEntity", (): void => {
   });
 
   describe("EventsEntity validation", (): void => {
-    let event: EventEntity;
-
-    beforeAll((): void => {
-      event = buildEventFakeFactory();
-    });
+    const event: EventEntity = buildEventFakeFactory();
 
     it("should successfully validate when all properties are valid", async (): Promise<void> => {
       expect(event).toBeInstanceOf(EventEntity);
