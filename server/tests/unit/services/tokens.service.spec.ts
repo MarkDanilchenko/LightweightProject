@@ -8,27 +8,33 @@ import RedisService from "@server/services/redis/redis.service";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 import { faker } from "@faker-js/faker";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import { randomValidJwt } from "../../helpers";
 
 describe("TokensService", (): void => {
   let tokensService: TokensService;
   let configService: jest.Mocked<ConfigService>;
   let jwtService: jest.Mocked<JwtService>;
   let redisService: jest.Mocked<RedisService>;
-
-  const mockTokenPayload: TokenPayload = {
-    jwti: faker.string.uuid(),
-    userId: faker.string.uuid(),
-    provider: faker.helpers.arrayElement(Object.values(AuthenticationProvider)),
-    iat: Math.floor(faker.date.recent().getTime() / 1000), // Random recent timestamp in seconds;
-    exp: Math.floor(faker.date.soon({ days: 7 }).getTime() / 1000), // Random future timestamp within 7 days;
-  };
-
-  const mockToken =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"; // random jwt from https://www.jwt.io/
+  let mockTokenPayload: TokenPayload;
+  let mockJwtToken: string;
 
   beforeEach(async (): Promise<void> => {
+    mockTokenPayload = {
+      jwti: faker.string.uuid(),
+      userId: faker.string.uuid(),
+      provider: faker.helpers.arrayElement(Object.values(AuthenticationProvider)),
+      iat: Math.floor(faker.date.recent().getTime() / 1000), // Random recent timestamp in seconds;
+      exp: Math.floor(faker.date.soon({ days: 7 }).getTime() / 1000), // Random future timestamp within 7 days;
+    };
+
+    mockJwtToken = randomValidJwt({
+      jwti: mockTokenPayload.jwti,
+      userId: mockTokenPayload.userId,
+      provider: mockTokenPayload.provider,
+    });
+
     const mockJwtService = {
-      signAsync: jest.fn().mockResolvedValue(mockToken),
+      signAsync: jest.fn().mockResolvedValue(mockJwtToken),
       verifyAsync: jest.fn().mockResolvedValue(mockTokenPayload),
       decode: jest.fn().mockReturnValue(mockTokenPayload),
     };
@@ -79,17 +85,20 @@ describe("TokensService", (): void => {
     it("should generate a JWT token with default options", async (): Promise<void> => {
       delete mockTokenPayload.exp;
       delete mockTokenPayload.iat;
+
       const result: string = await tokensService.generate(mockTokenPayload);
 
       expect(jwtService.signAsync).toHaveBeenCalledTimes(1);
       expect(jwtService.signAsync).toHaveBeenCalledWith(mockTokenPayload, { expiresIn: "1d" });
-      expect(result).toBe(mockToken);
+      expect(result).toBe(mockJwtToken);
     });
 
     it("should generate a JWT token with custom options", async (): Promise<void> => {
       const customOptions = { expiresIn: "2h" };
+
       delete mockTokenPayload.exp;
       delete mockTokenPayload.iat;
+
       await tokensService.generate(mockTokenPayload, customOptions);
 
       expect(jwtService.signAsync).toHaveBeenCalledTimes(1);
@@ -99,49 +108,56 @@ describe("TokensService", (): void => {
 
   describe("verify", (): void => {
     it("should verify a valid token", async (): Promise<void> => {
-      const result: TokenPayload = await tokensService.verify(mockToken);
+      const result: TokenPayload = await tokensService.verify(mockJwtToken);
 
       expect(jwtService.verifyAsync).toHaveBeenCalledTimes(1);
-      expect(jwtService.verifyAsync).toHaveBeenCalledWith(mockToken, { ignoreExpiration: false });
+      expect(jwtService.verifyAsync).toHaveBeenCalledWith(mockJwtToken, { ignoreExpiration: false });
       expect(result).toEqual(mockTokenPayload);
     });
 
     it("should throw UnauthorizedException for expired token", async (): Promise<void> => {
-      const error = new Error("Token expired");
+      const error: Error = new Error("Token expired");
       error.name = "TokenExpiredError";
+
       jwtService.verifyAsync.mockRejectedValueOnce(error);
 
-      await expect(tokensService.verify(mockToken)).rejects.toThrow(new UnauthorizedException("Token expired"));
+      await expect(tokensService.verify(mockJwtToken)).rejects.toThrow(new UnauthorizedException("Token expired"));
     });
 
     it("should throw UnauthorizedException for invalid token", async (): Promise<void> => {
       jwtService.verifyAsync.mockRejectedValueOnce(new Error("Invalid token"));
 
-      await expect(tokensService.verify("invalid.token")).rejects.toThrow(new UnauthorizedException("Invalid token"));
+      await expect(tokensService.verify("invalid-jwt-token")).rejects.toThrow(
+        new UnauthorizedException("Invalid token"),
+      );
     });
   });
 
   describe("decode", (): void => {
     it("should decode a token without verification", (): void => {
-      const result: TokenPayload = tokensService.decode(mockToken);
+      const result: TokenPayload = tokensService.decode(mockJwtToken);
 
       expect(jwtService.decode).toHaveBeenCalledTimes(1);
-      expect(jwtService.decode).toHaveBeenCalledWith(mockToken);
+      expect(jwtService.decode).toHaveBeenCalledWith(mockJwtToken);
       expect(result).toEqual(mockTokenPayload);
     });
   });
 
   describe("isBlacklisted", (): void => {
     it("should check if token is blacklisted", async (): Promise<void> => {
-      const jwti = "dc90a1ca-b82c-434e-8783-bd95e2ab4f66";
-      const exists = true;
-      redisService.exists.mockResolvedValueOnce(exists);
+      const jwtToken: string = randomValidJwt({
+        userId: faker.string.uuid(),
+        provider: faker.helpers.arrayElement(Object.values(AuthenticationProvider)),
+        jwti: faker.string.uuid(),
+      });
 
-      const result: boolean = await tokensService.isBlacklisted(jwti);
+      redisService.exists.mockResolvedValueOnce(true);
+
+      const result: boolean = await tokensService.isBlacklisted(jwtToken);
 
       expect(redisService.exists).toHaveBeenCalledTimes(1);
-      expect(redisService.exists).toHaveBeenCalledWith(jwti);
-      expect(result).toBe(exists);
+      expect(redisService.exists).toHaveBeenCalledWith(jwtToken);
+      expect(result).toBeTruthy();
     });
   });
 
