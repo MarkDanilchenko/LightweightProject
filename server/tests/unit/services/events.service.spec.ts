@@ -15,44 +15,35 @@ import { EventType } from "@server/events/types/events.types";
 import UserEntity from "@server/users/users.entity";
 
 describe("EventsService", (): void => {
-  let dataSource: jest.Mocked<Partial<DataSource>>;
+  const randomUuid: string = "3fd5e553-73a2-486b-8120-90cd007c9843";
+  const testEmail = "test@example.com";
+  const user: UserEntity = buildUserFakeFactory();
+  const event: EventEntity = buildEventFakeFactory({ userId: user.id });
   let eventsService: EventsService;
+  let dataSource: jest.Mocked<Partial<DataSource>>;
   let entityManager: jest.Mocked<Partial<EntityManager>>;
-  let randomUuid: string;
-  let user: UserEntity;
-  let event: EventEntity;
-
-  beforeAll((): void => {
-    user = buildUserFakeFactory();
-    event = buildEventFakeFactory({ userId: user.id });
-    randomUuid = "3fd5e553-73a2-486b-8120-90cd007c9843";
-  });
 
   beforeEach(async (): Promise<void> => {
-    entityManager = {
+    const mockEntityManager = {
       create: jest.fn().mockReturnValue(event),
       save: jest.fn().mockResolvedValue(null),
     };
 
-    dataSource = {
-      transaction: jest.fn().mockImplementation((callback) => callback(entityManager)),
+    const mockDataSource = {
+      transaction: jest.fn().mockImplementation((callback) => callback(mockEntityManager)),
     };
 
     const testingModule: TestingModule = await Test.createTestingModule({
       providers: [
         EventsService,
-        {
-          provide: getRepositoryToken(EventEntity),
-          useClass: Repository,
-        },
-        {
-          provide: DataSource,
-          useValue: dataSource,
-        },
+        { provide: getRepositoryToken(EventEntity), useClass: Repository },
+        { provide: DataSource, useValue: mockDataSource },
       ],
     }).compile();
 
     eventsService = testingModule.get<EventsService>(EventsService);
+    dataSource = testingModule.get<jest.Mocked<Partial<DataSource>>>(DataSource);
+    entityManager = mockEntityManager;
   });
 
   afterEach((): void => {
@@ -69,14 +60,14 @@ describe("EventsService", (): void => {
         EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT,
         user.id,
         randomUuid,
-        { email: "test@example.com" },
+        { email: testEmail },
       );
 
       expect(event).toBeDefined();
       expect(event.name).toBe(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT);
       expect(event.userId).toBe(user.id);
       expect(event.modelId).toBe(randomUuid);
-      expect(event.metadata).toEqual({ email: "test@example.com" });
+      expect(event.metadata).toEqual({ email: testEmail });
     });
 
     it("should create an instance of AuthLocalPasswordResetedEvent", (): void => {
@@ -99,7 +90,7 @@ describe("EventsService", (): void => {
         name: EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT,
         userId: user.id,
         modelId: randomUuid,
-        metadata: { email: "test@example.com" },
+        metadata: { email: testEmail },
       };
 
       await eventsService.createEvent(payload);
@@ -114,7 +105,7 @@ describe("EventsService", (): void => {
         name: EventName.AUTH_LOCAL_EMAIL_VERIFIED,
         userId: user.id,
         modelId: randomUuid,
-        metadata: { email: "test@example.com" },
+        metadata: { email: testEmail },
       };
 
       await eventsService.createEvent(payload, entityManager as EntityManager);

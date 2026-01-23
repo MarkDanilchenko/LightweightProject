@@ -7,36 +7,27 @@ import { REDIS_CLIENT, REDIS_KEY_MAX_BYTE_LEN, REDIS_KEY_TTL_SEC } from "@server
 import { faker } from "@faker-js/faker";
 
 describe("RedisService", (): void => {
+  const mockKey = "mocked:key";
+  const mockStringValue = "mockedString - nvELw63S";
+  const mockValue = { somekey1: "zGfKvWwA", somekey2: "Ln8PAuG", somekey3: "5f1YX4L" };
   let redisService: RedisService;
   let redisClient: jest.Mocked<Redis>;
   let logger: jest.SpyInstance;
-  const mockKey = "mocked:key";
-  const mockValue = {
-    somekey1: "zGfKvWwA",
-    somekey2: "Ln8PAuG",
-    somekey3: "5f1YX4L",
-  };
-  const mockStringValue = "mockedString - nvELw63S";
-  const mockedRedisClient = {
-    get: jest.fn(),
-    setex: jest.fn().mockResolvedValue("OK"),
-    exists: jest.fn().mockResolvedValue(1),
-    del: jest.fn().mockResolvedValue(1),
-  };
 
   beforeEach(async (): Promise<void> => {
+    const mockedRedisClient = {
+      get: jest.fn(),
+      setex: jest.fn().mockResolvedValue("OK"),
+      exists: jest.fn().mockResolvedValue(1),
+      del: jest.fn().mockResolvedValue(1),
+    };
+
     const testingModule: TestingModule = await Test.createTestingModule({
-      providers: [
-        RedisService,
-        {
-          provide: REDIS_CLIENT,
-          useValue: mockedRedisClient,
-        },
-      ],
+      providers: [RedisService, { provide: REDIS_CLIENT, useValue: mockedRedisClient }],
     }).compile();
 
     redisService = testingModule.get<RedisService>(RedisService);
-    redisClient = testingModule.get(REDIS_CLIENT);
+    redisClient = testingModule.get<jest.Mocked<Redis>>(REDIS_CLIENT);
     logger = jest.spyOn(Logger.prototype, "error").mockImplementation((): void => {});
   });
 
