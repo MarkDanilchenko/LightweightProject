@@ -8,7 +8,7 @@ const testSecretOrPrivateKey = "aFEo3Q8YBou-secretJwtKeyForTesting-FzM1sHSsEF3";
 /**
  * Generates random valid JWT token for testing purposes.
  * @param {TokenPayload} [payload] - The payload to be used in the token.
- * @param {JwtSignOptions} [options] - The options to be used in the token.
+ * @param {jwt.SignOptions} [options] - The options to be used in the token.
  * @param {string} [secretOrPrivateKey] - The secret or private key to be used in the token.
  *
  * @returns {string} JWT token that can be used in test cases.

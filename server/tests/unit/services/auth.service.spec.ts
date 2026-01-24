@@ -37,12 +37,13 @@ describe("AuthService", (): void => {
   let authService: AuthService;
   let dataSource: jest.Mocked<DataSource>;
   let entityManager: jest.Mocked<EntityManager>;
-  let authenticationRepository: jest.Mocked<Repository<AuthenticationEntity>>;
   let rmqMicroserviceClient: jest.Mocked<ClientProxy>;
   let tokensService: jest.Mocked<TokensService>;
   let usersService: jest.Mocked<UsersService>;
   let eventsService: jest.Mocked<EventsService>;
-  let eventEmitter: jest.Mocked<EventEmitter2>;
+  let eventEmitter2: jest.Mocked<EventEmitter2>;
+  let authenticationRepository: jest.Mocked<Repository<AuthenticationEntity>>;
+
   let user: UserEntity;
   let authentication: AuthenticationEntity;
 
@@ -60,21 +61,12 @@ describe("AuthService", (): void => {
       create: jest.fn(),
     } as unknown as jest.Mocked<EntityManager>;
 
-    dataSource = {
-      transaction: jest.fn().mockImplementation((callback) => callback(entityManager)),
-    } as unknown as jest.Mocked<DataSource>;
-
-    authenticationRepository = {
-      findOneBy: jest.fn(),
-      findOne: jest.fn(),
-      update: jest.fn(),
-    } as unknown as jest.Mocked<Repository<AuthenticationEntity>>;
-
-    rmqMicroserviceClient = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<ClientProxy>;
-
-    tokensService = {
+    const mockDataSource = { transaction: jest.fn().mockImplementation((callback) => callback(entityManager)) };
+    const mockRmqMicroserviceClient = { emit: jest.fn() };
+    const mockUsersService = { findUser: jest.fn(), updateUser: jest.fn() };
+    const mockEventsService = { buildInstance: jest.fn(), createEvent: jest.fn() };
+    const mockEventEmitter2 = { emit: jest.fn() };
+    const mockTokensService = {
       verify: jest.fn(),
       decode: jest.fn(),
       generate: jest.fn(),
@@ -82,36 +74,36 @@ describe("AuthService", (): void => {
       isBlacklisted: jest.fn(),
       jwtAccessTokenExpiresIn: "24h",
       jwtRefreshTokenExpiresIn: "7d",
-    } as unknown as jest.Mocked<TokensService>;
-
-    usersService = {
-      findUser: jest.fn(),
-      updateUser: jest.fn(),
-    } as unknown as jest.Mocked<UsersService>;
-
-    eventsService = {
-      buildInstance: jest.fn().mockReturnValue({}),
-      createEvent: jest.fn(),
-    } as unknown as jest.Mocked<EventsService>;
-
-    eventEmitter = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<EventEmitter2>;
+    };
+    const mockAuthenticationRepository = {
+      findOneBy: jest.fn(),
+      findOne: jest.fn(),
+      update: jest.fn(),
+    };
 
     const testingModule: TestingModule = await Test.createTestingModule({
       providers: [
         AuthService,
-        { provide: DataSource, useValue: dataSource },
-        { provide: getRepositoryToken(AuthenticationEntity), useValue: authenticationRepository },
-        { provide: RMQ_MICROSERVICE, useValue: rmqMicroserviceClient },
-        { provide: TokensService, useValue: tokensService },
-        { provide: UsersService, useValue: usersService },
-        { provide: EventsService, useValue: eventsService },
-        { provide: EventEmitter2, useValue: eventEmitter },
+        { provide: DataSource, useValue: mockDataSource },
+        { provide: RMQ_MICROSERVICE, useValue: mockRmqMicroserviceClient },
+        { provide: TokensService, useValue: mockTokensService },
+        { provide: UsersService, useValue: mockUsersService },
+        { provide: EventsService, useValue: mockEventsService },
+        { provide: EventEmitter2, useValue: mockEventEmitter2 },
+        { provide: getRepositoryToken(AuthenticationEntity), useValue: mockAuthenticationRepository },
       ],
     }).compile();
 
     authService = testingModule.get<AuthService>(AuthService);
+    dataSource = testingModule.get<jest.Mocked<DataSource>>(DataSource);
+    rmqMicroserviceClient = testingModule.get<jest.Mocked<ClientProxy>>(RMQ_MICROSERVICE);
+    tokensService = testingModule.get<jest.Mocked<TokensService>>(TokensService);
+    usersService = testingModule.get<jest.Mocked<UsersService>>(UsersService);
+    eventsService = testingModule.get<jest.Mocked<EventsService>>(EventsService);
+    eventEmitter2 = testingModule.get<jest.Mocked<EventEmitter2>>(EventEmitter2);
+    authenticationRepository = testingModule.get<jest.Mocked<Repository<AuthenticationEntity>>>(
+      getRepositoryToken(AuthenticationEntity),
+    );
   });
 
   afterEach((): void => {
@@ -123,11 +115,12 @@ describe("AuthService", (): void => {
   });
 
   describe("updateAuthentication", (): void => {
+    const updateResult: UpdateResult = { affected: 1, raw: {}, generatedMaps: [] };
     let whereCondition: FindOptionsWhere<AuthenticationEntity>;
     let values: Record<string, unknown>;
-    let updateResult: UpdateResult;
 
     beforeEach((): void => {
+      entityManager.update.mockResolvedValue(updateResult);
       whereCondition = { id: authentication.id };
       values = {
         refreshToken: randomValidJwt(
@@ -135,8 +128,10 @@ describe("AuthService", (): void => {
           { expiresIn: tokensService.jwtRefreshTokenExpiresIn },
         ),
       };
-      updateResult = { affected: 1, raw: {}, generatedMaps: [] };
-      entityManager.update.mockResolvedValue(updateResult);
+    });
+
+    afterEach((): void => {
+      jest.clearAllMocks();
     });
 
     it("should update authentication via transaction when no manager provided", async (): Promise<void> => {
@@ -210,6 +205,7 @@ describe("AuthService", (): void => {
   describe("localSignUp", (): void => {
     it("should create user and authentication when user does not exist", async (): Promise<void> => {
       usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
+      eventsService.buildInstance.mockReturnValueOnce(expect.any(Object));
       (entityManager.create as jest.Mock)
         .mockReturnValueOnce({ id: user.id, email: user.email })
         .mockReturnValueOnce(authentication);
@@ -289,10 +285,11 @@ describe("AuthService", (): void => {
       dto = {
         token: randomValidJwt({ userId: user.id, provider: AuthenticationProvider.LOCAL }, { expiresIn: "1d" }),
       };
-      payload = {
-        userId: user.id,
-        provider: AuthenticationProvider.LOCAL,
-      };
+      payload = { userId: user.id, provider: AuthenticationProvider.LOCAL };
+    });
+
+    afterEach((): void => {
+      jest.clearAllMocks();
     });
 
     it("should verify email and return access token", async (): Promise<void> => {
@@ -310,6 +307,7 @@ describe("AuthService", (): void => {
       tokensService.verify.mockResolvedValue(payload as TokenPayload);
       authenticationRepository.findOne.mockResolvedValue(authentication);
       tokensService.generate.mockResolvedValueOnce(newAccessToken).mockResolvedValueOnce(newRefreshToken);
+      eventsService.buildInstance.mockReturnValueOnce(expect.any(Object));
 
       const result: { accessToken: string } = await authService.localVerificationEmail(dto);
 
@@ -322,7 +320,7 @@ describe("AuthService", (): void => {
         authentication.metadata.local?.temporaryInfo ?? {},
         entityManager,
       );
-      expect(eventEmitter.emit).toHaveBeenCalledWith(
+      expect(eventEmitter2.emit).toHaveBeenCalledWith(
         EventName.AUTH_LOCAL_EMAIL_VERIFIED,
         expect.any(Object),
         entityManager,
@@ -425,14 +423,13 @@ describe("AuthService", (): void => {
     });
 
     it("should add token to blacklist and clear refreshToken", async (): Promise<void> => {
+      const updateResult: UpdateResult = { affected: 1, raw: {}, generatedMaps: [] };
       const payload: TokenPayload = {
         jwti: faker.string.uuid(),
         userId: user.id,
         provider: AuthenticationProvider.LOCAL,
         exp: Math.floor(Date.now() / 1_000) + 3_600, // 1 hour from now;
       } as TokenPayload;
-
-      const updateResult: UpdateResult = { affected: 1, raw: {}, generatedMaps: [] };
 
       entityManager.update.mockResolvedValue(updateResult);
 
@@ -597,6 +594,7 @@ describe("AuthService", (): void => {
 
     it("should emit password reset event when user found and email verified", async (): Promise<void> => {
       usersService.findUser.mockResolvedValue(user);
+      eventsService.buildInstance.mockReturnValue(expect.any(Object));
 
       await authService.localPasswordForgot({ email: user.email });
 
@@ -661,6 +659,7 @@ describe("AuthService", (): void => {
       usersService.findUser.mockResolvedValue(user);
       tokensService.verify.mockResolvedValue({} as TokenPayload);
       entityManager.update.mockResolvedValue(updateResult);
+      eventsService.buildInstance.mockReturnValue(expect.any(Object));
 
       await authService.localPasswordReset(dto);
 
@@ -675,7 +674,7 @@ describe("AuthService", (): void => {
           }) as AuthMetadata,
         }),
       );
-      expect(eventEmitter.emit).toHaveBeenCalledWith(
+      expect(eventEmitter2.emit).toHaveBeenCalledWith(
         EventName.AUTH_LOCAL_PASSWORD_RESETED,
         expect.any(Object),
         entityManager,
