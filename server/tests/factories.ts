@@ -5,11 +5,12 @@ import EventEntity from "@server/events/events.entity";
 import { EventName } from "@server/events/interfaces/events.interfaces";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
 import appConfiguration from "@server/configs/app.configuration";
+import { randomValidJwt } from "./utils";
 
 // Factory functions: used to create fake data instances for testing in memory
 // without creating them in database and so without using real database connection and queries;
 
-function buildUserFactory(): UserEntity {
+function buildUserFactory(overrides: Partial<UserEntity> = {}): UserEntity {
   const user = new UserEntity();
 
   user.id = faker.string.uuid();
@@ -22,88 +23,90 @@ function buildUserFactory(): UserEntity {
   user.updatedAt = faker.date.recent();
   user.deletedAt = null;
 
+  Object.assign(user, overrides);
+
   return user;
 }
 
-function buildAuthenticationFactory(
-  options: {
-    userId?: string;
-    provider?: AuthenticationProvider;
-  } = {},
-): AuthenticationEntity {
+function buildAuthenticationFactory(overrides: Partial<AuthenticationEntity> = {}): AuthenticationEntity {
   const authentication: AuthenticationEntity = new AuthenticationEntity();
 
   authentication.id = faker.string.uuid();
-  authentication.provider =
-    options.provider ??
-    faker.helpers.arrayElement([
-      AuthenticationProvider.GITHUB,
-      AuthenticationProvider.GOOGLE,
-      AuthenticationProvider.KEYCLOAK,
-      AuthenticationProvider.LOCAL,
-    ]);
-  authentication.refreshToken =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30"; // random jwt from https://www.jwt.io/
+  authentication.provider = faker.helpers.arrayElement([
+    AuthenticationProvider.GITHUB,
+    AuthenticationProvider.GOOGLE,
+    AuthenticationProvider.KEYCLOAK,
+    AuthenticationProvider.LOCAL,
+  ]);
   authentication.createdAt = faker.date.past();
   authentication.lastAccessedAt = faker.date.recent();
-  authentication.userId = options.userId ?? faker.string.uuid();
+  authentication.userId = faker.string.uuid();
 
-  switch (authentication.provider) {
-    case AuthenticationProvider.LOCAL: {
-      authentication.metadata = {
-        local: {
-          isEmailVerified: true,
-          password: faker.internet.password(),
-          verificationSendAt: faker.date.past(),
-          verificationConfirmedAt: faker.date.recent(),
-          callbackUrl: `${appConfiguration().serverConfiguration.baseUrl}/api/v1/auth/local/verification/email?token=${faker.string.uuid()}`,
-          temporaryInfo: {
-            username: faker.internet.username(),
-            firstName: faker.person.firstName(),
-            lastName: faker.person.lastName(),
-            avatarUrl: faker.image.avatar(),
+  Object.assign(authentication, overrides);
+
+  authentication.refreshToken = randomValidJwt(
+    { userId: faker.string.uuid(), provider: authentication.provider },
+    { expiresIn: appConfiguration().jwtConfiguration.refreshTokenExpiresIn },
+  );
+
+  if (!overrides.metadata || !Object.keys(overrides.metadata).length) {
+    switch (authentication.provider) {
+      case AuthenticationProvider.LOCAL: {
+        authentication.metadata = {
+          local: {
+            isEmailVerified: true,
+            password: faker.internet.password(),
+            verificationSendAt: faker.date.past(),
+            verificationConfirmedAt: faker.date.recent(),
+            callbackUrl: `${appConfiguration().serverConfiguration.baseUrl}/api/v1/auth/local/verification/email?token=${faker.string.uuid()}`,
+            temporaryInfo: {
+              username: faker.internet.username(),
+              firstName: faker.person.firstName(),
+              lastName: faker.person.lastName(),
+              avatarUrl: faker.image.avatar(),
+            },
           },
-        },
-      };
+        };
 
-      break;
-    }
+        break;
+      }
 
-    case AuthenticationProvider.GITHUB: {
-      authentication.metadata = {
-        github: {},
-      };
+      case AuthenticationProvider.GITHUB: {
+        authentication.metadata = {
+          github: {},
+        };
 
-      break;
-    }
+        break;
+      }
 
-    case AuthenticationProvider.GOOGLE: {
-      authentication.metadata = {
-        google: {},
-      };
+      case AuthenticationProvider.GOOGLE: {
+        authentication.metadata = {
+          google: {},
+        };
 
-      break;
-    }
+        break;
+      }
 
-    case AuthenticationProvider.KEYCLOAK: {
-      authentication.metadata = {
-        keycloak: {},
-      };
+      case AuthenticationProvider.KEYCLOAK: {
+        authentication.metadata = {
+          keycloak: {},
+        };
 
-      break;
-    }
+        break;
+      }
 
-    default: {
-      authentication.metadata = {};
+      default: {
+        authentication.metadata = {};
 
-      break;
+        break;
+      }
     }
   }
 
   return authentication;
 }
 
-function buildEventFactory(options: { userId?: string; modelId?: string } = {}): EventEntity {
+function buildEventFactory(overrides: Partial<EventEntity> = {}): EventEntity {
   const event = new EventEntity();
 
   event.id = faker.string.uuid();
@@ -117,8 +120,10 @@ function buildEventFactory(options: { userId?: string; modelId?: string } = {}):
   ]);
   event.metadata = {};
   event.createdAt = faker.date.past();
-  event.userId = options.userId ?? faker.string.uuid();
-  event.modelId = options.modelId ?? faker.string.uuid();
+  event.userId = faker.string.uuid();
+  event.modelId = faker.string.uuid();
+
+  Object.assign(event, overrides);
 
   return event;
 }
