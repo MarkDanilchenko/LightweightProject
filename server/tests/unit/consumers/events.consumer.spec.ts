@@ -9,7 +9,7 @@ import {
   AuthLocalPasswordResetSentEvent,
   EventName,
 } from "@server/events/interfaces/events.interfaces";
-import { buildUserFakeFactory, buildAuthenticationFakeFactory } from "../../factories";
+import { buildUserFactory, buildAuthenticationFactory } from "../../factories";
 import UserEntity from "@server/users/users.entity";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import { EntityManager } from "typeorm";
@@ -21,8 +21,8 @@ describe("EventsConsumer", (): void => {
   let authentication: AuthenticationEntity;
 
   beforeAll((): void => {
-    user = buildUserFakeFactory();
-    authentication = buildAuthenticationFakeFactory({ userId: user.id });
+    user = buildUserFactory();
+    authentication = buildAuthenticationFactory({ userId: user.id });
   });
 
   beforeEach(async (): Promise<void> => {

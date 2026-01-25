@@ -6,7 +6,7 @@ import LocalAuthStrategy from "@server/auth/strategies/local.strategy";
 import UsersService from "@server/users/users.service";
 import UserEntity from "@server/users/users.entity";
 import AuthenticationEntity from "@server/auth/auth.entity";
-import { buildAuthenticationFakeFactory, buildUserFakeFactory } from "../../factories";
+import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import { faker } from "@faker-js/faker";
 import { verifyHash } from "@server/utils/hasher";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
@@ -26,8 +26,8 @@ describe("LocalAuthStrategy", (): void => {
 
   beforeEach(async (): Promise<void> => {
     const mockUsersService = { findUser: jest.fn() };
-    user = buildUserFakeFactory();
-    authentication = buildAuthenticationFakeFactory({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+    user = buildUserFactory();
+    authentication = buildAuthenticationFactory({ userId: user.id, provider: AuthenticationProvider.LOCAL });
     password = faker.internet.password({ length: 8 });
 
     const testingModule: TestingModule = await Test.createTestingModule({

@@ -10,7 +10,7 @@ import {
 } from "@server/events/interfaces/events.interfaces";
 import { Logger } from "@nestjs/common";
 import UserEntity from "@server/users/users.entity";
-import { buildAuthenticationFakeFactory, buildUserFakeFactory } from "../../factories";
+import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import AuthenticationEntity from "@server/auth/auth.entity";
 
 jest.mock("nodemailer", () => ({
@@ -34,8 +34,8 @@ describe("RmqEmailConsumer", (): void => {
   let authentication: AuthenticationEntity;
 
   beforeEach(async (): Promise<void> => {
-    user = buildUserFakeFactory();
-    authentication = buildAuthenticationFakeFactory({ userId: user.id });
+    user = buildUserFactory();
+    authentication = buildAuthenticationFactory({ userId: user.id });
 
     const mockRmqEmailService = {
       sendWelcomeVerificationEmail: jest.fn(),

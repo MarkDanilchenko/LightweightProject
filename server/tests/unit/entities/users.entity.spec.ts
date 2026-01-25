@@ -2,7 +2,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import UserEntity from "@server/users/users.entity";
-import { buildUserFakeFactory } from "../../factories";
+import { buildUserFactory } from "../../factories";
 
 describe("UserEntity", (): void => {
   let userRepository: Repository<UserEntity>;
@@ -24,7 +24,7 @@ describe("UserEntity", (): void => {
   });
 
   describe("UserEntity structure", (): void => {
-    const user: UserEntity = buildUserFakeFactory();
+    const user: UserEntity = buildUserFactory();
 
     it("should have an id in uuid v4 format", (): void => {
       expect(user.id).toBeDefined();
@@ -69,7 +69,7 @@ describe("UserEntity", (): void => {
     let user: UserEntity;
 
     beforeEach((): void => {
-      user = buildUserFakeFactory();
+      user = buildUserFactory();
     });
 
     it("should successfully validate when all properties are valid", async (): Promise<void> => {

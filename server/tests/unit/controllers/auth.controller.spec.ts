@@ -11,12 +11,12 @@ import {
   LocalSignUpDto,
   LocalVerificationEmailDto,
 } from "@server/auth/dto/auth.dto";
-import { buildUserFakeFactory } from "../../factories";
+import { buildUserFactory } from "../../factories";
 import UserEntity from "@server/users/users.entity";
 import { RequestWithSignedCookies, RequestWithTokenPayload, RequestWithUser } from "@server/common/types/common.types";
 import { UnauthorizedException } from "@nestjs/common";
 import { setCookie, clearCookie } from "@server/utils/cookie";
-import { randomValidJwt } from "../../helpers";
+import { randomValidJwt } from "../../utils";
 import { v4 as uuidv4 } from "uuid";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
 
@@ -26,7 +26,7 @@ jest.mock("@server/utils/cookie", () => ({
 }));
 
 describe("AuthController", (): void => {
-  const user: UserEntity = buildUserFakeFactory();
+  const user: UserEntity = buildUserFactory();
   let authController: AuthController;
   let authService: jest.Mocked<AuthService>;
   let mockResponse: Partial<Response>;

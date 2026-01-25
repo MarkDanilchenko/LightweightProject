@@ -17,7 +17,7 @@ import {
 import UserEntity from "@server/users/users.entity";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import transporter from "@server/utils/nodemailer";
-import { buildAuthenticationFakeFactory, buildUserFakeFactory } from "../../factories";
+import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
 
 // Mock the nodemailer createTransport before import both RmqEmailConsumer and RmqEmailService;
@@ -102,8 +102,8 @@ describe("RmqEmailService", (): void => {
   });
 
   describe("sendWelcomeVerificationEmail", (): void => {
-    const user: UserEntity = buildUserFakeFactory();
-    const authentication: AuthenticationEntity = buildAuthenticationFakeFactory({ userId: user.id });
+    const user: UserEntity = buildUserFactory();
+    const authentication: AuthenticationEntity = buildAuthenticationFactory({ userId: user.id });
     const payload: AuthLocalCreatedEvent = {
       name: EventName.AUTH_LOCAL_CREATED,
       userId: user.id,
@@ -167,8 +167,8 @@ describe("RmqEmailService", (): void => {
   });
 
   describe("sendPasswordResetEmail", (): void => {
-    const user: UserEntity = buildUserFakeFactory();
-    const authentication: AuthenticationEntity = buildAuthenticationFakeFactory({ userId: user.id });
+    const user: UserEntity = buildUserFactory();
+    const authentication: AuthenticationEntity = buildAuthenticationFactory({ userId: user.id });
     const payload: AuthLocalPasswordResetEvent = {
       name: EventName.AUTH_LOCAL_PASSWORD_RESET,
       userId: user.id,

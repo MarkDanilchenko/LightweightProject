@@ -8,7 +8,7 @@ import RedisService from "@server/services/redis/redis.service";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 import { faker } from "@faker-js/faker";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
-import { randomValidJwt } from "../../helpers";
+import { randomValidJwt } from "../../utils";
 
 describe("TokensService", (): void => {
   let tokensService: TokensService;

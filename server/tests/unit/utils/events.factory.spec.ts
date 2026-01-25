@@ -1,12 +1,12 @@
 import { eventsRegistry } from "@server/events/events.factory";
 import { EventName } from "@server/events/interfaces/events.interfaces";
-import { buildAuthenticationFakeFactory, buildUserFakeFactory } from "../../factories";
+import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import UserEntity from "@server/users/users.entity";
 import AuthenticationEntity from "@server/auth/auth.entity";
 
 describe("EventsFactory", (): void => {
-  const user: UserEntity = buildUserFakeFactory();
-  const authentication: AuthenticationEntity = buildAuthenticationFakeFactory({ userId: user.id });
+  const user: UserEntity = buildUserFactory();
+  const authentication: AuthenticationEntity = buildAuthenticationFactory({ userId: user.id });
 
   it("should have entries for all event names", (): void => {
     Object.values(EventName).forEach((eventName: EventName): void => {

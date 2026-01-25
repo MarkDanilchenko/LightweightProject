@@ -2,10 +2,10 @@ import { Test, TestingModule } from "@nestjs/testing";
 import UsersController from "@server/users/users.controller";
 import UsersService from "@server/users/users.service";
 import UserEntity from "@server/users/users.entity";
-import { buildUserFakeFactory } from "../../factories";
+import { buildUserFactory } from "../../factories";
 
 describe("UsersController", (): void => {
-  const mockUser: UserEntity = buildUserFakeFactory();
+  const mockUser: UserEntity = buildUserFactory();
   let controller: UsersController;
   let service: jest.Mocked<UsersService>;
 

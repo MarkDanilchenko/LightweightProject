@@ -2,7 +2,7 @@ import { Repository } from "typeorm";
 import EventEntity from "@server/events/events.entity";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { buildEventFakeFactory } from "../../factories";
+import { buildEventFactory } from "../../factories";
 import { EventName } from "@server/events/interfaces/events.interfaces";
 
 describe("EventsEntity", (): void => {
@@ -25,7 +25,7 @@ describe("EventsEntity", (): void => {
   });
 
   describe("EventsEntity structure", (): void => {
-    const event: EventEntity = buildEventFakeFactory();
+    const event: EventEntity = buildEventFactory();
 
     it("should have an id in uuid v4 format", (): void => {
       expect(event.id).toBeDefined();
@@ -65,7 +65,7 @@ describe("EventsEntity", (): void => {
   });
 
   describe("EventsEntity validation", (): void => {
-    const event: EventEntity = buildEventFakeFactory();
+    const event: EventEntity = buildEventFactory();
 
     it("should successfully validate when all properties are valid", async (): Promise<void> => {
       expect(event).toBeInstanceOf(EventEntity);

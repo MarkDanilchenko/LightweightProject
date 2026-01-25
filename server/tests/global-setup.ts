@@ -18,8 +18,8 @@ export default async function globalSetup(): Promise<void> {
   logger.log("Global setup started");
 
   // 1.
-  // Connect to the tests DB and drop it, if exists;
-  // This one is needed to start e2e tests on clean state;
+  // Connect to the test DB host, drop and recreate its database again;
+  // This is needed to start e2e tests with clean, empty state;
   const { TEST_DATABASE_HOST, TEST_DATABASE_PORT, TEST_DATABASE_NAME, TEST_DATABASE_USER, TEST_DATABASE_PASSWORD } =
     dotenv.parse(fs.readFileSync(path.join(__dirname, "../../.env")));
   if (
@@ -37,13 +37,14 @@ export default async function globalSetup(): Promise<void> {
   const pgClient: Client = new Client({
     host: TEST_DATABASE_HOST,
     port: Number(TEST_DATABASE_PORT),
-    database: "postgres", // Connect to the default DB, because of attempt to drop the tests DB;
+    database: "postgres", // Connect to the default database, because of attempt to drop the test's database;
     user: TEST_DATABASE_USER,
     password: TEST_DATABASE_PASSWORD,
   });
-  await pgClient.connect();
 
   try {
+    await pgClient.connect();
+
     await pgClient.query(`DROP DATABASE IF EXISTS "${TEST_DATABASE_NAME}"`);
     await pgClient.query(`CREATE DATABASE "${TEST_DATABASE_NAME}"`);
   } catch (error) {

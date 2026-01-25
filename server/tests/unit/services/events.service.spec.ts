@@ -10,15 +10,15 @@ import {
   AuthLocalPasswordResetedEvent,
   EventName,
 } from "@server/events/interfaces/events.interfaces";
-import { buildEventFakeFactory, buildUserFakeFactory } from "../../factories";
+import { buildEventFactory, buildUserFactory } from "../../factories";
 import { EventType } from "@server/events/types/events.types";
 import UserEntity from "@server/users/users.entity";
 
 describe("EventsService", (): void => {
   const randomUuid: string = "3fd5e553-73a2-486b-8120-90cd007c9843";
   const testEmail = "test@example.com";
-  const user: UserEntity = buildUserFakeFactory();
-  const event: EventEntity = buildEventFakeFactory({ userId: user.id });
+  const user: UserEntity = buildUserFactory();
+  const event: EventEntity = buildEventFactory({ userId: user.id });
   let eventsService: EventsService;
   let dataSource: jest.Mocked<Partial<DataSource>>;
   let entityManager: jest.Mocked<Partial<EntityManager>>;

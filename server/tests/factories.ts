@@ -6,10 +6,10 @@ import { EventName } from "@server/events/interfaces/events.interfaces";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
 import appConfiguration from "@server/configs/app.configuration";
 
-// FakeFactory functions: used to create fake data for testing in memory
-// without creating an instance of the entity in database and so without using real database connection and queries;
+// Factory functions: used to create fake data instances for testing in memory
+// without creating them in database and so without using real database connection and queries;
 
-function buildUserFakeFactory(): UserEntity {
+function buildUserFactory(): UserEntity {
   const user = new UserEntity();
 
   user.id = faker.string.uuid();
@@ -25,7 +25,7 @@ function buildUserFakeFactory(): UserEntity {
   return user;
 }
 
-function buildAuthenticationFakeFactory(
+function buildAuthenticationFactory(
   options: {
     userId?: string;
     provider?: AuthenticationProvider;
@@ -103,7 +103,7 @@ function buildAuthenticationFakeFactory(
   return authentication;
 }
 
-function buildEventFakeFactory(options: { userId?: string; modelId?: string } = {}): EventEntity {
+function buildEventFactory(options: { userId?: string; modelId?: string } = {}): EventEntity {
   const event = new EventEntity();
 
   event.id = faker.string.uuid();
@@ -123,12 +123,4 @@ function buildEventFakeFactory(options: { userId?: string; modelId?: string } = 
   return event;
 }
 
-// Factory functions: used to create fake data for testing with real database connection and queries;
-
-// function buildUserFactory(userProps?: Partial<UserEntity>): UserEntity {}
-
-// function buildAuthenticationFactory(authProps?: Partial<AuthenticationEntity>): AuthenticationEntity {}
-
-// function buildEventFactory(eventProps?: Partial<EventEntity>): EventEntity {}
-
-export { buildUserFakeFactory, buildAuthenticationFakeFactory, buildEventFakeFactory };
+export { buildUserFactory, buildAuthenticationFactory, buildEventFactory };

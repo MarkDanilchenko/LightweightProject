@@ -4,10 +4,10 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
 import UsersService from "@server/users/users.service";
 import UserEntity from "@server/users/users.entity";
-import { buildUserFakeFactory } from "../../factories";
+import { buildUserFactory } from "../../factories";
 
 describe("UsersService", (): void => {
-  const user: UserEntity = buildUserFakeFactory();
+  const user: UserEntity = buildUserFactory();
   const mockEntityManager: jest.Mocked<EntityManager> = {
     update: jest.fn(),
   } as unknown as jest.Mocked<EntityManager>;

@@ -3,7 +3,7 @@ import UserEntity from "@server/users/users.entity";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import AuthService from "@server/auth/auth.service";
 import { Test, TestingModule } from "@nestjs/testing";
-import { buildAuthenticationFakeFactory, buildUserFakeFactory } from "../../factories";
+import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import { AuthenticationProvider, AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
 import {
   DataSource,
@@ -22,7 +22,7 @@ import TokensService from "@server/tokens/tokens.service";
 import UsersService from "@server/users/users.service";
 import EventsService from "@server/events/events.service";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { randomValidJwt } from "../../helpers";
+import { randomValidJwt } from "../../utils";
 import { faker } from "@faker-js/faker";
 import { EventName } from "@server/events/interfaces/events.interfaces";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
@@ -48,8 +48,8 @@ describe("AuthService", (): void => {
   let authentication: AuthenticationEntity;
 
   beforeEach(async (): Promise<void> => {
-    user = buildUserFakeFactory();
-    authentication = buildAuthenticationFakeFactory({
+    user = buildUserFactory();
+    authentication = buildAuthenticationFactory({
       userId: user.id,
       provider: AuthenticationProvider.LOCAL,
     });

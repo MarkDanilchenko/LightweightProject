@@ -16,12 +16,14 @@
   },
   "collectCoverageFrom": [
     "**/*.(t|j)s",
+    "!**/*.(module|types|interfaces|dto|schema|guard).(t|j)s",
+    "!**/src/configs/**",
     "!**/coverage/**",
     "!**/dist/**",
     "!**/insomnia/**",
     "!**/migrations/**",
     "!**/templates/**",
-    "!**/test/**"
+    "!**/tests/**"
   ],
   "coverageDirectory": "<rootDir>/../coverage",
   "coverageReporters": ["html"],

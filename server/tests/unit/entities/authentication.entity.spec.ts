@@ -2,7 +2,7 @@ import { Repository } from "typeorm";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
-import { buildAuthenticationFakeFactory } from "../../factories";
+import { buildAuthenticationFactory } from "../../factories";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
 
 describe("Authentication Entity", (): void => {
@@ -27,7 +27,7 @@ describe("Authentication Entity", (): void => {
   });
 
   describe("AuthenticationEntity structure", (): void => {
-    const authentication: AuthenticationEntity = buildAuthenticationFakeFactory();
+    const authentication: AuthenticationEntity = buildAuthenticationFactory();
 
     it("should have an id in uuid v4 format", (): void => {
       expect(authentication.id).toBeDefined();
@@ -76,7 +76,7 @@ describe("Authentication Entity", (): void => {
     let authentication: AuthenticationEntity;
 
     beforeEach((): void => {
-      authentication = buildAuthenticationFakeFactory();
+      authentication = buildAuthenticationFactory();
     });
 
     it("should successfully validate when all properties are valid", async (): Promise<void> => {
