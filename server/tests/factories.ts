@@ -45,7 +45,7 @@ function buildAuthenticationFactory(overrides: Partial<AuthenticationEntity> = {
   Object.assign(authentication, overrides);
 
   authentication.refreshToken = randomValidJwt(
-    { userId: faker.string.uuid(), provider: authentication.provider },
+    { userId: authentication.userId, provider: authentication.provider },
     { expiresIn: appConfiguration().jwtConfiguration.refreshTokenExpiresIn },
   );
 
@@ -58,7 +58,7 @@ function buildAuthenticationFactory(overrides: Partial<AuthenticationEntity> = {
             password: faker.internet.password(),
             verificationSendAt: faker.date.past(),
             verificationConfirmedAt: faker.date.recent(),
-            callbackUrl: `${appConfiguration().serverConfiguration.baseUrl}/api/v1/auth/local/verification/email?token=${faker.string.uuid()}`,
+            callbackUrl: `${appConfiguration().serverConfiguration.baseUrl}/api/v1/auth/local/verification/email?token=${randomValidJwt({ userId: authentication.userId, provider: authentication.provider })}`,
             temporaryInfo: {
               username: faker.internet.username(),
               firstName: faker.person.firstName(),
@@ -96,9 +96,7 @@ function buildAuthenticationFactory(overrides: Partial<AuthenticationEntity> = {
       }
 
       default: {
-        authentication.metadata = {};
-
-        break;
+        throw new Error("Invalid provider");
       }
     }
   }
