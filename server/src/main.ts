@@ -39,11 +39,9 @@ async function bootstrap(): Promise<void> {
   const { host, port, cookieSecret, swaggerEnabled, protocol } =
     configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration")!;
 
-  app.setGlobalPrefix("api/v1");
-
-  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
-
   app.use(cookieParser(cookieSecret));
+  app.setGlobalPrefix("api/v1");
+  app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
   if (swaggerEnabled) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
