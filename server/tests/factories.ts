@@ -7,8 +7,12 @@ import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces"
 import appConfiguration from "@server/configs/app.configuration";
 import { randomValidJwt } from "./utils";
 
-// Factory functions: used to create fake data instances for testing in memory
-// without creating them in database and so without using real database connection and queries;
+/**
+ * Factory functions for creating fake data instances for testing purposes.
+ * These functions generate realistic mock entities in memory without database connection & operations.
+ *
+ * All functions accept optional overrides to customize specific properties.
+ */
 
 function buildUserFactory(overrides: Partial<UserEntity> = {}): UserEntity {
   const user = new UserEntity();
