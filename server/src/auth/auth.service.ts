@@ -43,7 +43,8 @@ export default class AuthService {
     dataSource: DataSource,
     @InjectRepository(AuthenticationEntity)
     private readonly authenticationRepository: Repository<AuthenticationEntity>,
-    @Inject(RMQ_MICROSERVICE) private readonly rmqMicroserviceClient: ClientProxy,
+    @Inject(RMQ_MICROSERVICE)
+    private readonly rmqMicroserviceClient: ClientProxy,
     tokensService: TokensService,
     userService: UsersService,
     eventsService: EventsService,
