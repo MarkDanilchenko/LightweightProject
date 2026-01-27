@@ -2,8 +2,7 @@ import * as jwt from "jsonwebtoken";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 import { faker } from "@faker-js/faker";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
-
-const testSecretOrPrivateKey = "aFEo3Q8YBou-secretJwtKeyForTesting-FzM1sHSsEF3";
+import { DataSource } from "typeorm";
 
 /**
  * Generates random valid JWT token for testing purposes.
@@ -25,9 +24,28 @@ function randomValidJwt(
     jwti: faker.string.uuid(),
   },
   options: jwt.SignOptions = { expiresIn: "1d" },
-  secretOrPrivateKey: string = testSecretOrPrivateKey,
+  secretOrPrivateKey: string = "aFEo3Q8YBou-secretJwtKeyForTesting-FzM1sHSsEF3",
 ): string {
   return jwt.sign(payload, secretOrPrivateKey, options);
 }
 
-export { randomValidJwt };
+/**
+ * Truncates all tables in the database and restarts the identity of each table.
+ * This function is used in tests to clean the database before running the tests.
+ *
+ * @param {DataSource} dataSource - The data source to use for cleaning the database.
+ *
+ * @returns {Promise<void>} A promise that resolves when the database has been cleaned.
+ */
+async function dbTablesCleaner(dataSource: DataSource): Promise<void> {
+  const tableNames: string[] = await dataSource.query(
+    "SELECT table_name" +
+      "FROM information_schema.tables" +
+      "WHERE table_schema = 'public'" +
+      "AND table_name <> 'migrations'",
+  );
+
+  await dataSource.query("TRUNCATE " + tableNames.join(", ") + " RESTART IDENTITY CASCADE");
+}
+
+export { randomValidJwt, dbTablesCleaner };

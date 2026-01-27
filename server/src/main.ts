@@ -17,7 +17,7 @@ import AppModule from "@server/app.module";
  * @returns {Promise<void>} - A promise which resolves when the application is ready.
  */
 async function bootstrap(): Promise<void> {
-  const https = process.env.HTTPS === "true";
+  const https: boolean = process.env.HTTPS === "true";
   const httpsOptions: { key?: Buffer; cert?: Buffer } = {};
   if (https) {
     if (!process.env.CERT_PATH || !process.env.KEY_PATH) {
