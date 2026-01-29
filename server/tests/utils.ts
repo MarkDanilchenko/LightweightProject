@@ -37,15 +37,21 @@ function randomValidJwt(
  *
  * @returns {Promise<void>} A promise that resolves when the database has been cleaned.
  */
-async function dbTablesCleaner(dataSource: DataSource): Promise<void> {
-  const tableNames: string[] = await dataSource.query(
-    "SELECT table_name" +
-      "FROM information_schema.tables" +
-      "WHERE table_schema = 'public'" +
+async function dbCleaner(dataSource: DataSource): Promise<void> {
+  const tableNamesRaw: Array<{ table_name: string }> = await dataSource.query(
+    "SELECT table_name " +
+      "FROM information_schema.tables " +
+      "WHERE table_schema = 'public' " +
       "AND table_name <> 'migrations'",
   );
+
+  if (!tableNamesRaw.length) {
+    return;
+  }
+
+  const tableNames: string[] = tableNamesRaw.map((tableName): string => `"${tableName.table_name}"`);
 
   await dataSource.query("TRUNCATE " + tableNames.join(", ") + " RESTART IDENTITY CASCADE");
 }
 
-export { randomValidJwt, dbTablesCleaner };
+export { randomValidJwt, dbCleaner };

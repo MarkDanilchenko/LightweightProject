@@ -14,7 +14,7 @@ const logger = new Logger("AppConfiguration");
  * @returns {string} The path to the .env file.
  */
 function getEnvPath(): string {
-  const node_env: string | undefined = process.env.NODE_ENV || "development";
+  const node_env: string = process.env.NODE_ENV || "development";
   let distEnvPath: string;
   let fallbackEnvPath: string;
 
@@ -191,6 +191,7 @@ export default (): AppConfiguration => {
     username: TEST_DATABASE_USER,
     password: TEST_DATABASE_PASSWORD,
   };
+
   if (NODE_ENV === "test") {
     Object.assign(dbConfiguration, dbConfigurationTest);
   }

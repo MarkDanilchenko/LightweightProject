@@ -26,8 +26,8 @@ async function bootstrap(): Promise<void> {
       );
     }
 
-    httpsOptions.key = fs.readFileSync(process.env.KEY_PATH);
-    httpsOptions.cert = fs.readFileSync(process.env.CERT_PATH);
+    httpsOptions.key = fs.readFileSync(path.join(process.cwd(), "../" + process.env.KEY_PATH));
+    httpsOptions.cert = fs.readFileSync(path.join(process.cwd(), "../" + process.env.CERT_PATH));
   }
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
