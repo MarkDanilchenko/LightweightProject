@@ -22,6 +22,7 @@ export default async function globalSetup(): Promise<void> {
   // This is needed to start e2e tests with clean, empty state;
   const { TEST_DATABASE_HOST, TEST_DATABASE_PORT, TEST_DATABASE_NAME, TEST_DATABASE_USER, TEST_DATABASE_PASSWORD } =
     dotenv.parse(fs.readFileSync(path.join(process.cwd(), ".env")));
+
   if (
     !TEST_DATABASE_HOST ||
     !TEST_DATABASE_PORT ||
@@ -34,25 +35,25 @@ export default async function globalSetup(): Promise<void> {
     process.exit(1);
   }
 
-  const pgClient: Client = new Client({
-    host: TEST_DATABASE_HOST,
-    port: Number(TEST_DATABASE_PORT),
-    database: "postgres", // Connect to the default database, because of attempt to drop the test's database;
-    user: TEST_DATABASE_USER,
-    password: TEST_DATABASE_PASSWORD,
-  });
-
   try {
+    const pgClient: Client = new Client({
+      host: TEST_DATABASE_HOST,
+      port: Number(TEST_DATABASE_PORT),
+      database: "postgres", // Connect to the default database, because of attempt to drop the test's database;
+      user: TEST_DATABASE_USER,
+      password: TEST_DATABASE_PASSWORD,
+    });
+
     await pgClient.connect();
 
     await pgClient.query(`DROP DATABASE IF EXISTS "${TEST_DATABASE_NAME}"`);
     await pgClient.query(`CREATE DATABASE "${TEST_DATABASE_NAME}"`);
+
+    await pgClient.end();
   } catch (error) {
     logger.error("Failed to drop or create the tests database", error);
 
     process.exit(1);
-  } finally {
-    await pgClient.end();
   }
 
   // 2.

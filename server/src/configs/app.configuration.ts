@@ -21,8 +21,8 @@ function getEnvPath(): string {
   switch (node_env) {
     case "development":
     case "test": {
-      distEnvPath = path.join(__dirname, "../../../../.env");
-      fallbackEnvPath = path.join(__dirname, "../../../.env");
+      distEnvPath = path.join(process.cwd(), "../.env");
+      fallbackEnvPath = path.join(process.cwd(), ".env");
 
       break;
     }
