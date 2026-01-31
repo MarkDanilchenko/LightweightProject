@@ -67,7 +67,7 @@ export default class RmqEmailService {
 
     const authentication: AuthenticationEntity | null = await this.authService.findAuthenticationByPk(modelId);
     if (!authentication) {
-      throw new Error("Authentication not found");
+      throw new Error(`Email verification: Authentication "${modelId}" not found`);
     }
 
     const token: string = await this.tokensService.generate({

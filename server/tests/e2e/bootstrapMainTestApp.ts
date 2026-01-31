@@ -8,6 +8,11 @@ import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 
+/**
+ * Bootstrap the main test app.
+ *
+ * @returns {Promise<INestApplication>} A Promise that resolves to the bootstrapped test app.
+ */
 export async function bootstrapMainTestApp(): Promise<INestApplication> {
   const https: boolean = process.env.HTTPS === "true";
   const httpsOptions: { key?: Buffer; cert?: Buffer } = {};

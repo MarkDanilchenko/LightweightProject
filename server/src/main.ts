@@ -10,6 +10,7 @@ import { DocumentBuilder, OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { InternalServerErrorException } from "@nestjs/common";
 import { patchNestjsSwagger } from "@anatine/zod-nestjs";
 import AppModule from "@server/app.module";
+import { HttpsOptions } from "@nestjs/common/interfaces/external/https-options.interface";
 
 /**
  * Bootstraps the NestJS application.
@@ -18,16 +19,18 @@ import AppModule from "@server/app.module";
  */
 async function bootstrap(): Promise<void> {
   const https: boolean = process.env.HTTPS === "true";
-  const httpsOptions: { key?: Buffer; cert?: Buffer } = {};
-  if (https) {
+  let httpsOptions: HttpsOptions | undefined;
+  if (https && process.env.NODE_ENV !== "test") {
     if (!process.env.CERT_PATH || !process.env.KEY_PATH) {
       throw new InternalServerErrorException(
         "Both CERT_PATH and KEY_PATH env variables must be set when HTTPS is enabled!",
       );
     }
 
-    httpsOptions.key = fs.readFileSync(path.join(process.cwd(), "../" + process.env.KEY_PATH));
-    httpsOptions.cert = fs.readFileSync(path.join(process.cwd(), "../" + process.env.CERT_PATH));
+    httpsOptions = {
+      key: fs.readFileSync(path.join(process.cwd(), "../" + process.env.KEY_PATH)),
+      cert: fs.readFileSync(path.join(process.cwd(), "../" + process.env.CERT_PATH)),
+    };
   }
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {

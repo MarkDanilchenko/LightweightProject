@@ -73,7 +73,6 @@ export default (): AppConfiguration => {
     TYPEORM_LOGGING,
     TYPEORM_MIGRATIONS_RUN,
     SWAGGER_ENABLED,
-    HTTPS,
     CERT_PATH,
     KEY_PATH,
     COMMON_SECRET,
@@ -120,6 +119,11 @@ export default (): AppConfiguration => {
     TEST_DATABASE_USER,
     TEST_DATABASE_PASSWORD,
   } = process.env;
+
+  let { HTTPS } = process.env;
+  if (NODE_ENV === "test") {
+    HTTPS = "false";
+  }
 
   const serverConfiguration: AppConfiguration["serverConfiguration"] = {
     host: SERVER_HOST || "127.0.0.1",
@@ -192,10 +196,6 @@ export default (): AppConfiguration => {
     password: TEST_DATABASE_PASSWORD,
   };
 
-  if (NODE_ENV === "test") {
-    Object.assign(dbConfiguration, dbConfigurationTest);
-  }
-
   const jwtConfiguration: AppConfiguration["jwtConfiguration"] = {
     secret: JWT_SECRET!,
     accessTokenExpiresIn: JWT_ACCESS_TOKEN_EXPIRES_IN || "24h",
@@ -255,6 +255,10 @@ export default (): AppConfiguration => {
       keyPrefix: REDIS_KEY_PREFIX || "",
     },
   };
+
+  if (NODE_ENV === "test") {
+    Object.assign(dbConfiguration, dbConfigurationTest);
+  }
 
   return {
     serverConfiguration,

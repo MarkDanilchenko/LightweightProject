@@ -38,7 +38,7 @@ const localSignUpSchema = z
         title: "Password",
         description: `Password must contain at least one uppercase letter, one lowercase letter, one digit
         and be at least 8 characters long.`,
-        example: "12345678Aa_",
+        example: "12345678Aa",
       }),
   })
   .openapi({

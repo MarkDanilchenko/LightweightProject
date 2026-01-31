@@ -11,23 +11,34 @@ import AppModule from "@server/app.module";
  */
 async function bootstrap(): Promise<void> {
   // Can not use ConfigService here, so use process.env to get configuration variables for RabbitMQ;
+  const {
+    RABBITMQ_DEFAULT_USER,
+    RABBITMQ_DEFAULT_PASS,
+    RABBITMQ_HOST,
+    RABBITMQ_PORT,
+    RABBITMQ_MAIN_QUEUE,
+    RABBITMQ_PREFETCH_COUNT,
+    RABBITMQ_PERSISTENT,
+    RABBITMQ_NO_ACK,
+    RABBITMQ_HEARTBEAT_INTERVAL,
+    RABBITMQ_RECONNECT_TIME,
+    RABBITMQ_DURABLE,
+  } = process.env;
+
   const microserviceRmq: INestMicroservice = await NestFactory.createMicroservice<RmqOptions>(AppModule, {
     transport: Transport.RMQ,
     options: {
-      urls: [
-        `amqp://${process.env.RABBITMQ_DEFAULT_USER}:${process.env.RABBITMQ_DEFAULT_PASS}` +
-          `@${process.env.RABBITMQ_HOST}:${process.env.RABBITMQ_PORT}`,
-      ],
-      queue: process.env.RABBITMQ_MAIN_QUEUE,
-      prefetchCount: parseInt(process.env.RABBITMQ_PREFETCH_COUNT!) || 1,
-      persistent: process.env.RABBITMQ_PERSISTENT === "true",
-      noAck: process.env.RABBITMQ_NO_ACK === "true",
+      urls: [`amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@${RABBITMQ_HOST}:${RABBITMQ_PORT}`],
+      queue: RABBITMQ_MAIN_QUEUE,
+      prefetchCount: parseInt(RABBITMQ_PREFETCH_COUNT!) || 1,
+      persistent: RABBITMQ_PERSISTENT === "true",
+      noAck: RABBITMQ_NO_ACK === "true",
       socketOptions: {
-        heartbeatIntervalInSeconds: parseInt(process.env.RABBITMQ_HEARTBEAT_INTERVAL!) || 60,
-        reconnectTimeInSeconds: parseInt(process.env.RABBITMQ_RECONNECT_TIME!) || 10,
+        heartbeatIntervalInSeconds: parseInt(RABBITMQ_HEARTBEAT_INTERVAL!) || 60,
+        reconnectTimeInSeconds: parseInt(RABBITMQ_RECONNECT_TIME!) || 10,
       },
       queueOptions: {
-        durable: process.env.RABBITMQ_DURABLE === "true",
+        durable: RABBITMQ_DURABLE === "true",
       },
     },
   });
