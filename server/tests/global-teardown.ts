@@ -7,12 +7,14 @@ const logger = new Logger("GlobalTeardown");
  * This function is called after all tests have finished.
  * It is used to perform any necessary cleanup.
  *
- * @returns {Promise<void>} A promise that resolves when the global teardown is complete.
+ * @returns {void} Returns with void when the global teardown is complete.
  */
-export default async function globalTeardown(): Promise<void> {
+export default function globalTeardown(): void {
   logger.log("Global teardown started");
 
-  // Nothing to do here.
+  // Nothing to do here;
 
   logger.log("Global teardown completed");
+
+  process.exit(0);
 }

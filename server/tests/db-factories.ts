@@ -60,7 +60,7 @@ class DbFactories {
       userId = user.id;
     }
 
-    if (provider && !Object.keys(AuthenticationProvider).includes(provider)) {
+    if (provider && !Object.values(AuthenticationProvider).includes(provider)) {
       throw new Error("Invalid provider");
     } else if (!provider) {
       provider = faker.helpers.arrayElement(Object.values(AuthenticationProvider));
@@ -72,7 +72,7 @@ class DbFactories {
           metadata = {
             local: {
               isEmailVerified: true,
-              password: faker.internet.password(),
+              password: faker.string.alphanumeric(64),
               verificationSendAt: faker.date.past(),
               verificationConfirmedAt: faker.date.recent(),
               callbackUrl: `${appConfiguration().serverConfiguration.baseUrl}/api/v1/auth/local/verification/email?token=${randomValidJwt({ userId, provider })}`,
