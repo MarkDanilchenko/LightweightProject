@@ -210,4 +210,46 @@ describe("AuthController E2E", (): void => {
       });
     });
   });
+
+  describe("POST /api/v1/auth/local/verification/email", (): void => {
+    describe("positive scenarios", (): void => {});
+
+    describe("negative scenarios", (): void => {});
+  });
+
+  describe("POST /api/v1/auth/local/signin", (): void => {
+    describe("positive scenarios", (): void => {});
+
+    describe("negative scenarios", (): void => {});
+  });
+
+  describe("POST /api/v1/auth/local/password/forgot", (): void => {
+    describe("positive scenarios", (): void => {});
+
+    describe("negative scenarios", (): void => {});
+  });
+
+  describe("POST /api/v1/auth/local/password/reset", (): void => {
+    describe("positive scenarios", (): void => {});
+
+    describe("negative scenarios", (): void => {});
+  });
+
+  describe("POST /api/v1/auth/signout", (): void => {
+    describe("positive scenarios", (): void => {});
+
+    describe("negative scenarios", (): void => {});
+  });
+
+  describe("POST /api/v1/auth/refresh", (): void => {
+    describe("positive scenarios", (): void => {});
+
+    describe("negative scenarios", (): void => {});
+  });
+
+  describe("GET /api/v1/auth/me", (): void => {
+    describe("positive scenarios", (): void => {});
+
+    describe("negative scenarios", (): void => {});
+  });
 });
