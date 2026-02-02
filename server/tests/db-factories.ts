@@ -73,9 +73,10 @@ class DbFactories {
             local: {
               isEmailVerified: true,
               password: faker.string.alphanumeric(64),
-              verificationSendAt: faker.date.past(),
-              verificationConfirmedAt: faker.date.recent(),
-              callbackUrl: `${appConfiguration().serverConfiguration.baseUrl}/api/v1/auth/local/verification/email?token=${randomValidJwt({ userId, provider })}`,
+              callbackUrl:
+                `${appConfiguration().serverConfiguration.baseUrl}` +
+                `/api/v1/auth/local/verification/email?token=` +
+                `${randomValidJwt({ userId, provider }, undefined, appConfiguration().jwtConfiguration.secret)}`,
               temporaryInfo: {
                 username: user.username,
                 firstName: user.firstName,
@@ -122,6 +123,7 @@ class DbFactories {
       refreshToken: randomValidJwt(
         { userId, provider },
         { expiresIn: appConfiguration().jwtConfiguration.refreshTokenExpiresIn },
+        appConfiguration().jwtConfiguration.secret,
       ),
     };
 
