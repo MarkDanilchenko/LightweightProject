@@ -60,8 +60,6 @@ function buildAuthenticationFactory(overrides: Partial<AuthenticationEntity> = {
           local: {
             isEmailVerified: true,
             password: faker.internet.password(),
-            verificationSendAt: faker.date.past(),
-            verificationConfirmedAt: faker.date.recent(),
             callbackUrl: `${appConfiguration().serverConfiguration.baseUrl}/api/v1/auth/local/verification/email?token=${randomValidJwt({ userId: authentication.userId, provider: authentication.provider })}`,
             temporaryInfo: {
               username: faker.internet.username(),

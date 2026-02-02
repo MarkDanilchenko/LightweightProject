@@ -71,8 +71,6 @@ interface AuthMetadata {
   local?: {
     isEmailVerified: boolean;
     password: string;
-    verificationSendAt?: Date;
-    verificationConfirmedAt?: Date;
     callbackUrl?: string;
     temporaryInfo?: {
       username?: string | null;

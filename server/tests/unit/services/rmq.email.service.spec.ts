@@ -153,7 +153,9 @@ describe("RmqEmailService", (): void => {
     it("should throw an error if authentication not found", async (): Promise<void> => {
       authService.findAuthenticationByPk.mockResolvedValue(null);
 
-      await expect(rmqEmailService.sendWelcomeVerificationEmail(payload)).rejects.toThrow("Authentication not found");
+      await expect(rmqEmailService.sendWelcomeVerificationEmail(payload)).rejects.toThrow(
+        `Email verification: Authentication not found`,
+      );
     });
 
     it("should rollback transaction on error", async (): Promise<void> => {
