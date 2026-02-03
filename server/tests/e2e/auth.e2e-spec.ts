@@ -465,4 +465,144 @@ describe("AuthController E2E", (): void => {
       });
     });
   });
+
+  describe("POST /api/v1/auth/local/signin", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200 and set accessToken cookie on successful signin", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should handle signin with email", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should handle signin with username", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 401 for invalid credentials", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should return 401 for unverified email", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should return 400 for invalid request body", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+    });
+  });
+
+  describe("POST /api/v1/auth/local/password/forgot", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200 and send password reset email", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 400 for invalid email format", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should return 400 for non-existent email", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+    });
+  });
+
+  describe("POST /api/v1/auth/local/password/reset", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200 and reset password successfully", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 401 for invalid token", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should return 401 for expired token", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should return 400 for invalid request body", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+    });
+  });
+
+  describe("POST /api/v1/auth/signout", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200 and clear accessToken cookie", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 401 for missing accessToken", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should return 401 for invalid accessToken", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+    });
+  });
+
+  describe("POST /api/v1/auth/refresh", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200 and refresh accessToken from cookie", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should return 200 and refresh accessToken from authorization header", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should prioritize cookie over authorization header when both present", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 401 for missing accessToken", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should return 401 for invalid accessToken", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should return 401 for malformed authorization header", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+    });
+  });
+
+  describe("GET /api/v1/auth/me", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200 and user profile", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 401 for missing accessToken", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should return 401 for invalid accessToken", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+
+      it("should return 404 for non-existent user", async (): Promise<void> => {
+        // TODO: Implement test
+      });
+    });
+  });
 });
