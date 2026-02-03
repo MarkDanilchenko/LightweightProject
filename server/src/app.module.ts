@@ -11,6 +11,7 @@ import appConfiguration from "@server/configs/app.configuration";
 import { RmqModule } from "@server/services/rmq/rmq.module";
 import { JwtModule } from "@nestjs/jwt";
 import { RedisModule } from "@server/services/redis/redis.module";
+import { EventEmitterModule } from "@nestjs/event-emitter";
 
 @Module({
   imports: [
@@ -38,6 +39,9 @@ import { RedisModule } from "@server/services/redis/redis.module";
           secret: configService.get<AppConfiguration["jwtConfiguration"]["secret"]>("jwtConfiguration.secret")!,
         };
       },
+    }),
+    EventEmitterModule.forRoot({
+      verboseMemoryLeak: true,
     }),
     TokensModule,
     RedisModule,

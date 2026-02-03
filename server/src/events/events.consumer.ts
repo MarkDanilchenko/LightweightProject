@@ -33,12 +33,10 @@ export default class EventsConsumer {
    *
    * @returns {Promise<void>} A promise that resolves when the event has been successfully handled.
    */
-  @OnEvent([
-    EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT,
-    EventName.AUTH_LOCAL_EMAIL_VERIFIED,
-    EventName.AUTH_LOCAL_PASSWORD_RESET_SENT,
-    EventName.AUTH_LOCAL_PASSWORD_RESETED,
-  ])
+  @OnEvent(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT)
+  @OnEvent(EventName.AUTH_LOCAL_EMAIL_VERIFIED)
+  @OnEvent(EventName.AUTH_LOCAL_PASSWORD_RESET_SENT)
+  @OnEvent(EventName.AUTH_LOCAL_PASSWORD_RESETED)
   async handleAuthLocalEvents(
     payload:
       | AuthLocalEmailVerificationSentEvent
