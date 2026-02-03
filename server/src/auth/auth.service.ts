@@ -235,7 +235,7 @@ export default class AuthService {
 
     const { userId, provider } = await this.tokensService.verify(token);
     if (!userId || provider !== AuthenticationProvider.LOCAL || !provider) {
-      throw new UnauthorizedException("Invalid or expired token.");
+      throw new UnauthorizedException("Invalid token.");
     }
 
     const authentication: AuthenticationEntity | null = await this.findAuthentication({

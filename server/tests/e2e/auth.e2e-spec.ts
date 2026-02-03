@@ -8,6 +8,11 @@ import UserEntity from "@server/users/users.entity";
 import { faker } from "@faker-js/faker";
 import AuthenticationEntity from "@server/auth/auth.entity";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import { ConfigService } from "@nestjs/config";
+import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
+import EventEntity from "@server/events/events.entity";
+import { EventName } from "@server/events/interfaces/events.interfaces";
+import TokensService from "@server/tokens/tokens.service";
 
 // Mock nodemailer to prevent open handles
 jest.mock("nodemailer", () => ({
@@ -20,14 +25,24 @@ jest.mock("nodemailer", () => ({
 describe("AuthController E2E", (): void => {
   let app: INestApplication;
   let dataSource: DataSource;
+  let configService: ConfigService;
   let factories: DbFactories;
   let httpServer: TestAgent;
+  let tokensService: TokensService;
+  let serverBaseUrl: string;
+  let clientBaseUrl: string;
 
   beforeAll(async (): Promise<void> => {
     app = await bootstrapMainTestApp();
     dataSource = app.get(DataSource);
+    configService = app.get(ConfigService);
     factories = new DbFactories(dataSource);
     httpServer = request(app.getHttpServer());
+    tokensService = app.get(TokensService);
+    serverBaseUrl =
+      configService.get<AppConfiguration["serverConfiguration"]["baseUrl"]>("serverConfiguration.baseUrl")!;
+    clientBaseUrl =
+      configService.get<AppConfiguration["clientConfiguration"]["baseUrl"]>("clientConfiguration.baseUrl")!;
   });
 
   afterEach((): void => {
@@ -78,6 +93,7 @@ describe("AuthController E2E", (): void => {
           lastName: payload.lastName,
           avatarUrl: payload.avatarUrl,
         });
+        expect(authentication?.refreshToken).toBeNull();
       });
 
       it("should return 201 and create local authentication for the already signed up user with not local authentication", async (): Promise<void> => {
@@ -97,9 +113,14 @@ describe("AuthController E2E", (): void => {
           lastName: payload.lastName,
           avatarUrl: payload.avatarUrl,
         });
+        const refreshToken: string = await tokensService.generate({
+          userId: user.id,
+          provider: AuthenticationProvider.GOOGLE,
+        });
         await factories.buildAuthentication({
           userId: user.id,
           provider: AuthenticationProvider.GOOGLE,
+          refreshToken,
           metadata: {
             google: {},
           },
@@ -111,8 +132,18 @@ describe("AuthController E2E", (): void => {
           .getRepository(AuthenticationEntity)
           .count({ where: { userId: user.id } });
 
+        const localAuthentication: AuthenticationEntity | null = await dataSource
+          .getRepository(AuthenticationEntity)
+          .findOne({
+            where: {
+              userId: user.id,
+              provider: AuthenticationProvider.LOCAL,
+            },
+          });
+
         expect(response.statusCode).toBe(201);
         expect(userAuthenticationsCount).toBe(2);
+        expect(localAuthentication).not.toBeNull();
       });
     });
 
@@ -212,44 +243,226 @@ describe("AuthController E2E", (): void => {
   });
 
   describe("POST /api/v1/auth/local/verification/email", (): void => {
-    describe("positive scenarios", (): void => {});
+    describe("positive scenarios", (): void => {
+      it(`should return 302, redirect to clientBaseUrl/home endpoint and set cookies with access token`, async (): Promise<void> => {
+        const temporaryInfo = {
+          username: faker.string.alphanumeric(10),
+          firstName: faker.person.firstName(),
+          lastName: faker.person.lastName(),
+          avatarUrl: faker.image.avatar(),
+        };
 
-    describe("negative scenarios", (): void => {});
-  });
+        const user: UserEntity = await factories.buildUser({
+          email: faker.internet.email(),
+          username: null,
+          firstName: null,
+          lastName: null,
+          avatarUrl: null,
+        });
 
-  describe("POST /api/v1/auth/local/signin", (): void => {
-    describe("positive scenarios", (): void => {});
+        const token: string = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+          metadata: {
+            local: {
+              isEmailVerified: false,
+              password: faker.string.alphanumeric(64),
+              callbackUrl: `${serverBaseUrl}/api/v1/auth/local/verification/email?token=${token}`,
+              temporaryInfo,
+            },
+          },
+        });
 
-    describe("negative scenarios", (): void => {});
-  });
+        const response = await httpServer.post(`/api/v1/auth/local/verification/email`).query({ token }).send();
 
-  describe("POST /api/v1/auth/local/password/forgot", (): void => {
-    describe("positive scenarios", (): void => {});
+        const updatedUser: UserEntity | null = await dataSource
+          .getRepository(UserEntity)
+          .findOne({ where: { id: user.id } });
+        const updatedAuthentication: AuthenticationEntity | null = await dataSource
+          .getRepository(AuthenticationEntity)
+          .findOne({ where: { id: authentication.id } });
+        const event: EventEntity | null = await dataSource
+          .getRepository(EventEntity)
+          .findOne({ where: { name: EventName.AUTH_LOCAL_EMAIL_VERIFIED, userId: user.id } });
 
-    describe("negative scenarios", (): void => {});
-  });
+        expect(response.statusCode).toBe(302);
+        expect(response.header["location"]).toBe(`${clientBaseUrl}/home`);
+        expect(response.header["set-cookie"]).not.toBeNull();
+        expect(response.header["set-cookie"][0]).toContain("accessToken");
+        expect(updatedUser).not.toBeNull();
+        expect(updatedAuthentication).not.toBeNull();
+        expect(updatedUser?.username).toBe(temporaryInfo.username);
+        expect(updatedUser?.firstName).toBe(temporaryInfo.firstName);
+        expect(updatedUser?.lastName).toBe(temporaryInfo.lastName);
+        expect(updatedUser?.avatarUrl).toBe(temporaryInfo.avatarUrl);
+        expect(updatedAuthentication?.metadata?.local?.isEmailVerified).toBeTruthy();
+        expect(updatedAuthentication?.refreshToken).not.toBeNull();
+        expect(event).not.toBeNull();
+        expect(event?.name).toBe(EventName.AUTH_LOCAL_EMAIL_VERIFIED);
+        expect(event?.userId).toBe(user.id);
+        expect(event?.modelId).toBe(authentication.id);
+      });
 
-  describe("POST /api/v1/auth/local/password/reset", (): void => {
-    describe("positive scenarios", (): void => {});
+      it(`should return 302, redirect to clientBaseUrl/home endpoint and set cookies with access token and set refreshToken of other authentications to NULL`, async (): Promise<void> => {
+        const temporaryInfo = {
+          username: faker.string.alphanumeric(10),
+          firstName: faker.person.firstName(),
+          lastName: faker.person.lastName(),
+          avatarUrl: faker.image.avatar(),
+        };
 
-    describe("negative scenarios", (): void => {});
-  });
+        const user: UserEntity = await factories.buildUser({
+          email: faker.internet.email(),
+          username: null,
+          firstName: null,
+          lastName: null,
+          avatarUrl: null,
+        });
 
-  describe("POST /api/v1/auth/signout", (): void => {
-    describe("positive scenarios", (): void => {});
+        const token: string = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const localAuthentication: AuthenticationEntity = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+          metadata: {
+            local: {
+              isEmailVerified: false,
+              password: faker.string.alphanumeric(64),
+              callbackUrl: `${serverBaseUrl}/api/v1/auth/local/verification/email?token=${token}`,
+              temporaryInfo,
+            },
+          },
+        });
+        const googleAuthentication: AuthenticationEntity = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.GOOGLE,
+          metadata: {
+            google: {},
+          },
+        });
 
-    describe("negative scenarios", (): void => {});
-  });
+        const response = await httpServer.post(`/api/v1/auth/local/verification/email`).query({ token }).send();
 
-  describe("POST /api/v1/auth/refresh", (): void => {
-    describe("positive scenarios", (): void => {});
+        const updatedUser: UserEntity | null = await dataSource
+          .getRepository(UserEntity)
+          .findOne({ where: { id: user.id } });
+        const updatedLocalAuthentication: AuthenticationEntity | null = await dataSource
+          .getRepository(AuthenticationEntity)
+          .findOne({ where: { id: localAuthentication.id } });
+        const updatedGoogleAuthentication: AuthenticationEntity | null = await dataSource
+          .getRepository(AuthenticationEntity)
+          .findOne({ where: { id: googleAuthentication.id } });
+        const event: EventEntity | null = await dataSource
+          .getRepository(EventEntity)
+          .findOne({ where: { name: EventName.AUTH_LOCAL_EMAIL_VERIFIED, userId: user.id } });
 
-    describe("negative scenarios", (): void => {});
-  });
+        expect(response.statusCode).toBe(302);
+        expect(response.header["location"]).toBe(`${clientBaseUrl}/home`);
+        expect(response.header["set-cookie"]).not.toBeNull();
+        expect(response.header["set-cookie"][0]).toContain("accessToken");
+        expect(updatedUser).not.toBeNull();
+        expect(updatedLocalAuthentication).not.toBeNull();
+        expect(updatedUser?.username).toBe(temporaryInfo.username);
+        expect(updatedUser?.firstName).toBe(temporaryInfo.firstName);
+        expect(updatedUser?.lastName).toBe(temporaryInfo.lastName);
+        expect(updatedUser?.avatarUrl).toBe(temporaryInfo.avatarUrl);
+        expect(updatedLocalAuthentication?.metadata?.local?.isEmailVerified).toBeTruthy();
+        expect(updatedLocalAuthentication?.refreshToken).not.toBeNull();
+        expect(updatedGoogleAuthentication?.refreshToken).toBeNull();
+        expect(event).not.toBeNull();
+        expect(event?.name).toBe(EventName.AUTH_LOCAL_EMAIL_VERIFIED);
+        expect(event?.userId).toBe(user.id);
+        expect(event?.modelId).toBe(localAuthentication.id);
+      });
+    });
 
-  describe("GET /api/v1/auth/me", (): void => {
-    describe("positive scenarios", (): void => {});
+    describe("negative scenarios", (): void => {
+      it("should return 400 when token is missing", async (): Promise<void> => {
+        const response = await httpServer.post("/api/v1/auth/local/verification/email").send();
 
-    describe("negative scenarios", (): void => {});
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toEqual(expect.arrayContaining(["token: Required"]));
+      });
+
+      it("should return 302 and redirect to signin page with error message when token is invalid", async (): Promise<void> => {
+        const response = await httpServer
+          .post("/api/v1/auth/local/verification/email")
+          .query({ token: "invalid-token" })
+          .send();
+
+        expect(response.statusCode).toBe(302);
+        expect(response.header["location"]).toBe(
+          `${clientBaseUrl}/signin?errorMsg=${encodeURIComponent("Invalid token")}`,
+        );
+      });
+
+      it("should return 302 and redirect to signin page with error message when token is expired", async (): Promise<void> => {
+        const user: UserEntity = await factories.buildUser();
+        const expiredToken: string = await tokensService.generate(
+          { userId: user.id, provider: AuthenticationProvider.LOCAL },
+          { expiresIn: "-1h" },
+        );
+
+        const response = await httpServer
+          .post("/api/v1/auth/local/verification/email")
+          .query({ token: expiredToken })
+          .send();
+
+        expect(response.statusCode).toBe(302);
+        expect(response.header["location"]).toBe(
+          `${clientBaseUrl}/signin?errorMsg=${encodeURIComponent("Token expired")}`,
+        );
+      });
+
+      it("should return 302 and redirect to signin page with error message when user has no local authentication", async (): Promise<void> => {
+        const user: UserEntity = await factories.buildUser();
+        const token: string = await tokensService.generate({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+
+        const response = await httpServer.post("/api/v1/auth/local/verification/email").query({ token }).send();
+
+        expect(response.statusCode).toBe(302);
+        expect(response.header["location"]).toBe(
+          `${clientBaseUrl}/signin?errorMsg=${encodeURIComponent("Authentication not found.")}`,
+        );
+      });
+
+      it("should return 302 and redirect to signin page with error message when email is already verified", async (): Promise<void> => {
+        const user: UserEntity = await factories.buildUser();
+        const token: string = await tokensService.generate({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        // Email in local authentication has already been verified here;
+        await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+
+        const response = await httpServer.post("/api/v1/auth/local/verification/email").query({ token }).send();
+
+        expect(response.statusCode).toBe(302);
+        expect(response.header["location"]).toBe(
+          `${clientBaseUrl}/signin?errorMsg=${encodeURIComponent("Email has been already verified.")}`,
+        );
+      });
+
+      it("should return 302 and redirect to signin page with error message when provider in token does not match local authentication provider", async (): Promise<void> => {
+        const user: UserEntity = await factories.buildUser();
+        const token: string = await tokensService.generate({
+          userId: user.id,
+          provider: AuthenticationProvider.GOOGLE, // Different provider
+        });
+
+        const response = await httpServer.post("/api/v1/auth/local/verification/email").query({ token }).send();
+
+        expect(response.statusCode).toBe(302);
+        expect(response.header["location"]).toBe(
+          `${clientBaseUrl}/signin?errorMsg=${encodeURIComponent("Invalid token.")}`,
+        );
+      });
+    });
   });
 });

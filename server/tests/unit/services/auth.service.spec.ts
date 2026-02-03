@@ -332,7 +332,7 @@ describe("AuthService", (): void => {
       tokensService.verify.mockResolvedValue({} as TokenPayload);
 
       await expect(authService.localVerificationEmail(dto)).rejects.toThrow(
-        new UnauthorizedException("Invalid or expired token."),
+        new UnauthorizedException("Invalid token."),
       );
     });
 
