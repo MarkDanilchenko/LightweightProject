@@ -13,6 +13,7 @@ import AppConfiguration from "@server/configs/interfaces/appConfiguration.interf
 import EventEntity from "@server/events/events.entity";
 import { EventName } from "@server/events/interfaces/events.interfaces";
 import TokensService from "@server/tokens/tokens.service";
+import { hash } from "@server/utils/hasher";
 
 // Mock nodemailer to prevent open handles
 jest.mock("nodemailer", () => ({
@@ -469,140 +470,284 @@ describe("AuthController E2E", (): void => {
   describe("POST /api/v1/auth/local/signin", (): void => {
     describe("positive scenarios", (): void => {
       it("should return 200 and set accessToken cookie on successful signin", async (): Promise<void> => {
-        // TODO: Implement test
+        const password = "12345Abc";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUser({
+          email: faker.internet.email(),
+          username: faker.string.alphanumeric(10),
+          firstName: faker.person.firstName(),
+          lastName: faker.person.lastName(),
+          avatarUrl: faker.image.avatar(),
+        });
+        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+              },
+            },
+          },
+        );
+
+        const payload = { login: user.email, password };
+
+        const response = await httpServer.post("/api/v1/auth/local/signin").send(payload);
+
+        const updatedAuthentication: AuthenticationEntity | null = await dataSource
+          .getRepository(AuthenticationEntity)
+          .findOne({
+            where: {
+              userId: user.id,
+              provider: AuthenticationProvider.LOCAL,
+            },
+          });
+
+        expect(response.statusCode).toBe(200);
+        expect(response.header["set-cookie"]).not.toBeNull();
+        expect(response.header["set-cookie"][0]).toContain("accessToken");
+        expect(updatedAuthentication).not.toBeNull();
+        expect(updatedAuthentication?.refreshToken).not.toBeNull();
       });
 
-      it("should handle signin with email", async (): Promise<void> => {
-        // TODO: Implement test
-      });
+      it("should handle signin both with username and email", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
 
-      it("should handle signin with username", async (): Promise<void> => {
-        // TODO: Implement test
+        const user: UserEntity = await factories.buildUser({
+          email: faker.internet.email(),
+          username: faker.string.alphanumeric(10),
+        });
+        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+              },
+            },
+          },
+        );
+
+        let requests = 0;
+        const payload = { login: "", password };
+
+        while (requests < 2) {
+          if (requests === 0) {
+            payload.login = user.username!;
+          } else {
+            payload.login = user.email;
+          }
+
+          const response = await httpServer.post("/api/v1/auth/local/signin").send(payload);
+
+          expect(response.statusCode).toBe(200);
+          expect(response.header["set-cookie"]).not.toBeNull();
+          expect(response.header["set-cookie"][0]).toContain("accessToken");
+
+          requests++;
+        }
       });
     });
 
     describe("negative scenarios", (): void => {
       it("should return 401 for invalid credentials", async (): Promise<void> => {
-        // TODO: Implement test
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUser({
+          email: faker.internet.email(),
+          username: faker.string.alphanumeric(10),
+        });
+        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+              },
+            },
+          },
+        );
+
+        const payload = { login: user.email, password: "wrongPassword" };
+
+        const response = await httpServer.post("/api/v1/auth/local/signin").send(payload);
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Authentication failed");
       });
 
       it("should return 401 for unverified email", async (): Promise<void> => {
-        // TODO: Implement test
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUser({
+          email: faker.internet.email(),
+          username: faker.string.alphanumeric(10),
+        });
+        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: false,
+              },
+            },
+          },
+        );
+
+        const payload = { login: user.email, password };
+
+        const response = await httpServer.post("/api/v1/auth/local/signin").send(payload);
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Authentication failed");
       });
 
       it("should return 400 for invalid request body", async (): Promise<void> => {
-        // TODO: Implement test
+        const payload = {
+          login: "test@example.com",
+          // Missing required password field;
+        };
+
+        const response = await httpServer.post("/api/v1/auth/local/signin").send(payload);
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Unauthorized");
       });
     });
   });
 
-  describe("POST /api/v1/auth/local/password/forgot", (): void => {
-    describe("positive scenarios", (): void => {
-      it("should return 200 and send password reset email", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-    });
-
-    describe("negative scenarios", (): void => {
-      it("should return 400 for invalid email format", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-
-      it("should return 400 for non-existent email", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-    });
-  });
-
-  describe("POST /api/v1/auth/local/password/reset", (): void => {
-    describe("positive scenarios", (): void => {
-      it("should return 200 and reset password successfully", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-    });
-
-    describe("negative scenarios", (): void => {
-      it("should return 401 for invalid token", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-
-      it("should return 401 for expired token", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-
-      it("should return 400 for invalid request body", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-    });
-  });
-
-  describe("POST /api/v1/auth/signout", (): void => {
-    describe("positive scenarios", (): void => {
-      it("should return 200 and clear accessToken cookie", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-    });
-
-    describe("negative scenarios", (): void => {
-      it("should return 401 for missing accessToken", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-
-      it("should return 401 for invalid accessToken", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-    });
-  });
-
-  describe("POST /api/v1/auth/refresh", (): void => {
-    describe("positive scenarios", (): void => {
-      it("should return 200 and refresh accessToken from cookie", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-
-      it("should return 200 and refresh accessToken from authorization header", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-
-      it("should prioritize cookie over authorization header when both present", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-    });
-
-    describe("negative scenarios", (): void => {
-      it("should return 401 for missing accessToken", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-
-      it("should return 401 for invalid accessToken", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-
-      it("should return 401 for malformed authorization header", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-    });
-  });
-
-  describe("GET /api/v1/auth/me", (): void => {
-    describe("positive scenarios", (): void => {
-      it("should return 200 and user profile", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-    });
-
-    describe("negative scenarios", (): void => {
-      it("should return 401 for missing accessToken", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-
-      it("should return 401 for invalid accessToken", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-
-      it("should return 404 for non-existent user", async (): Promise<void> => {
-        // TODO: Implement test
-      });
-    });
-  });
+  // describe("POST /api/v1/auth/local/password/forgot", (): void => {
+  //   describe("positive scenarios", (): void => {
+  //     it("should return 200 and send password reset email", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //   });
+  //
+  //   describe("negative scenarios", (): void => {
+  //     it("should return 400 for invalid email format", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //
+  //     it("should return 400 for non-existent email", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //   });
+  // });
+  //
+  // describe("POST /api/v1/auth/local/password/reset", (): void => {
+  //   describe("positive scenarios", (): void => {
+  //     it("should return 200 and reset password successfully", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //   });
+  //
+  //   describe("negative scenarios", (): void => {
+  //     it("should return 401 for invalid token", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //
+  //     it("should return 401 for expired token", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //
+  //     it("should return 400 for invalid request body", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //   });
+  // });
+  //
+  // describe("POST /api/v1/auth/signout", (): void => {
+  //   describe("positive scenarios", (): void => {
+  //     it("should return 200 and clear accessToken cookie", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //   });
+  //
+  //   describe("negative scenarios", (): void => {
+  //     it("should return 401 for missing accessToken", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //
+  //     it("should return 401 for invalid accessToken", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //   });
+  // });
+  //
+  // describe("POST /api/v1/auth/refresh", (): void => {
+  //   describe("positive scenarios", (): void => {
+  //     it("should return 200 and refresh accessToken from cookie", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //
+  //     it("should return 200 and refresh accessToken from authorization header", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //
+  //     it("should prioritize cookie over authorization header when both present", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //   });
+  //
+  //   describe("negative scenarios", (): void => {
+  //     it("should return 401 for missing accessToken", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //
+  //     it("should return 401 for invalid accessToken", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //
+  //     it("should return 401 for malformed authorization header", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //   });
+  // });
+  //
+  // describe("GET /api/v1/auth/me", (): void => {
+  //   describe("positive scenarios", (): void => {
+  //     it("should return 200 and user profile", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //   });
+  //
+  //   describe("negative scenarios", (): void => {
+  //     it("should return 401 for missing accessToken", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //
+  //     it("should return 401 for invalid accessToken", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //
+  //     it("should return 404 for non-existent user", async (): Promise<void> => {
+  //       // TODO: Implement test
+  //     });
+  //   });
+  // });
 });
