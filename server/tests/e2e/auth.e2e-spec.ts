@@ -641,24 +641,86 @@ describe("AuthController E2E", (): void => {
     });
   });
 
-  // describe("POST /api/v1/auth/local/password/forgot", (): void => {
-  //   describe("positive scenarios", (): void => {
-  //     it("should return 200 and send password reset email", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //   });
-  //
-  //   describe("negative scenarios", (): void => {
-  //     it("should return 400 for invalid email format", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //
-  //     it("should return 400 for non-existent email", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //   });
-  // });
-  //
+  describe("POST /api/v1/auth/local/password/forgot", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200 and send password reset email", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUser({
+          email: faker.internet.email(),
+          username: faker.string.alphanumeric(10),
+        });
+        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+          },
+        );
+
+        const payload = { email: user.email };
+
+        const response = await httpServer.post("/api/v1/auth/local/password/forgot").send(payload);
+
+        expect(response.statusCode).toBe(200);
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 400 for invalid email format", async (): Promise<void> => {
+        const payload = { email: "invalid-email-format" };
+
+        const response = await httpServer.post("/api/v1/auth/local/password/forgot").send(payload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toEqual(expect.arrayContaining(["email: Invalid email"]));
+      });
+
+      it("should return 400 for user with not verified email", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUser({
+          email: faker.internet.email(),
+          username: faker.string.alphanumeric(10),
+        });
+        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: false,
+              },
+            },
+          },
+        );
+
+        const payload = { email: user.email };
+
+        const response = await httpServer.post("/api/v1/auth/local/password/forgot").send(payload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toContain(`Email "${user.email}" is not verified yet.`);
+      });
+    });
+  });
+
   // describe("POST /api/v1/auth/local/password/reset", (): void => {
   //   describe("positive scenarios", (): void => {
   //     it("should return 200 and reset password successfully", async (): Promise<void> => {
