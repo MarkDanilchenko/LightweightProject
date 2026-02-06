@@ -151,9 +151,6 @@ describe("AuthController E2E", (): void => {
     describe("negative scenarios", (): void => {
       it("should return 400 when signing up with an already used username", async (): Promise<void> => {
         const existingUsername = faker.string.alphanumeric(10);
-
-        await factories.buildUser({ username: existingUsername });
-
         const payload = {
           username: existingUsername,
           firstName: faker.person.firstName(),
@@ -162,6 +159,8 @@ describe("AuthController E2E", (): void => {
           avatarUrl: faker.image.avatar(),
           password: "Password1",
         };
+
+        await factories.buildUser({ username: existingUsername });
 
         const response = await httpServer.post("/api/v1/auth/local/signup").send(payload);
 
@@ -520,10 +519,7 @@ describe("AuthController E2E", (): void => {
         const password = "Password123";
         const hashedPassword: string = await hash(password);
 
-        const user: UserEntity = await factories.buildUser({
-          email: faker.internet.email(),
-          username: faker.string.alphanumeric(10),
-        });
+        const user: UserEntity = await factories.buildUser();
         const authentication: AuthenticationEntity = await factories.buildAuthentication({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
@@ -566,10 +562,7 @@ describe("AuthController E2E", (): void => {
         const password = "Password123";
         const hashedPassword: string = await hash(password);
 
-        const user: UserEntity = await factories.buildUser({
-          email: faker.internet.email(),
-          username: faker.string.alphanumeric(10),
-        });
+        const user: UserEntity = await factories.buildUser();
         const authentication: AuthenticationEntity = await factories.buildAuthentication({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
@@ -598,10 +591,7 @@ describe("AuthController E2E", (): void => {
         const password = "Password123";
         const hashedPassword: string = await hash(password);
 
-        const user: UserEntity = await factories.buildUser({
-          email: faker.internet.email(),
-          username: faker.string.alphanumeric(10),
-        });
+        const user: UserEntity = await factories.buildUser();
         const authentication: AuthenticationEntity = await factories.buildAuthentication({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
@@ -647,10 +637,7 @@ describe("AuthController E2E", (): void => {
         const password = "Password123";
         const hashedPassword: string = await hash(password);
 
-        const user: UserEntity = await factories.buildUser({
-          email: faker.internet.email(),
-          username: faker.string.alphanumeric(10),
-        });
+        const user: UserEntity = await factories.buildUser();
         const authentication: AuthenticationEntity = await factories.buildAuthentication({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
@@ -690,10 +677,7 @@ describe("AuthController E2E", (): void => {
         const password = "Password123";
         const hashedPassword: string = await hash(password);
 
-        const user: UserEntity = await factories.buildUser({
-          email: faker.internet.email(),
-          username: faker.string.alphanumeric(10),
-        });
+        const user: UserEntity = await factories.buildUser();
         const authentication: AuthenticationEntity = await factories.buildAuthentication({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
@@ -721,28 +705,120 @@ describe("AuthController E2E", (): void => {
     });
   });
 
-  // describe("POST /api/v1/auth/local/password/reset", (): void => {
-  //   describe("positive scenarios", (): void => {
-  //     it("should return 200 and reset password successfully", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //   });
-  //
-  //   describe("negative scenarios", (): void => {
-  //     it("should return 401 for invalid token", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //
-  //     it("should return 401 for expired token", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //
-  //     it("should return 400 for invalid request body", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //   });
-  // });
-  //
+  describe("POST /api/v1/auth/local/password/reset", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200 and reset password successfully", async (): Promise<void> => {
+        const oldPassword = "OldPassword123";
+        const newPassword = "NewPassword123";
+        const oldHashedPassword: string = await hash(oldPassword);
+
+        const user: UserEntity = await factories.buildUser();
+        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: oldHashedPassword,
+                isEmailVerified: true,
+              },
+            },
+          },
+        );
+
+        // Generate token using the current password as secret (as per service logic);
+        const token: string = await tokensService.generate(
+          { userId: user.id, provider: AuthenticationProvider.LOCAL },
+          { secret: oldHashedPassword, expiresIn: "15m" },
+        );
+
+        const payload = { token, password: newPassword };
+
+        const response = await httpServer.post("/api/v1/auth/local/password/reset").send(payload);
+
+        const updatedAuthentication: AuthenticationEntity | null = await dataSource
+          .getRepository(AuthenticationEntity)
+          .findOne({
+            where: {
+              userId: user.id,
+              provider: AuthenticationProvider.LOCAL,
+            },
+          });
+
+        expect(response.statusCode).toBe(200);
+        expect(updatedAuthentication).not.toBeNull();
+        expect(updatedAuthentication?.metadata.local?.password).not.toBe(oldHashedPassword);
+        expect(updatedAuthentication?.metadata.local?.password).toBeTruthy();
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 401 for invalid token", async (): Promise<void> => {
+        const payload = {
+          token: "invalid-token",
+          password: "NewPassword123",
+        };
+
+        const response = await httpServer.post("/api/v1/auth/local/password/reset").send(payload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toContain("Token is invalid.");
+      });
+
+      it("should return 401 for expired token", async (): Promise<void> => {
+        const oldPassword = "OldPassword123";
+        const oldHashedPassword: string = await hash(oldPassword);
+
+        const user: UserEntity = await factories.buildUser();
+        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: oldHashedPassword,
+                isEmailVerified: true,
+              },
+            },
+          },
+        );
+
+        // Generate expired token
+        const token: string = await tokensService.generate(
+          { userId: user.id, provider: AuthenticationProvider.LOCAL },
+          { secret: oldHashedPassword, expiresIn: "-1h" },
+        );
+
+        const payload = { token, password: "NewPassword123" };
+
+        const response = await httpServer.post("/api/v1/auth/local/password/reset").send(payload);
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Token expired");
+      });
+
+      it("should return 400 for invalid request body", async (): Promise<void> => {
+        const payload = {
+          token: "some-token",
+          // Missing password field
+        };
+
+        const response = await httpServer.post("/api/v1/auth/local/password/reset").send(payload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toEqual(expect.arrayContaining(["password: Required"]));
+      });
+    });
+  });
+
   // describe("POST /api/v1/auth/signout", (): void => {
   //   describe("positive scenarios", (): void => {
   //     it("should return 200 and clear accessToken cookie", async (): Promise<void> => {
