@@ -819,24 +819,76 @@ describe("AuthController E2E", (): void => {
     });
   });
 
-  // describe("POST /api/v1/auth/signout", (): void => {
-  //   describe("positive scenarios", (): void => {
-  //     it("should return 200 and clear accessToken cookie", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //   });
-  //
-  //   describe("negative scenarios", (): void => {
-  //     it("should return 401 for missing accessToken", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //
-  //     it("should return 401 for invalid accessToken", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //   });
-  // });
-  //
+  describe("POST /api/v1/auth/signout", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200 and clear accessToken cookie", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUser();
+        const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie;
+        const signinPayload = { login: user.email, password };
+        const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        const accessTokenCookie = signinResponse.header["set-cookie"][0];
+
+        const response = await httpServer.post("/api/v1/auth/signout").set("Cookie", accessTokenCookie).send();
+
+        const updatedAuthentication: AuthenticationEntity | null = await dataSource
+          .getRepository(AuthenticationEntity)
+          .findOne({
+            where: {
+              userId: user.id,
+              provider: AuthenticationProvider.LOCAL,
+            },
+          });
+
+        expect(response.statusCode).toBe(200);
+        expect(response.header["set-cookie"]).not.toBeNull();
+        expect(response.header["set-cookie"][0]).toContain("accessToken=");
+        expect(updatedAuthentication).not.toBeNull();
+        expect(updatedAuthentication?.refreshToken).toBeNull();
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 401 for missing accessToken", async (): Promise<void> => {
+        const response = await httpServer.post("/api/v1/auth/signout").send();
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Unauthorized");
+      });
+
+      it("should return 401 for invalid accessToken", async (): Promise<void> => {
+        const response = await httpServer
+          .post("/api/v1/auth/signout")
+          .set("Cookie", "accessToken=invalid-token")
+          .send();
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Unauthorized");
+      });
+    });
+  });
+
   // describe("POST /api/v1/auth/refresh", (): void => {
   //   describe("positive scenarios", (): void => {
   //     it("should return 200 and refresh accessToken from cookie", async (): Promise<void> => {
