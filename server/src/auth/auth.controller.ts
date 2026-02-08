@@ -160,6 +160,7 @@ export default class AuthController {
     @Body() localPasswordForgotDto: LocalPasswordForgotDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
+    // TODO: user can use this route many times at once, it is not good, so should thin about some kind of debounce;
     await this.authService.localPasswordForgot(localPasswordForgotDto);
 
     res.status(200).send();
