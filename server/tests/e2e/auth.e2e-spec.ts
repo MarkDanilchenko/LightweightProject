@@ -15,7 +15,7 @@ import { EventName } from "@server/events/interfaces/events.interfaces";
 import TokensService from "@server/tokens/tokens.service";
 import { hash } from "@server/utils/hasher";
 
-// Mock nodemailer to prevent open handles
+// Mock nodemailer to prevent open handles;
 jest.mock("nodemailer", () => ({
   createTransport: jest.fn(() => ({
     verify: jest.fn((callback) => callback(null)),
@@ -64,7 +64,7 @@ describe("AuthController E2E", (): void => {
           lastName: faker.person.lastName(),
           email: faker.internet.email(),
           avatarUrl: faker.image.avatar(),
-          password: "12345Abc",
+          password: "Password123",
         };
 
         const response = await httpServer.post("/api/v1/auth/local/signup").send(payload);
@@ -104,7 +104,7 @@ describe("AuthController E2E", (): void => {
           lastName: faker.person.lastName(),
           email: faker.internet.email(),
           avatarUrl: faker.image.avatar(),
-          password: "12345Abc",
+          password: "Password123",
         };
 
         const user: UserEntity = await factories.buildUser({
@@ -157,7 +157,7 @@ describe("AuthController E2E", (): void => {
           lastName: faker.person.lastName(),
           email: faker.internet.email(),
           avatarUrl: faker.image.avatar(),
-          password: "Password1",
+          password: "Password123",
         };
 
         await factories.buildUser({ username: existingUsername });
@@ -175,7 +175,7 @@ describe("AuthController E2E", (): void => {
           lastName: faker.person.lastName(),
           email: existingEmail,
           avatarUrl: faker.image.avatar(),
-          password: "Password1",
+          password: "Password123",
         };
 
         const existingUser: UserEntity = await factories.buildUser({
@@ -216,7 +216,7 @@ describe("AuthController E2E", (): void => {
           lastName: faker.person.lastName(),
           email: existingEmail,
           avatarUrl: faker.image.avatar(),
-          password: "Password1",
+          password: "Password123",
         };
 
         const existingUser: UserEntity = await factories.buildUser({
@@ -259,7 +259,6 @@ describe("AuthController E2E", (): void => {
           lastName: null,
           avatarUrl: null,
         });
-
         const token: string = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
         const authentication: AuthenticationEntity = await factories.buildAuthentication({
           userId: user.id,
@@ -319,7 +318,6 @@ describe("AuthController E2E", (): void => {
           lastName: null,
           avatarUrl: null,
         });
-
         const token: string = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
         const localAuthentication: AuthenticationEntity = await factories.buildAuthentication({
           userId: user.id,
@@ -468,18 +466,23 @@ describe("AuthController E2E", (): void => {
 
   describe("POST /api/v1/auth/local/signin", (): void => {
     describe("positive scenarios", (): void => {
-      it("should return 200 and set accessToken cookie on successful signin", async (): Promise<void> => {
-        const password = "12345Abc";
-        const hashedPassword: string = await hash(password);
+      let password: string;
+      let hashedPassword: string;
+      let user: UserEntity;
+      let authentication: AuthenticationEntity;
 
-        const user: UserEntity = await factories.buildUser({
+      beforeAll(async (): Promise<void> => {
+        password = "Password123";
+        hashedPassword = await hash(password);
+
+        user = await factories.buildUser({
           email: faker.internet.email(),
           username: faker.string.alphanumeric(10),
           firstName: faker.person.firstName(),
           lastName: faker.person.lastName(),
           avatarUrl: faker.image.avatar(),
         });
-        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+        authentication = await factories.buildAuthentication({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
         });
@@ -494,7 +497,9 @@ describe("AuthController E2E", (): void => {
             },
           },
         );
+      });
 
+      it("should return 200 and set accessToken cookie on successful signin", async (): Promise<void> => {
         const payload = { login: user.email, password };
 
         const response = await httpServer.post("/api/v1/auth/local/signin").send(payload);
@@ -516,26 +521,6 @@ describe("AuthController E2E", (): void => {
       });
 
       it("should handle signin both with username and email", async (): Promise<void> => {
-        const password = "Password123";
-        const hashedPassword: string = await hash(password);
-
-        const user: UserEntity = await factories.buildUser();
-        const authentication: AuthenticationEntity = await factories.buildAuthentication({
-          userId: user.id,
-          provider: AuthenticationProvider.LOCAL,
-        });
-        await dataSource.getRepository(AuthenticationEntity).update(
-          { id: authentication.id },
-          {
-            metadata: {
-              local: {
-                ...authentication.metadata.local,
-                password: hashedPassword,
-              },
-            },
-          },
-        );
-
         let requests = 0;
         const payload = { login: "", password };
 
@@ -889,55 +874,173 @@ describe("AuthController E2E", (): void => {
     });
   });
 
-  // describe("POST /api/v1/auth/refresh", (): void => {
-  //   describe("positive scenarios", (): void => {
-  //     it("should return 200 and refresh accessToken from cookie", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //
-  //     it("should return 200 and refresh accessToken from authorization header", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //
-  //     it("should prioritize cookie over authorization header when both present", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //   });
-  //
-  //   describe("negative scenarios", (): void => {
-  //     it("should return 401 for missing accessToken", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //
-  //     it("should return 401 for invalid accessToken", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //
-  //     it("should return 401 for malformed authorization header", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //   });
-  // });
-  //
-  // describe("GET /api/v1/auth/me", (): void => {
-  //   describe("positive scenarios", (): void => {
-  //     it("should return 200 and user profile", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //   });
-  //
-  //   describe("negative scenarios", (): void => {
-  //     it("should return 401 for missing accessToken", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //
-  //     it("should return 401 for invalid accessToken", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //
-  //     it("should return 404 for non-existent user", async (): Promise<void> => {
-  //       // TODO: Implement test
-  //     });
-  //   });
-  // });
+  describe("POST /api/v1/auth/refresh", (): void => {
+    describe("positive scenarios", (): void => {
+      let password: string;
+      let hashedPassword: string;
+      let user: UserEntity;
+      let authentication: AuthenticationEntity;
+      let refreshToken: string;
+      let signinPayload: Record<string, any>;
+      let signinResponse: any;
+      let accessTokenCookie: string;
+
+      beforeAll(async (): Promise<void> => {
+        password = "Password123";
+        hashedPassword = await hash(password);
+
+        user = await factories.buildUser();
+        refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        authentication = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie;
+        signinPayload = { login: user.email, password };
+        signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        accessTokenCookie = signinResponse.header["set-cookie"][0];
+      });
+
+      it("should return 200 and refresh accessToken from cookie", async (): Promise<void> => {
+        const response = await httpServer.post("/api/v1/auth/refresh").set("Cookie", accessTokenCookie).send();
+
+        expect(response.statusCode).toBe(200);
+        expect(response.header["set-cookie"]).toBeDefined();
+        expect(response.header["set-cookie"][0]).toContain("accessToken=");
+      });
+
+      it("should return 200 and refresh accessToken from authorization header", async (): Promise<void> => {
+        // Extract access token from cookie;
+        const accessTokenMatch = accessTokenCookie.match(/s%3A([^.]+\.[^.]+\.[^.]+)/);
+        const accessToken = accessTokenMatch ? accessTokenMatch[1] : "";
+
+        const response = await httpServer
+          .post("/api/v1/auth/refresh")
+          .set("Authorization", `Bearer ${accessToken}`)
+          .send();
+
+        expect(response.statusCode).toBe(200);
+        expect(response.header["set-cookie"]).toBeDefined();
+        expect(response.header["set-cookie"][0]).toContain("accessToken=");
+      });
+
+      it("should prioritize cookie over authorization header when both present", async (): Promise<void> => {
+        // Extract access token from cookie;
+        const accessTokenMatch = accessTokenCookie.match(/s%3A([^.]+\.[^.]+\.[^.]+)/);
+        const accessToken = accessTokenMatch ? accessTokenMatch[1] : "";
+
+        const response = await httpServer
+          .post("/api/v1/auth/refresh")
+          .set("Cookie", accessTokenCookie)
+          .set("Authorization", `Bearer ${accessToken}`)
+          .send();
+
+        expect(response.statusCode).toBe(200);
+        expect(response.header["set-cookie"]).toBeDefined();
+        expect(response.header["set-cookie"][0]).toContain("accessToken=");
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 401 for missing accessToken", async (): Promise<void> => {
+        const response = await httpServer.post("/api/v1/auth/refresh").send();
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Authentication failed. Token is not provided.");
+      });
+
+      it("should return 401 for invalid accessToken", async (): Promise<void> => {
+        const response = await httpServer
+          .post("/api/v1/auth/refresh")
+          .set("Authorization", "Bearer invalid-jwt-token")
+          .send();
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Invalid token");
+      });
+    });
+  });
+
+  describe("GET /api/v1/auth/me", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200 and user profile", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUser({
+          email: faker.internet.email(),
+          username: faker.string.alphanumeric(10),
+          firstName: faker.person.firstName(),
+          lastName: faker.person.lastName(),
+          avatarUrl: faker.image.avatar(),
+        });
+        const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie
+        const signinPayload = { login: user.email, password };
+        const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        const accessTokenCookie = signinResponse.header["set-cookie"][0];
+
+        const response = await httpServer.get("/api/v1/auth/me").set("Cookie", accessTokenCookie).send();
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body).toHaveProperty("id", user.id);
+        expect(response.body).toHaveProperty("username", user.username);
+        expect(response.body).toHaveProperty("firstName", user.firstName);
+        expect(response.body).toHaveProperty("lastName", user.lastName);
+        expect(response.body).toHaveProperty("email", user.email);
+        expect(response.body).toHaveProperty("avatarUrl", user.avatarUrl);
+        expect(response.body).toHaveProperty("createdAt");
+        expect(response.body).toHaveProperty("updatedAt");
+        expect(response.body).not.toHaveProperty("password");
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 401 for missing accessToken", async (): Promise<void> => {
+        const response = await httpServer.get("/api/v1/auth/me").send();
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Unauthorized");
+      });
+
+      it("should return 401 for invalid accessToken", async (): Promise<void> => {
+        const response = await httpServer.get("/api/v1/auth/me").set("Cookie", "accessToken=invalid-token").send();
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Unauthorized");
+      });
+    });
+  });
 });
