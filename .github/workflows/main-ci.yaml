@@ -1,5 +1,5 @@
 name: GitHub Actions Main CI
-run-name: "💿 CI on ${{ github.ref_name }}. Test Suite (${{ github.event_name }})"
+run-name: "💾 CI on ${{ github.ref_name }}. Test suite (${{ github.event_name }})"
 
 on:
   push:
@@ -10,12 +10,27 @@ on:
       - main
 
 jobs:
-  lint-ts-test:
+  eslint-ts-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [ 24.x ]
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event to ${{ github.ref_name }} branch."
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event to ${{ github.ref_name }} branch."
       - run: echo "Author - ${{ github.actor }}"
       - run: echo "Commit message - ${{ github.event.head_commit.message }}"
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Use Node.js v${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: ESLint checks
+        run: npm run lint:server
+      - name: TS checks (through compilation)
+        run: npm run tsc
+
+      - run: echo "This job's status is ${{ job.status }}. ${{ job.status == 'success' && '✅' || job.status == 'failure' && '❌' || '⏳' }}"
