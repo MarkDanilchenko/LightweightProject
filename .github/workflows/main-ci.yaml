@@ -1,5 +1,6 @@
 name: GitHub Actions Main CI
 run-name: "💿 CI on ${{ github.ref_name }}. Test Suite (${{ github.event_name }})"
+
 on:
   push:
     branches:
@@ -7,13 +8,14 @@ on:
   pull_request:
     branches:
       - main
+
 jobs:
   lint-ts-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 24.x ]
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event to ${{ github.ref_name }} branch."
       - run: echo "Author - ${{ github.actor }}"
       - run: echo "Commit message - ${{ github.event.head_commit.message }}"
-
-#      - name: Checkout code
-#        uses: actions/checkout@v5
