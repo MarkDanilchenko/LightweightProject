@@ -1,0 +1,14 @@
+name: GitHub Actions Main CI
+run-name: "CI is running on ${{ github.ref_name }}; actor: ${{ github.actor }}"
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+jobs:
+  lint-ts-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "🍏 This job's status is ${{ job.status }}."
