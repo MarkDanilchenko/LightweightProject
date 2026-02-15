@@ -33,4 +33,9 @@ jobs:
       - name: TS checks (through compilation)
         run: npm run tsc
 
-      - run: echo "This job's status is ${{ job.status }}. ${{ job.status == 'success' && '✅' || job.status == 'failure' && '❌' || '⏳' }}"
+      - if: success()
+        run: echo "✅ Job completed successfully!"
+      - if: failure()
+        run: echo "❌ Job failed!"
+      - if: cancelled()
+        run: echo "🚫 Job was cancelled!"
