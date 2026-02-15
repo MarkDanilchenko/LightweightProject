@@ -11,7 +11,8 @@ compose.development.yaml
 **/*.local
 **/dumps/
 !/init/**
-./.codeiumignore
+.codeiumignore
+tsconfig.tsbuildinfo
 
 # compiled output
 **/dist

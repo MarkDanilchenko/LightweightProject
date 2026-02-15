@@ -2,12 +2,12 @@
 **/*.pdf
 **/db_data/
 **/redis_data/
+**/rabbitmq_data/
 **/logs/
 **/coverage/
 **/node_modules/
 **/dist/
 **/server/dist/
-**/rabbitmq_data/
 **/screenshots/
 **/dumps/
 

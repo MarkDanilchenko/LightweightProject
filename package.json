@@ -28,7 +28,8 @@
     "test:e2e": "NODE_ENV=test jest --detectOpenHandles --config server/tests/jest-e2e.json",
     "test:unit:cov": "NODE_ENV=test jest --coverage",
     "test:e2e:cov": "NODE_ENV=test jest --config server/tests/jest-e2e.json --coverage",
-    "test:clear": "rm -rf ./server/coverage"
+    "test:clear": "rm -rf ./server/coverage",
+    "tsc": "tsc --noEmit"
   },
   "dependencies": {
     "@anatine/zod-nestjs": "^2.0.12",
