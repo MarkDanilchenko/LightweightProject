@@ -8,6 +8,23 @@ jest.mock("crypto", () => ({
   createDecipheriv: jest.fn(),
 }));
 
+// Mock the app configuration to provide complete configuration for tests;
+jest.mock("@server/configs/app.configuration", () => ({
+  __esModule: true,
+  default: jest.fn().mockImplementation(() => ({
+    serverConfiguration: {
+      host: "127.0.0.1",
+      port: 3000,
+      swaggerEnabled: false,
+      cookieSecret: "c2662514ae3efdf4f6e8c2977fb6a8bc3f7ca59853148fc90faa5279a4e04f9a",
+      commonSecret: "c2662514ae3efdf4f6e8c2977fb6a8bc3f7ca59853148fc90faa5279a4e04f9a",
+      https: false,
+      protocol: "http",
+      baseUrl: "http://127.0.0.1:3000",
+    },
+  })),
+}));
+
 describe("Encrypter Utility", (): void => {
   const algorithm = "aes-256-cbc";
 
