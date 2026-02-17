@@ -46,6 +46,16 @@ jest.mock("@server/configs/app.configuration", () => ({
       accessTokenExpiresIn: "24h",
       refreshTokenExpiresIn: "7d",
     },
+    serverConfiguration: {
+      host: "127.0.0.1",
+      port: 3000,
+      swaggerEnabled: false,
+      cookieSecret: "c2662514ae3efdf4f6e8c2977fb6a8bc3f7ca59853148fc90faa5279a4e04f9a",
+      commonSecret: "c2662514ae3efdf4f6e8c2977fb6a8bc3f7ca59853148fc90faa5279a4e04f9a",
+      https: false,
+      protocol: "http",
+      baseUrl: "http://127.0.0.1:3000",
+    },
   })),
 }));
 
