@@ -33,7 +33,7 @@ jest.mock("@server/configs/app.configuration", () => ({
       from: "noreply@example.com",
     },
     jwtConfiguration: {
-      secret: "test-secret-c2662514ae3efdf4f6e8c2977fb6a8bc3f7ca59853148fc90faa5279a4e04f9a",
+      secret: "c2662514ae3efdf4f6e8c2977fb6a8bc3f7ca59853148fc90faa5279a4e04f9a",
       accessTokenExpiresIn: "24h",
       refreshTokenExpiresIn: "7d",
     },
@@ -41,86 +41,12 @@ jest.mock("@server/configs/app.configuration", () => ({
       host: "127.0.0.1",
       port: 3000,
       swaggerEnabled: false,
-      cookieSecret: "test-secret-c2662514ae3efdf4f6e8c2977fb6a8bc3f7ca59853148fc90faa5279a4e04f9a",
-      commonSecret: "test-secret-c2662514ae3efdf4f6e8c2977fb6a8bc3f7ca59853148fc90faa5279a4e04f9a",
+      cookieSecret: "c2662514ae3efdf4f6e8c2977fb6a8bc3f7ca59853148fc90faa5279a4e04f9a",
+      commonSecret: "c2662514ae3efdf4f6e8c2977fb6a8bc3f7ca59853148fc90faa5279a4e04f9a",
       https: false,
       protocol: "http",
       baseUrl: "http://127.0.0.1:3000",
     },
-    // clientConfiguration: {
-    //   host: "127.0.0.1",
-    //   port: 3001,
-    //   protocol: "http",
-    //   baseUrl: "http://127.0.0.1:3001",
-    // },
-    // loggerConfiguration: {
-    //   transports: [],
-    // },
-    // dbConfiguration: {
-    //   type: "postgres",
-    //   host: "127.0.0.1",
-    //   port: 5432,
-    //   database: "test_db",
-    //   username: "test_user",
-    //   password: "test_password",
-    //   logging: false,
-    //   migrationsRun: false,
-    //   entities: [],
-    //   autoLoadEntities: true,
-    //   migrations: [],
-    //   applicationName: "LightweightProject",
-    // },
-    // authConfiguration: {
-    //   google: {
-    //     clientID: "test-google-client-id",
-    //     clientSecret: "test-google-client-secret",
-    //     callbackURL: "http://127.0.0.1:3000/api/v1/auth/google/redirect",
-    //   },
-    //   keycloak: {
-    //     oidc: {
-    //       clientID: "test-kc-client-id",
-    //       clientSecret: "test-kc-client-secret",
-    //       callbackURL: "http://127.0.0.1:3000/api/v1/auth/keycloak/oidc/redirect",
-    //       authUrl: "http://localhost:8080/realms/test/protocol/openid-connect/auth",
-    //       idTokenUrl: "http://localhost:8080/realms/test/protocol/openid-connect/token",
-    //       userInfoUrl: "http://localhost:8080/realms/test/protocol/openid-connect/userinfo",
-    //       discoveryUrl: "http://localhost:8080/realms/test/.well-known/openid-configuration",
-    //     },
-    //     saml: {
-    //       issuer: "test-kc-saml-issuer",
-    //       idpCert: "test-cert",
-    //       callbackUrl: "http://127.0.0.1:3000/api/v1/auth/keycloak/saml/redirect",
-    //       entryPoint: "http://localhost:8080/realms/test/protocol/saml",
-    //       descriptorUrl: "http://localhost:8080/realms/test/protocol/saml/descriptor",
-    //     },
-    //   },
-    // },
-    // rabbitmqConfiguration: {
-    //   transport: "rmq",
-    //   options: {
-    //     urls: ["amqp://guest:guest@localhost:5672"],
-    //     queue: "test_queue",
-    //     prefetchCount: 1,
-    //     persistent: false,
-    //     socketOptions: {
-    //       heartbeatIntervalInSeconds: 60,
-    //       reconnectTimeInSeconds: 10,
-    //     },
-    //     queueOptions: {
-    //       durable: false,
-    //     },
-    //   },
-    // },
-    // redisConfiguration: {
-    //   transport: "redis",
-    //   options: {
-    //     host: "127.0.0.1",
-    //     port: 6379,
-    //     password: undefined,
-    //     db: 0,
-    //     keyPrefix: "",
-    //   },
-    // },
   })),
 }));
 
