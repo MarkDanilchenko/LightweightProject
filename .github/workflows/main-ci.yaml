@@ -52,13 +52,14 @@ jobs:
           echo "TEST_DATABASE_USER=${{ secrets.TEST_DATABASE_USER }}" >> .env
           echo "TEST_DATABASE_PASSWORD=${{ secrets.TEST_DATABASE_PASSWORD }}" >> .env
           echo "TEST_DATABASE_NAME=${{ secrets.TEST_DATABASE_NAME }}" >> .env
-          echo "NODE_ENV=test" >> .env
       - name: ESLint checks
         run: npm run lint:server
       - name: TS checks
         run: npm run tsc
       - name: Run Unit Tests (JEST)
         run: npm run test:unit
+      - name: Run E2E Tests (JEST)
+        run: npm run test:e2e
 
       - if: success()
         run: echo "✅ Job completed successfully!"
