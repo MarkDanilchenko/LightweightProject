@@ -23,7 +23,7 @@ jest.mock("nodemailer", () => ({
   })),
 }));
 
-// Mock the app SMTP configuration;
+// Mock partially the app configuration;
 jest.mock("@server/configs/app.configuration", () => ({
   __esModule: true,
   default: jest.fn().mockImplementation(() => ({
@@ -34,6 +34,11 @@ jest.mock("@server/configs/app.configuration", () => ({
       username: "tests@example.com",
       password: "tests-password",
       from: "noreply@example.com",
+    },
+    jwtConfiguration: {
+      secret: "tests-secret",
+      accessTokenExpiresIn: "24h",
+      refreshTokenExpiresIn: "7d",
     },
   })),
 }));
