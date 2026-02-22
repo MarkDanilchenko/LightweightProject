@@ -23,6 +23,21 @@ jest.mock("nodemailer", () => ({
   })),
 }));
 
+// Mock the app SMTP configuration;
+jest.mock("@server/configs/app.configuration", () => ({
+  __esModule: true,
+  default: jest.fn().mockImplementation(() => ({
+    ...jest.requireActual("@server/configs/app.configuration").default(),
+    smtpConfiguration: {
+      host: "smtp.example.com",
+      port: 587,
+      username: "tests@example.com",
+      password: "tests-password",
+      from: "noreply@example.com",
+    },
+  })),
+}));
+
 describe("AuthController E2E", (): void => {
   let app: INestApplication;
   let dataSource: DataSource;
