@@ -1,6 +1,5 @@
 name: GitHub Actions Main CI
-run-name: "💾 CI on ${{ github.ref_name }}. Test suite (${{ github.event_name }})"
-
+run-name: "💾 CI for ${{ github.event.pull_request.head.ref || github.ref_name }}. Test suite (${{ github.event_name }})"
 on:
   push:
     branches:
@@ -8,18 +7,39 @@ on:
   pull_request:
     branches:
       - main
-
 jobs:
-  eslint-ts-test:
+  eslint-ts-tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: [ 24.x ]
-
+    services:
+      postgres:
+        image: postgres:16.4
+        env:
+          POSTGRES_USER: admin
+          POSTGRES_PASSWORD: ${{ secrets.TEST_DATABASE_PASSWORD }}
+          POSTGRES_DB: lightweightproject-test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+      redis:
+        image: redis:8.2.2
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
     steps:
-      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event to ${{ github.ref_name }} branch."
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event for ${{ github.event.pull_request.head.ref || github.ref_name }} branch."
       - run: echo "Author - ${{ github.actor }}"
-      - run: echo "Commit message - ${{ github.event.head_commit.message }}"
+      - run: echo "Commit SHA - ${{ github.sha }}"
       - name: Checkout code
         uses: actions/checkout@v5
       - name: Use Node.js v${{ matrix.node-version }}
@@ -29,12 +49,25 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm install
+      - name: Create .env file for E2E tests in CI
+        run: |
+          echo "TEST_DATABASE_HOST=127.0.0.1" >> .env
+          echo "TEST_DATABASE_PORT=5433" >> .env
+          echo "TEST_DATABASE_USER=admin" >> .env
+          echo "TEST_DATABASE_PASSWORD=${{ secrets.TEST_DATABASE_PASSWORD }}" >> .env
+          echo "TEST_DATABASE_NAME=lightweightproject-test" >> .env
+          echo "REDIS_HOST=127.0.0.1" >> .env
+          echo "REDIS_PORT=6379" >> .env
+          echo "REDIS_DB=0" >> .env
+          echo "REDIS_KEY_PREFIX=lightweightproject" >> .env
       - name: ESLint checks
         run: npm run lint:server
       - name: TS checks
         run: npm run tsc
       - name: Run Unit Tests (JEST)
         run: npm run test:unit
+      - name: Run E2E Tests (JEST)
+        run: npm run test:e2e
 
       - if: success()
         run: echo "✅ Job completed successfully!"

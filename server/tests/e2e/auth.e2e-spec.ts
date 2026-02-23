@@ -23,6 +23,30 @@ jest.mock("nodemailer", () => ({
   })),
 }));
 
+// Mock the app configuration partially;
+jest.mock("@server/configs/app.configuration", () => {
+  const mockSecret = "d227161a1d43c195902210e8e03d1021d5b0cd4d0662982597c431bafa3eb884";
+  const appConfiguration = {
+    ...jest.requireActual("@server/configs/app.configuration").default(),
+  };
+
+  appConfiguration["serverConfiguration"]["cookieSecret"] = mockSecret;
+  appConfiguration["serverConfiguration"]["commonSecret"] = mockSecret;
+  appConfiguration["jwtConfiguration"]["secret"] = mockSecret;
+  appConfiguration["smtpConfiguration"] = {
+    host: "smtp.example.com",
+    port: 587,
+    username: "tests@example.com",
+    password: "tests-password",
+    from: "noreply@example.com",
+  };
+
+  return {
+    __esModule: true,
+    default: jest.fn().mockImplementation(() => appConfiguration),
+  };
+});
+
 describe("AuthController E2E", (): void => {
   let app: INestApplication;
   let dataSource: DataSource;
