@@ -91,15 +91,7 @@ describe("AuthController E2E", (): void => {
           password: "Password123",
         };
 
-        let response;
-        try {
-          response = await httpServer.post("/api/v1/auth/local/signup").send(payload);
-          // eslint-disable-next-line no-console
-          console.log("response", response);
-        } catch (error) {
-          // eslint-disable-next-line no-console
-          console.log("error", error);
-        }
+        const response = await httpServer.post("/api/v1/auth/local/signup").send(payload);
 
         const user: UserEntity | null = await dataSource.getRepository(UserEntity).findOneBy({
           email: payload.email,
