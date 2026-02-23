@@ -23,25 +23,29 @@ jest.mock("nodemailer", () => ({
   })),
 }));
 
-// Mock partially the app configuration;
-jest.mock("@server/configs/app.configuration", () => ({
-  __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
+// Mock the app configuration partially;
+jest.mock("@server/configs/app.configuration", () => {
+  const mockSecret = "d227161a1d43c195902210e8e03d1021d5b0cd4d0662982597c431bafa3eb884";
+  const appConfiguration = {
     ...jest.requireActual("@server/configs/app.configuration").default(),
-    smtpConfiguration: {
-      host: "smtp.example.com",
-      port: 587,
-      username: "tests@example.com",
-      password: "tests-password",
-      from: "noreply@example.com",
-    },
-    jwtConfiguration: {
-      secret: "tests-secret",
-      accessTokenExpiresIn: "24h",
-      refreshTokenExpiresIn: "7d",
-    },
-  })),
-}));
+  };
+
+  appConfiguration["serverConfiguration"]["cookieSecret"] = mockSecret;
+  appConfiguration["serverConfiguration"]["commonSecret"] = mockSecret;
+  appConfiguration["jwtConfiguration"]["secret"] = mockSecret;
+  appConfiguration["smtpConfiguration"] = {
+    host: "smtp.example.com",
+    port: 587,
+    username: "tests@example.com",
+    password: "tests-password",
+    from: "noreply@example.com",
+  };
+
+  return {
+    __esModule: true,
+    default: jest.fn().mockImplementation(() => ({ ...appConfiguration })),
+  };
+});
 
 describe("AuthController E2E", (): void => {
   let app: INestApplication;
@@ -87,7 +91,13 @@ describe("AuthController E2E", (): void => {
           password: "Password123",
         };
 
-        const response = await httpServer.post("/api/v1/auth/local/signup").send(payload);
+        let response;
+        try {
+          response = await httpServer.post("/api/v1/auth/local/signup").send(payload);
+          console.log("response", response);
+        } catch (error) {
+          console.log("error", error);
+        }
 
         const user: UserEntity | null = await dataSource.getRepository(UserEntity).findOneBy({
           email: payload.email,
