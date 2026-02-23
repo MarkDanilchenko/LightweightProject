@@ -94,8 +94,10 @@ describe("AuthController E2E", (): void => {
         let response;
         try {
           response = await httpServer.post("/api/v1/auth/local/signup").send(payload);
+          // eslint-disable-next-line no-console
           console.log("response", response);
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.log("error", error);
         }
 
