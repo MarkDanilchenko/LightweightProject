@@ -43,7 +43,7 @@ jest.mock("@server/configs/app.configuration", () => {
 
   return {
     __esModule: true,
-    default: jest.fn().mockImplementation(() => ({ ...appConfiguration })),
+    default: jest.fn().mockImplementation(() => appConfiguration),
   };
 });
 
