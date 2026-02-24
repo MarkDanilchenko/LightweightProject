@@ -1,0 +1,33 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: saturday
+      time: 12:00
+      timezone: Europe/Moscow
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    assignees:
+      - MarkDanilchenko
+    groups:
+      dependencies:
+        patterns:
+          - "*"
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+      day: saturday
+      time: 12:00
+      timezone: Europe/Moscow
+    labels:
+      - dependencies
+    assignees:
+      - MarkDanilchenko
+    groups:
+      actions:
+        patterns:
+          - "*"
