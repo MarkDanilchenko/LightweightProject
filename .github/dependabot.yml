@@ -5,7 +5,7 @@ updates:
     schedule:
       interval: weekly
       day: saturday
-      time: 12:00
+      time: "12:00"
       timezone: Europe/Moscow
     open-pull-requests-limit: 5
     labels:
@@ -21,7 +21,7 @@ updates:
     schedule:
       interval: monthly
       day: saturday
-      time: 12:00
+      time: "12:00"
       timezone: Europe/Moscow
     labels:
       - dependencies
