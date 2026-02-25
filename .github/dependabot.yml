@@ -16,6 +16,10 @@ updates:
       dependencies:
         patterns:
           - "*"
+        exclude-patterns:
+          - "zod"
+          - "@anatine/zod-nestjs"
+          - "@anatine/zod-openapi"
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
