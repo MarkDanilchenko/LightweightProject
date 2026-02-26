@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { JwtService, JwtSignOptions, JwtVerifyOptions } from "@nestjs/jwt";
+import { JwtService, JwtVerifyOptions } from "@nestjs/jwt";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
 import RedisService from "@server/services/redis/redis.service";
@@ -29,11 +29,14 @@ export default class TokensService {
    * Generates a jwt with the given payload and expiresIn.
    *
    * @param {TokenPayload} payload The payload to sign.
-   * @param {JwtSignOptions} [options] The options to use for generating the jwt. Defaults to { expiresIn: "1d" }.
+   * @param {Record<string, string | number>} [options] The options to use for generating the jwt. Defaults to { expiresIn: "1d" }.
    *
    * @returns {Promise<string>} A promise that resolves with the generated jwt.
    */
-  async generate(payload: TokenPayload, options: JwtSignOptions = { expiresIn: "1d" }): Promise<string> {
+  async generate(
+    payload: TokenPayload,
+    options: Record<string, string | number> = { expiresIn: "1d" },
+  ): Promise<string> {
     return this.jwtService.signAsync(payload, options);
   }
 
