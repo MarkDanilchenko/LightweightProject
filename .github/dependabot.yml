@@ -12,6 +12,11 @@ updates:
       - dependencies
     assignees:
       - MarkDanilchenko
+    ignore:
+      - dependency-name: "zod"
+      - dependency-name: "@anatine/zod-nestjs"
+      - dependency-name: "@anatine/zod-openapi"
+      - dependency-name: "@swc/cli"
     groups:
       dependencies:
         patterns:
@@ -20,6 +25,7 @@ updates:
           - "zod"
           - "@anatine/zod-nestjs"
           - "@anatine/zod-openapi"
+          - "@swc/cli"
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
