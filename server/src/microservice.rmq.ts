@@ -1,5 +1,5 @@
 import { NestFactory } from "@nestjs/core";
-import { INestMicroservice } from "@nestjs/common";
+import { INestMicroservice, LoggerService } from "@nestjs/common";
 import { RmqOptions, Transport } from "@nestjs/microservices";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import AppModule from "@server/app.module";
@@ -43,12 +43,10 @@ async function bootstrap(): Promise<void> {
     },
   });
 
-  microserviceRmq.useLogger(microserviceRmq.get(WINSTON_MODULE_NEST_PROVIDER));
+  const logger = microserviceRmq.get(WINSTON_MODULE_NEST_PROVIDER) as LoggerService;
+  microserviceRmq.useLogger(logger);
 
-  await microserviceRmq.listen().then((): void => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
-    microserviceRmq.get(WINSTON_MODULE_NEST_PROVIDER).log("RabbitMQ microservice is running", "NestMicroservice");
-  });
+  await microserviceRmq.listen().then((): void => logger.log("RabbitMQ microservice is running", "NestMicroservice"));
 }
 
 void bootstrap();
