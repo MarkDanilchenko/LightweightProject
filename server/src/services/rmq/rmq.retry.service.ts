@@ -10,6 +10,7 @@ export default class RmqRetryService {
 
   private readonly mainQueue: string;
   private readonly retryQueue: string;
+  private readonly deadQueue: string;
   private readonly maxRetriesCount: number;
   private readonly baseDelayMs: number;
 
@@ -28,6 +29,7 @@ export default class RmqRetryService {
     )!;
     this.mainQueue = queue!;
     this.retryQueue = `${this.mainQueue}-retry`;
+    this.deadQueue = `${this.mainQueue}-dead`;
   }
 
   /**
@@ -82,11 +84,11 @@ export default class RmqRetryService {
     const nextRetriesCount = retriesCount + 1;
     const nextDelayMs = this.baseDelayMs + Math.pow(2, retriesCount);
 
-    const messageProperties = {
+    const messageProperties: Record<string, any> = {
       ...originalMsg.properties,
       expiration: nextDelayMs.toString(),
       headers: {
-        ...originalMsg.headers,
+        ...originalMsg.properties.headers,
         "x-retry-count": nextRetriesCount,
         "x-retry-error": consumerError.message,
       },
@@ -102,5 +104,18 @@ export default class RmqRetryService {
     );
   }
 
-  private sendToDeadQueue(channel: Channel, originalMsg: Record<string, any>, consumerError: Error): void {}
+  private sendToDeadQueue(channel: Channel, originalMsg: Record<string, any>, consumerError: Error): void {
+    const messageProperties: Record<string, any> = {
+      ...originalMsg.properties,
+      expiration: null,
+      headers: {
+        ...originalMsg.properties.headers,
+        "x-dead-letter-error": consumerError.message,
+      },
+    };
+
+    channel.sendToQueue(this.deadQueue, originalMsg.content, messageProperties);
+
+    this.logger.warn(`Message was sent to dead letter queue: ${this.deadQueue}` + ` reason: ${consumerError.message};`);
+  }
 }
