@@ -101,11 +101,13 @@ export default (): AppConfiguration => {
     RABBITMQ_DEFAULT_PASS,
     RABBITMQ_MAIN_QUEUE,
     RABBITMQ_PREFETCH_COUNT,
-    RABBITMQ_NO_ACK, // Is used only when creates an instance of NestMicroservice;
+    RABBITMQ_NO_ACK, // Is used only when creates an INestMicroservice instance;
     RABBITMQ_DURABLE,
     RABBITMQ_PERSISTENT,
     RABBITMQ_HEARTBEAT_INTERVAL,
     RABBITMQ_RECONNECT_TIME,
+    RABBITMQ_MAIN_QUEUE_MAX_RETRIES_COUNT,
+    RABBITMQ_MAIN_QUEUE_BASE_DELAY_MS,
     REDIS_HOST,
     REDIS_PORT,
     REDIS_PASSWORD,
@@ -242,6 +244,10 @@ export default (): AppConfiguration => {
       queueOptions: {
         durable: RABBITMQ_DURABLE === "true",
       },
+    },
+    mainQueueOptions: {
+      maxRetriesCount: parseInt(RABBITMQ_MAIN_QUEUE_MAX_RETRIES_COUNT!) || 3,
+      baseDelayMs: parseInt(RABBITMQ_MAIN_QUEUE_BASE_DELAY_MS!) || 1000,
     },
   };
 
