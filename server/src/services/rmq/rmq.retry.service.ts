@@ -104,6 +104,15 @@ export default class RmqRetryService {
     );
   }
 
+  /**
+   * Sends a failed message to the dead letter queue after all retry attempts are exhausted.
+   *
+   * @param {Channel} channel - RabbitMQ channel instance for message operations;
+   * @param {Record<string, any>} originalMsg - The original message that failed processing;
+   * @param {Error} consumerError - The error that occurred during message processing;
+   *
+   * @returns {void}
+   */
   private sendToDeadQueue(channel: Channel, originalMsg: Record<string, any>, consumerError: Error): void {
     const messageProperties: Record<string, any> = {
       ...originalMsg.properties,
