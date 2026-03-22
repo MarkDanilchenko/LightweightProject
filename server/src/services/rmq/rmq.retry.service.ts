@@ -63,7 +63,44 @@ export default class RmqRetryService {
     }
   }
 
-  private async sendToRetryQueue(channel: Channel) {}
+  /**
+   * Sends a failed message to the retry queue with exponential backoff delay.
+   *
+   * @param {Channel} channel - RabbitMQ channel instance for message operations;
+   * @param {Record<string, any>} originalMsg - The original message that failed processing;
+   * @param {number} retriesCount - Current retry count from message headers;
+   * @param {Error} consumerError - The error that occurred during message processing;
+   *
+   * @returns {void}
+   */
+  private sendToRetryQueue(
+    channel: Channel,
+    originalMsg: Record<string, any>,
+    retriesCount: number,
+    consumerError: Error,
+  ): void {
+    const nextRetriesCount = retriesCount + 1;
+    const nextDelayMs = this.baseDelayMs + Math.pow(2, retriesCount);
 
-  private async sendToDeadQueue(channel: Channel) {}
+    const messageProperties = {
+      ...originalMsg.properties,
+      expiration: nextDelayMs.toString(),
+      headers: {
+        ...originalMsg.headers,
+        "x-retry-count": nextRetriesCount,
+        "x-retry-error": consumerError.message,
+      },
+    };
+
+    channel.sendToQueue(this.retryQueue, originalMsg.content, messageProperties);
+
+    this.logger.warn(
+      `Message was sent to retry queue: ${this.retryQueue}` +
+        `delay: ${10};` +
+        ` attempt: ${retriesCount};` +
+        ` reason: ${consumerError.message};`,
+    );
+  }
+
+  private sendToDeadQueue(channel: Channel, originalMsg: Record<string, any>, consumerError: Error): void {}
 }
