@@ -234,7 +234,7 @@ export default (): AppConfiguration => {
     transport: Transport.RMQ,
     options: {
       urls: [`amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@${RABBITMQ_HOST}:${RABBITMQ_PORT}`],
-      queue: RABBITMQ_MAIN_QUEUE,
+      queue: RABBITMQ_MAIN_QUEUE || "main-queue",
       prefetchCount: parseInt(RABBITMQ_PREFETCH_COUNT!) || 1,
       persistent: RABBITMQ_PERSISTENT === "true",
       socketOptions: {

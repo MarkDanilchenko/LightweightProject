@@ -8,9 +8,26 @@ export default class RmqRetryService {
   private readonly logger: LoggerService;
   private readonly configService: ConfigService;
 
+  private readonly mainQueue: string;
+  private readonly retryQueue: string;
+  private readonly maxRetriesCount: number;
+  private readonly baseDelayMs: number;
+
   constructor(configService: ConfigService) {
     this.logger = new Logger(RmqRetryService.name);
     this.configService = configService;
+
+    this.maxRetriesCount = this.configService.get<
+      AppConfiguration["rabbitmqConfiguration"]["mainQueueOptions"]["maxRetriesCount"]
+    >("rabbitmqConfiguration.mainQueueOptions.maxRetriesCount")!;
+    this.baseDelayMs = this.configService.get<
+      AppConfiguration["rabbitmqConfiguration"]["mainQueueOptions"]["baseDelayMs"]
+    >("rabbitmqConfiguration.mainQueueOptions.baseDelayMs")!;
+    const { queue } = this.configService.get<AppConfiguration["rabbitmqConfiguration"]["options"]>(
+      "rabbitmqConfiguration.options",
+    )!;
+    this.mainQueue = queue!;
+    this.retryQueue = `${this.mainQueue}-retry`;
   }
 
   /**
@@ -20,24 +37,20 @@ export default class RmqRetryService {
    * @param {Record<string, any>} originalMsg - The original message;
    * @param {Error} consumerError - The error that occurred in consumer during message processing;
    *
-   * @returns {Promise<void>} Resolves when the message is processed;
+   * @returns {void}
    */
-  async processFailedMessage(channel: Channel, originalMsg: Record<string, any>, consumerError: Error): Promise<void> {
+  processFailedMessage(channel: Channel, originalMsg: Record<string, any>, consumerError: Error): void {
     try {
-      const maxRetriesCount = this.configService.get<
-        AppConfiguration["rabbitmqConfiguration"]["mainQueueOptions"]["maxRetriesCount"]
-      >("rabbitmqConfiguration.mainQueueOptions.maxRetriesCount")!;
-
       const headers: Record<string, any> = originalMsg.headers || {};
-      const retryCount: number =
+      const retriesCount: number =
         typeof headers["x-retry-count"] === "string"
           ? parseInt(headers["x-retry-count"])
           : headers["x-retry-count"] || 0;
 
-      if (retryCount >= maxRetriesCount) {
-        await this.sendToDeadQueue(channel);
+      if (retriesCount >= this.maxRetriesCount) {
+        this.sendToDeadQueue(channel, originalMsg, consumerError);
       } else {
-        await this.sendToRetryQueue(channel);
+        this.sendToRetryQueue(channel, originalMsg, retriesCount, consumerError);
       }
 
       // Acknowledge the original message, otherwise it could be stalled in the main queue forever;
