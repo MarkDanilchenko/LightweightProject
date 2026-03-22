@@ -7,6 +7,7 @@ import { ClientsModule } from "@nestjs/microservices";
 import { RMQ_MICROSERVICE } from "@server/configs/constants";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
+import RmqRetryService from "@server/services/rmq/rmq.retry.service";
 
 @Global()
 @Module({
@@ -24,7 +25,7 @@ import AppConfiguration from "@server/configs/interfaces/appConfiguration.interf
     EventsModule,
   ],
   controllers: [RmqEmailConsumer],
-  providers: [RmqEmailService],
+  providers: [RmqEmailService, RmqRetryService],
   exports: [ClientsModule],
 })
 export class RmqModule {}
