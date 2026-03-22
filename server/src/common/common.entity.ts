@@ -10,7 +10,7 @@ export default class CommonEntity extends BaseEntity {
   async validate(): Promise<void> {
     const errors: ValidationError[] = await validate(this);
 
-    if (errors.length > 0) {
+    if (errors.length) {
       const errorMessages: string = errors
         .map((error: ValidationError): string[] => Object.values(error.constraints || {}))
         .flat()

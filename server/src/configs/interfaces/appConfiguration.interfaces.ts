@@ -58,6 +58,11 @@ export default interface AppConfiguration {
       };
     };
   };
-  rabbitmqConfiguration: RmqOptions;
+  rabbitmqConfiguration: RmqOptions & {
+    mainQueueOptions: {
+      maxRetriesCount: number;
+      baseDelayMs: number;
+    };
+  };
   redisConfiguration: RedisOptions;
 }
