@@ -12,6 +12,7 @@ import { Logger } from "@nestjs/common";
 import UserEntity from "@server/users/users.entity";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import AuthenticationEntity from "@server/auth/auth.entity";
+import RmqRetryService from "@server/services/rmq/rmq.retry.service";
 
 jest.mock("nodemailer", () => ({
   createTransport: jest.fn().mockReturnValue({
@@ -52,12 +53,14 @@ jest.mock("@server/configs/app.configuration", () => ({
 
 describe("RmqEmailConsumer", (): void => {
   const mockChannel = { ack: jest.fn(), nack: jest.fn() };
+  const mockMessage = { content: Buffer.from("test"), properties: {}, headers: {} };
   const mockRmqContext = {
     getChannelRef: () => mockChannel,
-    getMessage: () => jest.fn().mockImplementation((): void => {}),
+    getMessage: () => mockMessage,
   } as unknown as RmqContext;
   let rmqEmailConsumer: RmqEmailConsumer;
   let rmqEmailService: jest.Mocked<RmqEmailService>;
+  let rmqRetryService: jest.Mocked<RmqRetryService>;
   let logger: jest.SpyInstance;
   let user: UserEntity;
   let authentication: AuthenticationEntity;
@@ -71,13 +74,21 @@ describe("RmqEmailConsumer", (): void => {
       sendPasswordResetEmail: jest.fn(),
     };
 
+    const mockRmqRetryService = {
+      processFailedMessage: jest.fn(),
+    };
+
     const testingModule: TestingModule = await Test.createTestingModule({
       controllers: [RmqEmailConsumer],
-      providers: [{ provide: RmqEmailService, useValue: mockRmqEmailService }],
+      providers: [
+        { provide: RmqEmailService, useValue: mockRmqEmailService },
+        { provide: RmqRetryService, useValue: mockRmqRetryService },
+      ],
     }).compile();
 
     rmqEmailConsumer = testingModule.get<RmqEmailConsumer>(RmqEmailConsumer);
     rmqEmailService = testingModule.get<jest.Mocked<RmqEmailService>>(RmqEmailService);
+    rmqRetryService = testingModule.get<jest.Mocked<RmqRetryService>>(RmqRetryService);
 
     logger = jest.spyOn(Logger.prototype, "error").mockImplementation((): void => {});
   });
@@ -112,6 +123,7 @@ describe("RmqEmailConsumer", (): void => {
       await rmqEmailConsumer.handleAuthLocalCreated(payload, mockRmqContext);
 
       expect(rmqEmailService.sendWelcomeVerificationEmail).toHaveBeenCalledWith(payload);
+      expect(rmqRetryService.processFailedMessage).not.toHaveBeenCalled();
       expect(mockChannel.ack).toHaveBeenCalled();
       expect(mockChannel.nack).not.toHaveBeenCalled();
     });
@@ -122,8 +134,11 @@ describe("RmqEmailConsumer", (): void => {
       await rmqEmailConsumer.handleAuthLocalCreated(payload, mockRmqContext);
 
       expect(rmqEmailService.sendWelcomeVerificationEmail).toHaveBeenCalledWith(payload);
-      expect(mockChannel.ack).not.toHaveBeenCalled();
-      expect(mockChannel.nack).toHaveBeenCalled();
+      expect(rmqRetryService.processFailedMessage).toHaveBeenCalledWith(
+        mockChannel,
+        mockRmqContext.getMessage(),
+        new Error("Failed to send email"),
+      );
     });
   });
 
@@ -144,6 +159,7 @@ describe("RmqEmailConsumer", (): void => {
       await rmqEmailConsumer.handleAuthLocalPasswordReset(payload, mockRmqContext);
 
       expect(rmqEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(payload);
+      expect(rmqRetryService.processFailedMessage).not.toHaveBeenCalled();
       expect(mockChannel.ack).toHaveBeenCalled();
       expect(mockChannel.nack).not.toHaveBeenCalled();
     });
@@ -154,8 +170,11 @@ describe("RmqEmailConsumer", (): void => {
       await rmqEmailConsumer.handleAuthLocalPasswordReset(payload, mockRmqContext);
 
       expect(rmqEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(payload);
-      expect(mockChannel.ack).not.toHaveBeenCalled();
-      expect(mockChannel.nack).toHaveBeenCalled();
+      expect(rmqRetryService.processFailedMessage).toHaveBeenCalledWith(
+        mockChannel,
+        mockRmqContext.getMessage(),
+        new Error("Failed to send email"),
+      );
     });
   });
 });

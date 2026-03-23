@@ -47,7 +47,7 @@ export default class RmqEmailConsumer {
     } catch (error) {
       this.logger.error("RmqEmailConsumer ~ handleAuthCreatedLocal", error);
 
-      await this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
+      this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
     }
   }
 
@@ -76,7 +76,7 @@ export default class RmqEmailConsumer {
     } catch (error) {
       this.logger.error("RmqEmailConsumer ~ handleAuthLocalPasswordReset", error);
 
-      await this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
+      this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
     }
   }
 }
