@@ -8,11 +8,11 @@ export default class RmqRetryService {
   private readonly logger: LoggerService;
   private readonly configService: ConfigService;
 
+  private readonly maxRetriesCount: number;
+  private readonly baseDelayMs: number;
   private readonly mainQueue: string;
   private readonly retryQueue: string;
   private readonly deadQueue: string;
-  private readonly maxRetriesCount: number;
-  private readonly baseDelayMs: number;
 
   constructor(configService: ConfigService) {
     this.logger = new Logger(RmqRetryService.name);
@@ -21,9 +21,11 @@ export default class RmqRetryService {
     this.maxRetriesCount = this.configService.get<
       AppConfiguration["rabbitmqConfiguration"]["mainQueueOptions"]["maxRetriesCount"]
     >("rabbitmqConfiguration.mainQueueOptions.maxRetriesCount")!;
+
     this.baseDelayMs = this.configService.get<
       AppConfiguration["rabbitmqConfiguration"]["mainQueueOptions"]["baseDelayMs"]
     >("rabbitmqConfiguration.mainQueueOptions.baseDelayMs")!;
+
     const { queue } = this.configService.get<AppConfiguration["rabbitmqConfiguration"]["options"]>(
       "rabbitmqConfiguration.options",
     )!;

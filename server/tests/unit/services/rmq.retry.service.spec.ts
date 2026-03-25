@@ -1,0 +1,145 @@
+import RmqRetryService from "@server/services/rmq/rmq.retry.service";
+import { Test, TestingModule } from "@nestjs/testing";
+import { ConfigService } from "@nestjs/config";
+import { Logger } from "@nestjs/common";
+
+describe("RmqRetryService", (): void => {
+  let rmqRetryService: RmqRetryService;
+  let configService: jest.Mocked<ConfigService>;
+  let channel: { ack: jest.Mock; nack: jest.Mock; sendToQueue: jest.Mock };
+
+  const mainQueueOptions = {
+    maxRetriesCount: 5,
+    baseDelayMs: 1000,
+    queue: "main-queue",
+  };
+
+  beforeEach(async (): Promise<void> => {
+    const mockConfigService = {
+      get: jest.fn().mockImplementation((key: string) => {
+        switch (key) {
+          case "rabbitmqConfiguration.mainQueueOptions.maxRetriesCount": {
+            return mainQueueOptions.maxRetriesCount;
+          }
+
+          case "rabbitmqConfiguration.mainQueueOptions.baseDelayMs": {
+            return mainQueueOptions.baseDelayMs;
+          }
+
+          case "rabbitmqConfiguration.options": {
+            return {
+              queue: mainQueueOptions.queue,
+            };
+          }
+
+          default:
+            return undefined;
+        }
+      }),
+    };
+
+    const testingModule: TestingModule = await Test.createTestingModule({
+      providers: [RmqRetryService, { provide: ConfigService, useValue: mockConfigService }],
+    }).compile();
+
+    rmqRetryService = testingModule.get<RmqRetryService>(RmqRetryService);
+    configService = testingModule.get<jest.Mocked<ConfigService>>(ConfigService);
+  });
+
+  afterEach((): void => {
+    jest.clearAllMocks();
+  });
+
+  it("should be defined", (): void => {
+    expect(rmqRetryService).toBeDefined();
+  });
+
+  describe("processFailedMessage", (): void => {
+    const buildMsg = (overrides?: Partial<Record<string, any>>): Record<string, any> => ({
+      content: Buffer.from("test"),
+      headers: {},
+      properties: {
+        headers: {},
+      },
+      ...overrides,
+    });
+
+    beforeEach((): void => {
+      channel = {
+        ack: jest.fn(),
+        nack: jest.fn(),
+        sendToQueue: jest.fn(),
+      };
+    });
+
+    afterEach((): void => {
+      jest.clearAllMocks();
+    });
+
+    it("should send message to retry queue and ack original message when retriesCount is less than max", (): void => {
+      const originalMsg = buildMsg({ headers: { "x-retry-count": 0 } });
+      const error = new Error("Consumer failed");
+
+      // Cast to any to bypass type checking, because these methods are private;
+      const spyRetry = jest.spyOn(rmqRetryService as any, "sendToRetryQueue");
+      const spyDead = jest.spyOn(rmqRetryService as any, "sendToDeadQueue");
+
+      rmqRetryService.processFailedMessage(channel, originalMsg, error);
+
+      expect(spyRetry).toHaveBeenCalledWith(channel, originalMsg, 0, error);
+      expect(spyDead).not.toHaveBeenCalled();
+      expect(channel.ack).toHaveBeenCalledWith(originalMsg);
+      expect(channel.nack).not.toHaveBeenCalled();
+    });
+
+    it("should parse retriesCount from string header and send to retry queue", (): void => {
+      const msg = buildMsg({ headers: { "x-retry-count": "3" } });
+      const error = new Error("Consumer failed");
+
+      // Cast to any to bypass type checking, because these methods are private;
+      const spyRetry = jest.spyOn(rmqRetryService as any, "sendToRetryQueue");
+
+      rmqRetryService.processFailedMessage(channel, msg, error);
+
+      expect(spyRetry).toHaveBeenCalledWith(channel, msg, 3, error);
+      expect(channel.ack).toHaveBeenCalledWith(msg);
+      expect(channel.nack).not.toHaveBeenCalled();
+    });
+
+    it("should send message to dead letter queue and ack original message when retriesCount reaches max", (): void => {
+      const msg = buildMsg({ headers: { "x-retry-count": 5 } });
+      const error = new Error("Consumer failed");
+
+      // Cast to any to bypass type checking, because these methods are private;
+      const spyRetry = jest.spyOn(rmqRetryService as any, "sendToRetryQueue");
+      const spyDead = jest.spyOn(rmqRetryService as any, "sendToDeadQueue");
+
+      rmqRetryService.processFailedMessage(channel, msg, error);
+
+      expect(spyDead).toHaveBeenCalledWith(channel, msg, error);
+      expect(spyRetry).not.toHaveBeenCalled();
+      expect(channel.ack).toHaveBeenCalledWith(msg);
+      expect(channel.nack).not.toHaveBeenCalled();
+    });
+
+    it("should nack original message without requeue if internal error occurs", (): void => {
+      const msg = buildMsg({ headers: { "x-retry-count": 0 } });
+      const error = new Error("Consumer failed");
+
+      jest.spyOn(rmqRetryService as any, "sendToRetryQueue").mockImplementation((): void => {
+        throw new Error("Internal error");
+      });
+      const loggerErrorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(jest.fn());
+
+      rmqRetryService.processFailedMessage(channel, msg, error);
+
+      expect(loggerErrorSpy).toHaveBeenCalled();
+      expect(channel.nack).toHaveBeenCalledWith(msg, false, false);
+      expect(channel.ack).not.toHaveBeenCalled();
+    });
+  });
+
+  // describe("sendToRetryQueue", (): void => {});
+
+  // describe("sendToDeadQueue", (): void => {});
+});
