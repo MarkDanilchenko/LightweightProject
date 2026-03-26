@@ -6,6 +6,7 @@ import {
   AuthLocalPasswordResetEvent,
   EventName,
 } from "@server/events/interfaces/events.interfaces";
+import RmqRetryService from "@server/services/rmq/rmq.retry.service";
 
 /**
  * Controller that handles incoming RabbitMQ messages for email-related events.
@@ -16,10 +17,12 @@ import {
 export default class RmqEmailConsumer {
   private readonly logger: LoggerService;
   private readonly rmqEmailService: RmqEmailService;
+  private readonly rmqRetryService: RmqRetryService;
 
-  constructor(rmqEmailService: RmqEmailService) {
+  constructor(rmqEmailService: RmqEmailService, rmqRetryService: RmqRetryService) {
     this.logger = new Logger(RmqEmailConsumer.name);
     this.rmqEmailService = rmqEmailService;
+    this.rmqRetryService = rmqRetryService;
   }
 
   /**
@@ -42,9 +45,9 @@ export default class RmqEmailConsumer {
 
       channel.ack(originalMsg);
     } catch (error) {
-      channel.nack(originalMsg);
-
       this.logger.error("RmqEmailConsumer ~ handleAuthCreatedLocal", error);
+
+      this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
     }
   }
 
@@ -71,9 +74,9 @@ export default class RmqEmailConsumer {
 
       channel.ack(originalMsg);
     } catch (error) {
-      channel.nack(originalMsg);
-
       this.logger.error("RmqEmailConsumer ~ handleAuthLocalPasswordReset", error);
+
+      this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
     }
   }
 }
