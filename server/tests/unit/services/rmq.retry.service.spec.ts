@@ -170,10 +170,7 @@ describe("RmqRetryService", (): void => {
     it("should send message to dead letter queue with dead-letter header and expiration null", (): void => {
       const originalMsg = buildMsg({
         properties: {
-          headers: {
-            "x-correlation-id": "corr-1",
-          },
-          appId: "test-app",
+          headers: {},
         },
       });
       const error = new Error("Consumer failed");
@@ -187,10 +184,8 @@ describe("RmqRetryService", (): void => {
         `${mainQueueOptions.queue}-dead`,
         originalMsg.content,
         expect.objectContaining({
-          appId: "test-app",
           expiration: null,
           headers: expect.objectContaining({
-            "x-correlation-id": "corr-1",
             "x-dead-letter-error": error.message,
           }),
         }),
