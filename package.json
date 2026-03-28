@@ -61,7 +61,7 @@
     "ejs": "5.0.1",
     "ioredis": "5.10.1",
     "nest-winston": "1.10.2",
-    "nodemailer": "8.0.3",
+    "nodemailer": "8.0.4",
     "passport": "0.7.0",
     "passport-google-oauth20": "2.0.0",
     "passport-jwt": "4.0.1",
