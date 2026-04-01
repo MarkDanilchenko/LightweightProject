@@ -10,7 +10,7 @@ import {
   UseGuards,
   UsePipes,
 } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery, ApiCookieAuth } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery, ApiCookieAuth, ApiOAuth2 } from "@nestjs/swagger";
 import { Response } from "express";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces";
@@ -29,6 +29,7 @@ import UserEntity from "@server/users/users.entity";
 import JwtGuard from "@server/auth/guards/jwt.guard";
 import { RequestWithSignedCookies, RequestWithTokenPayload, RequestWithUser } from "@server/common/types/common.types";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
+import GoogleOAuth2Guard from "@server/auth/guards/google.guard";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -270,22 +271,21 @@ export default class AuthController {
     return this.authService.retrieveProfile(payload.userId);
   }
 
-  //   @Get("google/signin")
-  //   @ApiOperation({
-  //     summary: "Google authentication via OAuth2",
-  //     description: "The users will be redirected to Google for further authentication.",
-  //   })
-  //   @ApiOAuth2(["email", "profile"], "googleOAuth2")
-  //   @ApiResponse({
-  //     status: 302,
-  //     description: "The users will be redirected to Google authentication form.",
-  //   })
-  //   @UseGuards(GoogleAuthGuard)
-  //   async googleSignIn(): Promise<void> {
-  //     // The request will be redirected to Google for further authentication;
-  //     // Nothing more to do here;
-  //   }
-  //
+  @Get("google/signin")
+  @ApiOperation({
+    summary: "Google authentication via OAuth2.0",
+    description: "The users will be redirected to Google for further OAuth2.0 authentication.",
+  })
+  @ApiResponse({
+    status: 302,
+    description: "The users will be redirected to Google authentication form.",
+  })
+  @ApiOAuth2(["email", "profile"], "googleOAuth2")
+  @UseGuards(GoogleOAuth2Guard)
+  async googleSignIn(): Promise<void> {
+    // Nothing more to do here;
+  }
+
   //   @Get("google/redirect")
   //   @ApiOperation({
   //     summary: "Google authentication via OAuth2 (redirect)",
@@ -308,7 +308,7 @@ export default class AuthController {
   //     status: 404,
   //     description: "Authentication failed. User not found.",
   //   })
-  //   @UseGuards(GoogleAuthGuard)
+  //   @UseGuards(GoogleOAuth2Guard)
   //   async googleSignInRedirect(@Req() req: requestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
   //     const users = req.users;
   //

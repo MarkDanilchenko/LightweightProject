@@ -4,7 +4,7 @@ import AuthenticationEntity from "@server/auth/auth.entity";
 import AuthService from "@server/auth/auth.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
-import { AuthenticationProvider, AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider, AuthenticationInstanceMetadata } from "@server/auth/interfaces/auth.interfaces";
 import {
   DataSource,
   EntityManager,
@@ -670,8 +670,8 @@ describe("AuthService", (): void => {
         { provider: decoded.provider, userId: decoded.userId, id: authentication.id },
         expect.objectContaining({
           metadata: expect.objectContaining({
-            local: expect.objectContaining({ password: "hashed-password" }) as AuthMetadata["local"],
-          }) as AuthMetadata,
+            local: expect.objectContaining({ password: "hashed-password" }) as AuthenticationInstanceMetadata["local"],
+          }) as AuthenticationInstanceMetadata,
         }),
       );
       expect(eventEmitter2.emit).toHaveBeenCalledWith(

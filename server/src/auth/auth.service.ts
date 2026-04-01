@@ -1,4 +1,12 @@
-import { BadRequestException, Inject, Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  Logger,
+  LoggerService,
+  NotFoundException,
+  UnauthorizedException,
+} from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import {
   DataSource,
@@ -16,7 +24,7 @@ import UserEntity from "@server/users/users.entity";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { EventName } from "@server/events/interfaces/events.interfaces";
 import EventsService from "@server/events/events.service";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider, AuthenticationWithIdP } from "@server/auth/interfaces/auth.interfaces";
 import { hash } from "@server/utils/hasher";
 import TokensService from "@server/tokens/tokens.service";
 import { v4 as uuidv4 } from "uuid";
@@ -37,6 +45,7 @@ export default class AuthService {
   private readonly userService: UsersService;
   private readonly eventsService: EventsService;
   private readonly eventEmitter: EventEmitter2;
+  private readonly logger: LoggerService;
 
   constructor(
     @InjectDataSource()
@@ -55,6 +64,7 @@ export default class AuthService {
     this.userService = userService;
     this.eventsService = eventsService;
     this.eventEmitter = eventEmitter;
+    this.logger = new Logger(AuthService.name);
   }
 
   /**
@@ -555,87 +565,87 @@ export default class AuthService {
     });
   }
 
-  // async authAccordingToStrategy(
-  //   idP: AuthenticationProvider,
-  //   userInfo: SignUpLocalDto,
-  //   options: AuthAccordingToStrategyOptions = {},
-  // ): Promise<UserEntity | void> {
-  //   // Both idPTokens (accessToken and refreshToken) are not used in the authentication flow,
-  //   // so also not stored in database;
-  //   // Besides, inner access token and inner refresh token are configured by the application itself
-  //   // for further access to the protected API routes;
-  //   const { accessToken, refreshToken } = options;
-  //   const { username, email, firstName, lastName, avatarUrl, password } = userInfo;
-  //
-  //   const users: UserEntity | null = await this.userService.find({
-  //     relations: ["authentications"],
-  //     select: {
-  //       id: true,
-  //       email: true,
-  //       authentications: {
-  //         id: true,
-  //         userId: true,
-  //         provider: true,
-  //         metadata: true,
-  //       },
-  //     },
-  //     where: {
-  //       email,
-  //     },
-  //   });
-  //
-  //   switch (idP) {
-  //     case "keycloak":
-  //     case "google": {
-  //       await this.dataSource.transaction(async (transactionalEntityManager: EntityManager) => {
-  //         try {
-  //           if (!users) {
-  //             this.logger.log(`User with email "${email}" does not exist. Creating ...`);
-  //
-  //             const users = transactionalEntityManager.create(UserEntity, {
-  //               firstName,
-  //               lastName,
-  //               email,
-  //               avatarUrl,
-  //             });
-  //             await transactionalEntityManager.save(users);
-  //
-  //             const authentication = transactionalEntityManager.create(AuthenticationEntity, {
-  //               userId: users.id,
-  //               provider: idP,
-  //             });
-  //             await transactionalEntityManager.save(authentication);
-  //           } else {
-  //             this.logger.log(
-  //               `User with email "${email}" already exists. Update profile partially and check related authentication ...`,
-  //             );
-  //
-  //             let authentication = users.authentications.find((auth) => auth.provider === idP);
-  //
-  //             if (!authentication) {
-  //               authentication = transactionalEntityManager.create(AuthenticationEntity, {
-  //                 userId: users.id,
-  //                 provider: idP,
-  //               });
-  //             }
-  //
-  //             await transactionalEntityManager.update(UserEntity, users.id, {
-  //               firstName,
-  //               lastName,
-  //               avatarUrl,
-  //             });
-  //
-  //             // NOTE: Saving to already existing and new authentication instance is needed
-  //             // NOTE: for updating the lastAuthenticatedAt field;
-  //             await transactionalEntityManager.save(authentication);
-  //           }
-  //         } catch (error) {
-  //           this.logger.error(error.message);
-  //
-  //           throw new UnauthorizedException(`Authentication for "${username ?? email}" failed.`);
-  //         }
-  //       });
-  //
-  //       break;
-  //     }
+  async idPAuthentication(
+    idP: AuthenticationProvider,
+    userClaims: AuthenticationWithIdP["userClaims"],
+  ): Promise<UserEntity> {
+    switch (idP) {
+      case AuthenticationProvider.GOOGLE: {
+        const { username, firstName, lastName, email, avatarUrl } = userClaims;
+
+        return this.dataSource.transaction(async (manager: EntityManager): Promise<UserEntity> => {
+          const existingUser: UserEntity | null = await this.userService.findUser(
+            {
+              where: { email },
+              relations: ["authentications"],
+              select: {
+                id: true,
+                email: true,
+                authentications: {
+                  id: true,
+                  provider: true,
+                  userId: true,
+                  metadata: true,
+                },
+              },
+            },
+            manager,
+          );
+
+          if (!existingUser) {
+            this.logger.log(`User with email ${email} is not found, creating...`);
+
+            const newUser = manager.create(UserEntity, {
+              username,
+              firstName,
+              lastName,
+              email,
+              avatarUrl,
+            });
+
+            const authentication = manager.create(AuthenticationEntity, {
+              userId: newUser.id,
+              provider: idP,
+            });
+
+            await manager.save(newUser);
+            await manager.save(authentication);
+
+            return newUser;
+          }
+
+          this.logger.log(
+            `User with email "${email}" already exists. Update profile partially and check related authentication...`,
+          );
+
+          let authentication = existingUser.authentications.find((auth) => auth.provider === idP);
+          if (!authentication) {
+            authentication = manager.create(AuthenticationEntity, {
+              userId: existingUser.id,
+              provider: idP,
+            });
+          }
+
+          await this.userService.updateUser(
+            { id: existingUser.id },
+            { username, firstName, lastName, avatarUrl },
+            manager,
+          );
+
+          // NOTE: Saving to already existing and new authentication instance is needed for updating the lastAuthenticatedAt;
+          await manager.save(authentication);
+
+          return existingUser;
+        });
+      }
+
+      case AuthenticationProvider.GITHUB: {
+        throw new BadRequestException("GitHub authentication is not implemented yet");
+      }
+
+      default: {
+        throw new BadRequestException("Invalid idP");
+      }
+    }
+  }
 }

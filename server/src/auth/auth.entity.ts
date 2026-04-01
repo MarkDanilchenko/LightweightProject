@@ -9,7 +9,7 @@ import {
   UpdateDateColumn,
 } from "typeorm";
 import UserEntity from "@server/users/users.entity";
-import { AuthenticationProvider, AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider, AuthenticationInstanceMetadata } from "@server/auth/interfaces/auth.interfaces";
 import { IsDate, IsEnum, IsOptional, IsString, IsUUID } from "class-validator";
 import { Type } from "class-transformer";
 import CommonEntity from "@server/common/common.entity";
@@ -45,7 +45,7 @@ export default class AuthenticationEntity extends CommonEntity {
     comment: "additional authentication metadata",
   })
   @Type(() => Object)
-  metadata: AuthMetadata;
+  metadata: AuthenticationInstanceMetadata;
 
   @CreateDateColumn({ type: "timestamptz" })
   @IsDate()
