@@ -24,7 +24,7 @@ import UserEntity from "@server/users/users.entity";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { EventName } from "@server/events/interfaces/events.interfaces";
 import EventsService from "@server/events/events.service";
-import { AuthenticationProvider, AuthenticationWithIdP } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider, AuthenticationViaIdP } from "@server/auth/interfaces/auth.interfaces";
 import { hash } from "@server/utils/hasher";
 import TokensService from "@server/tokens/tokens.service";
 import { v4 as uuidv4 } from "uuid";
@@ -567,7 +567,7 @@ export default class AuthService {
 
   async idPAuthentication(
     idP: AuthenticationProvider,
-    userClaims: AuthenticationWithIdP["userClaims"],
+    userClaims: AuthenticationViaIdP["userClaims"],
   ): Promise<UserEntity> {
     switch (idP) {
       case AuthenticationProvider.GOOGLE: {
@@ -581,6 +581,10 @@ export default class AuthService {
               select: {
                 id: true,
                 email: true,
+                username: true,
+                firstName: true,
+                lastName: true,
+                avatarUrl: true,
                 authentications: {
                   id: true,
                   provider: true,
@@ -593,8 +597,6 @@ export default class AuthService {
           );
 
           if (!existingUser) {
-            this.logger.log(`User with email ${email} is not found, creating...`);
-
             const newUser = manager.create(UserEntity, {
               username,
               firstName,
@@ -614,10 +616,6 @@ export default class AuthService {
             return newUser;
           }
 
-          this.logger.log(
-            `User with email "${email}" already exists. Update profile partially and check related authentication...`,
-          );
-
           let authentication = existingUser.authentications.find((auth) => auth.provider === idP);
           if (!authentication) {
             authentication = manager.create(AuthenticationEntity, {
@@ -632,8 +630,10 @@ export default class AuthService {
             manager,
           );
 
-          // NOTE: Saving to already existing and new authentication instance is needed for updating the lastAuthenticatedAt;
+          // NOTE: Saving both already existing or new authentication instance is needed for updating the lastAuthenticatedAt;
           await manager.save(authentication);
+
+          await existingUser.reload();
 
           return existingUser;
         });

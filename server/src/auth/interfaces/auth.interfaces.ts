@@ -76,7 +76,7 @@ interface AuthenticationInstanceMetadata {
   github?: Record<string, any>;
 }
 
-interface AuthenticationWithIdP {
+interface AuthenticationViaIdP {
   userClaims: {
     username?: string;
     firstName?: string;
@@ -93,7 +93,7 @@ interface AuthenticationWithIdP {
 export {
   AuthenticationProvider,
   AuthenticationInstanceMetadata,
-  AuthenticationWithIdP,
+  AuthenticationViaIdP,
   // JwtAuthGuardResponse,
   // KeycloakOAuth2OIDC,
   // AuthAccordingToStrategyOptions,
