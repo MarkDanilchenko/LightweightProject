@@ -314,44 +314,54 @@ export default class AuthService {
   }
 
   /**
-   * Sign in users with local authentication.
+   * Sign in user according to provided Identity Provider (idP).
    *
    * @param {UserEntity} user - User entity.
    *
    * @returns {Promise<{ accessToken: string }>} - Access token.
    */
-  async localSignIn(user: UserEntity): Promise<{ accessToken: string }> {
-    if (!user.authentications || user.authentications.length === 0) {
-      throw new UnauthorizedException("Authentication failed. Authentication not found.");
+  async signIn(user: UserEntity, provider: AuthenticationProvider): Promise<{ accessToken: string }> {
+    if (!user.authentications || !user.authentications.length) {
+      throw new UnauthorizedException("Authentication not found.");
     }
 
-    const authentication: AuthenticationEntity | null | undefined = user.authentications.find(
-      (auth: AuthenticationEntity) =>
-        auth.provider === AuthenticationProvider.LOCAL && auth.metadata.local?.isEmailVerified,
+    const verifiedAuthentication: AuthenticationEntity | null | undefined = user.authentications.find(
+      (auth: AuthenticationEntity) => {
+        switch (provider) {
+          case AuthenticationProvider.LOCAL: {
+            return auth.provider === provider && auth.metadata.local?.isEmailVerified;
+          }
+
+          case AuthenticationProvider.GITHUB:
+          case AuthenticationProvider.GOOGLE: {
+            return auth.provider === provider;
+          }
+        }
+      },
     );
-    if (!authentication) {
-      throw new UnauthorizedException("Authentication failed. Authentication not found.");
+    if (!verifiedAuthentication) {
+      throw new UnauthorizedException("Authentication not found.");
     }
 
     const accessToken: string = await this.tokensService.generate(
-      { userId: user.id, provider: AuthenticationProvider.LOCAL, jwti: uuidv4() },
+      { userId: user.id, provider, jwti: uuidv4() },
       { expiresIn: this.tokensService.jwtAccessTokenExpiresIn },
     );
     const refreshToken: string = await this.tokensService.generate(
-      { userId: user.id, provider: AuthenticationProvider.LOCAL },
+      { userId: user.id, provider },
       { expiresIn: this.tokensService.jwtRefreshTokenExpiresIn },
     );
 
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
       await this.updateAuthentication(
-        { id: authentication.id, userId: user.id, provider: AuthenticationProvider.LOCAL },
+        { id: verifiedAuthentication.id, userId: user.id, provider },
         { refreshToken },
         manager,
       );
 
-      // Set refreshToken to null for all other users' authentications;
+      // Set refreshToken to null for all other user's authentications;
       await this.updateAuthentication(
-        { userId: user.id, provider: Not(AuthenticationProvider.LOCAL) },
+        { userId: user.id, provider: Not(provider) },
         { refreshToken: null, lastAccessedAt: (): string => "lastAccessedAt" },
         manager,
       );
@@ -612,6 +622,8 @@ export default class AuthService {
 
             await manager.save(newUser);
             await manager.save(authentication);
+
+            newUser.authentications.push(authentication);
 
             return newUser;
           }

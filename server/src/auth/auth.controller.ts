@@ -30,6 +30,7 @@ import JwtGuard from "@server/auth/guards/jwt.guard";
 import { RequestWithSignedCookies, RequestWithTokenPayload, RequestWithUser } from "@server/common/types/common.types";
 import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
 import GoogleOAuth2Guard from "@server/auth/guards/google.guard";
+import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -129,11 +130,11 @@ export default class AuthController {
   ): Promise<void> {
     const user: UserEntity = req.user;
 
-    const { accessToken } = await this.authService.localSignIn(user);
+    const { accessToken } = await this.authService.signIn(user, AuthenticationProvider.LOCAL);
 
     if (!accessToken) {
       throw new UnauthorizedException(
-        "Authentication failed. " + "Invalid credentials or " + "users not found or " + "email is not verified.",
+        "Authentication failed. " + "Invalid credentials or " + "user not found or " + "email is not verified.",
       );
     }
 
@@ -273,8 +274,8 @@ export default class AuthController {
 
   @Get("google/signin")
   @ApiOperation({
-    summary: "Google authentication via OAuth2.0",
-    description: "The users will be redirected to Google for further OAuth2.0 authentication.",
+    summary: "OAuth2 Google authentication.",
+    description: "Users will be redirected to Google for OAuth2 authentication.",
   })
   @ApiResponse({
     status: 302,
@@ -286,44 +287,45 @@ export default class AuthController {
     // Nothing more to do here;
   }
 
-  //   @Get("google/redirect")
-  //   @ApiOperation({
-  //     summary: "Google authentication via OAuth2 (redirect)",
-  //     description: "The users will be redirected to the home page of the web application after successful authentication.",
-  //   })
-  //   @ApiOAuth2(["email", "profile"], "googleOAuth2")
-  //   @ApiResponse({
-  //     status: 302,
-  //     description: "The users will be redirected to the home page of the web application.",
-  //   })
-  //   @ApiResponse({
-  //     status: 400,
-  //     description: "Authentication failed. Invalid request.",
-  //   })
-  //   @ApiResponse({
-  //     status: 401,
-  //     description: "Authentication failed.",
-  //   })
-  //   @ApiResponse({
-  //     status: 404,
-  //     description: "Authentication failed. User not found.",
-  //   })
-  //   @UseGuards(GoogleOAuth2Guard)
-  //   async googleSignInRedirect(@Req() req: requestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
-  //     const users = req.users;
-  //
-  //     const credentials: AuthCredentials = {
-  //       provider: "google",
-  //       email: users.email,
-  //     };
-  //
-  //     const { accessToken } = await this.authService.signIn(credentials);
-  //
-  //     setCookie(res, "accessToken", accessToken, this.https);
-  //
-  //     res.redirect("/");
-  //   }
-  //
+  // TODO: Perform tests
+  @Get("google/redirect")
+  @ApiOperation({
+    summary: "OAuth2 Google authentication",
+    description:
+      "User will be redirected the home page of the web application after successful authentication within idp service.",
+  })
+  @ApiResponse({
+    status: 302,
+    description: "Redirect the home page of the web application.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Authentication failed.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "User not found.",
+  })
+  @ApiOAuth2(["email", "profile"], "googleOAuth2")
+  @UseGuards(GoogleOAuth2Guard)
+  async googleRedirect(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
+    const { accessToken } = await this.authService.signIn(req.user, AuthenticationProvider.GOOGLE);
+
+    if (!accessToken) {
+      throw new UnauthorizedException(
+        "Authentication failed. " + "Invalid credentials or " + "user not found.",
+      );
+    }
+
+    setCookie(res, "accessToken", accessToken, this.https);
+
+    res.redirect("/");
+  }
+
   //   @Get("keycloak/signin")
   //   @ApiOperation({
   //     summary: "Keycloak authentication via OAuth2(OIDC)",
