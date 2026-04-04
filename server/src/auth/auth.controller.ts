@@ -131,7 +131,6 @@ export default class AuthController {
     const user: UserEntity = req.user;
 
     const { accessToken } = await this.authService.signIn(user, AuthenticationProvider.LOCAL);
-
     if (!accessToken) {
       throw new UnauthorizedException(
         "Authentication failed. " + "Invalid credentials or " + "user not found or " + "email is not verified.",
@@ -314,16 +313,14 @@ export default class AuthController {
   @UseGuards(GoogleOAuth2Guard)
   async googleRedirect(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
     const { accessToken } = await this.authService.signIn(req.user, AuthenticationProvider.GOOGLE);
-
     if (!accessToken) {
-      throw new UnauthorizedException(
-        "Authentication failed. " + "Invalid credentials or " + "user not found.",
-      );
+      throw new UnauthorizedException("Authentication failed. " + "Invalid credentials or " + "user not found.");
     }
 
     setCookie(res, "accessToken", accessToken, this.https);
 
-    res.redirect("/");
+    // TODO: should redirect to the home client page (frontend-app) after successful google redirect;
+    res.redirect(302, `${this.clientBaseUrl}/home`);
   }
 
   //   @Get("keycloak/signin")

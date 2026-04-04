@@ -581,7 +581,8 @@ export default class AuthService {
   ): Promise<UserEntity> {
     switch (idP) {
       case AuthenticationProvider.GOOGLE: {
-        const { username, firstName, lastName, email, avatarUrl } = userClaims;
+        const { firstName, lastName, email, avatarUrl } = userClaims;
+        let { username } = userClaims;
 
         return this.dataSource.transaction(async (manager: EntityManager): Promise<UserEntity> => {
           const existingUser: UserEntity | null = await this.userService.findUser(
@@ -606,6 +607,19 @@ export default class AuthService {
             manager,
           );
 
+          if (username) {
+            const isUsernameTaken: UserEntity | null = await this.userService.findUser(
+              {
+                select: { id: true },
+                where: { username },
+              },
+              manager,
+            );
+            if (isUsernameTaken) {
+              username = undefined;
+            }
+          }
+
           if (!existingUser) {
             const newUser = manager.create(UserEntity, {
               username,
@@ -614,40 +628,39 @@ export default class AuthService {
               email,
               avatarUrl,
             });
+            await manager.save(newUser);
 
             const authentication = manager.create(AuthenticationEntity, {
               userId: newUser.id,
               provider: idP,
             });
-
-            await manager.save(newUser);
             await manager.save(authentication);
 
-            newUser.authentications.push(authentication);
+            newUser.authentications = [authentication];
 
             return newUser;
+          } else {
+            let authentication = existingUser.authentications.find((auth) => auth.provider === idP);
+            if (!authentication) {
+              authentication = manager.create(AuthenticationEntity, {
+                userId: existingUser.id,
+                provider: idP,
+              });
+            }
+
+            await this.userService.updateUser(
+              { id: existingUser.id },
+              { username, firstName, lastName, avatarUrl },
+              manager,
+            );
+
+            // NOTE: Saving both already existing or new authentication instance is needed for updating the lastAuthenticatedAt;
+            await manager.save(authentication);
+
+            await existingUser.reload();
+
+            return existingUser;
           }
-
-          let authentication = existingUser.authentications.find((auth) => auth.provider === idP);
-          if (!authentication) {
-            authentication = manager.create(AuthenticationEntity, {
-              userId: existingUser.id,
-              provider: idP,
-            });
-          }
-
-          await this.userService.updateUser(
-            { id: existingUser.id },
-            { username, firstName, lastName, avatarUrl },
-            manager,
-          );
-
-          // NOTE: Saving both already existing or new authentication instance is needed for updating the lastAuthenticatedAt;
-          await manager.save(authentication);
-
-          await existingUser.reload();
-
-          return existingUser;
         });
       }
 
