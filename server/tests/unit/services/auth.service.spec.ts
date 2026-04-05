@@ -4,7 +4,11 @@ import AuthenticationEntity from "@server/auth/auth.entity";
 import AuthService from "@server/auth/auth.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
-import { AuthenticationProvider, AuthenticationInstanceMetadata } from "@server/auth/interfaces/auth.interfaces";
+import {
+  AuthenticationProvider,
+  AuthenticationInstanceMetadata,
+  AuthenticationViaIdP,
+} from "@server/auth/interfaces/auth.interfaces";
 import {
   DataSource,
   EntityManager,
@@ -54,6 +58,7 @@ describe("AuthService", (): void => {
       provider: AuthenticationProvider.LOCAL,
     });
     user.authentications = [authentication];
+    user.reload = jest.fn().mockResolvedValue(undefined);
 
     entityManager = {
       update: jest.fn(),
@@ -727,6 +732,156 @@ describe("AuthService", (): void => {
         EventName.AUTH_LOCAL_PASSWORD_RESETED,
         expect.any(Object),
         entityManager,
+      );
+    });
+  });
+
+  describe("idPAuthentication", (): void => {
+    it("should create new user and authentication for GOOGLE provider", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "John",
+        lastName: "Doe",
+        email: "john.doe@example.com",
+        avatarUrl: "https://example.com/avatar.jpg",
+        username: "johndoe",
+      };
+      const newUser: UserEntity = buildUserFactory({ ...userClaims });
+      const newAuthentication: AuthenticationEntity = buildAuthenticationFactory({
+        userId: newUser.id,
+        provider: AuthenticationProvider.GOOGLE,
+      });
+      newUser.authentications = [newAuthentication];
+
+      usersService.findUser.mockResolvedValue(null);
+      (entityManager.create as jest.Mock).mockReturnValueOnce(newUser).mockReturnValueOnce(newAuthentication);
+      (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+
+      const result: UserEntity = await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
+
+      expect(usersService.findUser).toHaveBeenCalledWith(
+        {
+          where: { email: userClaims.email },
+          relations: ["authentications"],
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+        },
+        entityManager,
+      );
+      expect(entityManager.create).toHaveBeenCalledTimes(2);
+      expect(entityManager.save).toHaveBeenCalledTimes(2);
+      expect(result).toEqual(newUser);
+    });
+
+    it("should update existing user with GOOGLE authentication", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "John",
+        lastName: "Doe",
+        email: user.email, // already existing email;
+        avatarUrl: "https://example.com/new-avatar.jpg",
+        username: "newUsernameFromGoogle",
+      };
+      const googleAuth: AuthenticationEntity = buildAuthenticationFactory({
+        userId: user.id,
+        provider: AuthenticationProvider.GOOGLE,
+      });
+      user.authentications = [authentication, googleAuth];
+
+      usersService.findUser.mockResolvedValueOnce(user).mockResolvedValueOnce(null);
+      (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+
+      const result: UserEntity = await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
+
+      expect(usersService.updateUser).toHaveBeenCalledWith(
+        { id: user.id },
+        {
+          username: userClaims.username,
+          firstName: userClaims.firstName,
+          lastName: userClaims.lastName,
+          avatarUrl: userClaims.avatarUrl,
+        },
+        entityManager,
+      );
+      expect(entityManager.save).toHaveBeenCalledWith(googleAuth);
+      expect(user.reload).toHaveBeenCalled();
+      expect(result).toEqual(user);
+    });
+
+    it("should create GOOGLE authentication for existing user without it", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "John",
+        lastName: "Doe",
+        email: user.email,
+        avatarUrl: user.avatarUrl!,
+      };
+      const newGoogleAuth: AuthenticationEntity = buildAuthenticationFactory({
+        userId: user.id,
+        provider: AuthenticationProvider.GOOGLE,
+      });
+      user.authentications = [authentication];
+
+      usersService.findUser.mockResolvedValue(user);
+      (entityManager.create as jest.Mock).mockReturnValue(newGoogleAuth);
+      (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+
+      const result: UserEntity = await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
+
+      expect(entityManager.create).toHaveBeenCalledWith(AuthenticationEntity, {
+        userId: user.id,
+        provider: AuthenticationProvider.GOOGLE,
+      });
+      expect(entityManager.save).toHaveBeenCalledWith(newGoogleAuth);
+      expect(user.reload).toHaveBeenCalled();
+      expect(result).toEqual(user);
+    });
+
+    it("should set username to undefined when it is already taken", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "John",
+        lastName: "Doe",
+        email: user.email,
+        avatarUrl: user.avatarUrl!,
+        username: "takenusername",
+      };
+      user.authentications = [authentication];
+
+      usersService.findUser.mockResolvedValueOnce(user).mockResolvedValueOnce(true as unknown as UserEntity);
+      (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+
+      await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
+
+      expect(usersService.updateUser).toHaveBeenCalledWith(
+        { id: user.id },
+        {
+          username: undefined,
+          firstName: userClaims.firstName,
+          lastName: userClaims.lastName,
+          avatarUrl: userClaims.avatarUrl,
+        },
+        entityManager,
+      );
+    });
+
+    it("should throw BadRequestException for invalid provider", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "John",
+        lastName: "Doe",
+        email: user.email,
+      };
+
+      await expect(authService.idPAuthentication("invalid" as AuthenticationProvider, userClaims)).rejects.toThrow(
+        new BadRequestException("Invalid idP"),
       );
     });
   });
