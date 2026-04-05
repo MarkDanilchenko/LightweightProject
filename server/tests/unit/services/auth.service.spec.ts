@@ -357,20 +357,20 @@ describe("AuthService", (): void => {
     });
   });
 
-  describe("localSignIn", (): void => {
+  describe("signIn", (): void => {
     it("should throw UnauthorizedException when user has no authentications", async (): Promise<void> => {
       user.authentications = [];
 
-      await expect(authService.localSignIn(user)).rejects.toThrow(
-        new UnauthorizedException("Authentication failed. Authentication not found."),
+      await expect(authService.signIn(user, AuthenticationProvider.LOCAL)).rejects.toThrow(
+        new UnauthorizedException("Authentication not found."),
       );
     });
 
     it("should throw UnauthorizedException when no verified local authentication", async (): Promise<void> => {
       authentication.metadata.local!.isEmailVerified = false;
 
-      await expect(authService.localSignIn(user)).rejects.toThrow(
-        new UnauthorizedException("Authentication failed. Authentication not found."),
+      await expect(authService.signIn(user, AuthenticationProvider.LOCAL)).rejects.toThrow(
+        new UnauthorizedException("Authentication not found."),
       );
     });
 
@@ -387,9 +387,20 @@ describe("AuthService", (): void => {
 
       tokensService.generate.mockResolvedValueOnce(newAccessToken).mockResolvedValueOnce(newRefreshToken);
 
-      const result: { accessToken: string } = await authService.localSignIn(user);
+      const result: { accessToken: string } = await authService.signIn(user, AuthenticationProvider.LOCAL);
 
       expect(tokensService.generate).toHaveBeenCalledTimes(2);
+      expect(tokensService.generate).toHaveBeenNthCalledWith(
+        1,
+        { userId: user.id, provider: AuthenticationProvider.LOCAL, jwti: expect.any(String) },
+        { expiresIn: tokensService.jwtAccessTokenExpiresIn },
+      );
+      expect(tokensService.generate).toHaveBeenNthCalledWith(
+        2,
+        { userId: user.id, provider: AuthenticationProvider.LOCAL },
+        { expiresIn: tokensService.jwtRefreshTokenExpiresIn },
+      );
+
       expect(dataSource.transaction).toHaveBeenCalledTimes(1);
       expect(entityManager.update).toHaveBeenCalledTimes(2);
       expect(entityManager.update).toHaveBeenNthCalledWith(
@@ -402,6 +413,44 @@ describe("AuthService", (): void => {
         2,
         AuthenticationEntity,
         { userId: user.id, provider: Not(AuthenticationProvider.LOCAL) },
+        { refreshToken: null, lastAccessedAt: expect.any(Function) },
+      );
+      expect(result).toEqual({ accessToken: newAccessToken });
+    });
+
+    it("should sign in user with google authentication", async (): Promise<void> => {
+      const googleAuthentication: AuthenticationEntity = buildAuthenticationFactory({
+        userId: user.id,
+        provider: AuthenticationProvider.GOOGLE,
+      });
+      user.authentications = [googleAuthentication];
+
+      const newAccessToken: string = randomValidJwt(
+        { userId: user.id, provider: AuthenticationProvider.GOOGLE, jwti: faker.string.uuid() },
+        { expiresIn: tokensService.jwtAccessTokenExpiresIn },
+      );
+      const newRefreshToken: string = randomValidJwt(
+        { userId: user.id, provider: AuthenticationProvider.GOOGLE },
+        { expiresIn: tokensService.jwtRefreshTokenExpiresIn },
+      );
+
+      tokensService.generate.mockResolvedValueOnce(newAccessToken).mockResolvedValueOnce(newRefreshToken);
+
+      const result: { accessToken: string } = await authService.signIn(user, AuthenticationProvider.GOOGLE);
+
+      expect(tokensService.generate).toHaveBeenCalledTimes(2);
+      expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+      expect(entityManager.update).toHaveBeenCalledTimes(2);
+      expect(entityManager.update).toHaveBeenNthCalledWith(
+        1,
+        AuthenticationEntity,
+        { id: googleAuthentication.id, userId: user.id, provider: AuthenticationProvider.GOOGLE },
+        { refreshToken: newRefreshToken },
+      );
+      expect(entityManager.update).toHaveBeenNthCalledWith(
+        2,
+        AuthenticationEntity,
+        { userId: user.id, provider: Not(AuthenticationProvider.GOOGLE) },
         { refreshToken: null, lastAccessedAt: expect.any(Function) },
       );
       expect(result).toEqual({ accessToken: newAccessToken });

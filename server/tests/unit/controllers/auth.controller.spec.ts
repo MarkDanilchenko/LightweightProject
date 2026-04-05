@@ -35,9 +35,9 @@ describe("AuthController", (): void => {
     const mockAuthService = {
       localSignUp: jest.fn(),
       localVerificationEmail: jest.fn(),
-      localSignIn: jest.fn(),
       localPasswordForgot: jest.fn(),
       localPasswordReset: jest.fn(),
+      signIn: jest.fn(),
       signOut: jest.fn(),
       refreshAccessToken: jest.fn(),
       retrieveProfile: jest.fn(),
@@ -174,11 +174,11 @@ describe("AuthController", (): void => {
         }),
       };
 
-      authService.localSignIn.mockResolvedValue(tokenData);
+      authService.signIn.mockResolvedValue(tokenData);
 
       await authController.localSignIn(req, dto, mockResponse as Response);
 
-      expect(authService.localSignIn).toHaveBeenCalledWith(user);
+      expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.LOCAL);
       expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", tokenData.accessToken, true);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
@@ -188,15 +188,15 @@ describe("AuthController", (): void => {
       const req = { user } as RequestWithUser;
       const dto: LocalSignInDto = { login: user.username as string, password: "Test1234!_" };
 
-      authService.localSignIn.mockResolvedValue({ accessToken: undefined as unknown as string });
+      authService.signIn.mockResolvedValue({ accessToken: undefined as unknown as string });
 
       await expect(authController.localSignIn(req, dto, mockResponse as Response)).rejects.toThrow(
         new UnauthorizedException(
-          "Authentication failed. " + "Invalid credentials or " + "users not found or " + "email is not verified.",
+          "Authentication failed. " + "Invalid credentials or " + "user not found or " + "email is not verified.",
         ),
       );
 
-      expect(authService.localSignIn).toHaveBeenCalledWith(user);
+      expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.LOCAL);
       expect(setCookie).not.toHaveBeenCalled();
     });
   });
