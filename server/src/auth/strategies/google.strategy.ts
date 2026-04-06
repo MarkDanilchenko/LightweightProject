@@ -32,19 +32,6 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
     this.authService = authService;
   }
 
-  //   /**
-  //    * Returns the additional authorization parameters for the Google OAuth2 strategy.
-  //    * This is needed for returning the refresh token while consent is accepted and related users info is received at first time.
-  //    *
-  //    * @returns An object containing the access type and prompt settings.
-  //    */
-  //   authorizationParams(): GoogleOAuth2["authorizationParams"] {
-  //     return {
-  //       access_type: "offline",
-  //       prompt: "consent",
-  //     };
-  //   }
-
   /**
    * Validate the users during the Google OAuth2 strategy.
    *
@@ -70,13 +57,6 @@ export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "go
         email,
         avatarUrl: picture,
       });
-
-      if (!user) {
-        return done(
-          new UnauthorizedException("Failed to authenticate with Google: user could not be created or updated"),
-          undefined,
-        );
-      }
 
       done(null, user);
     } catch (error: unknown) {
