@@ -40,7 +40,7 @@
     "@anatine/zod-openapi": "2.2.8",
     "@nestjs/common": "11.1.17",
     "@nestjs/config": "4.0.3",
-    "@nestjs/core": "11.1.17",
+    "@nestjs/core": "11.1.18",
     "@nestjs/event-emitter": "3.0.1",
     "@nestjs/jwt": "11.0.2",
     "@nestjs/microservices": "11.1.17",
