@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Post,
   Query,
@@ -263,6 +264,48 @@ export default class AuthController {
 
     return this.authService.retrieveProfile(payload.userId);
   }
+
+  @Delete("me")
+  @ApiOperation({
+    summary: "Delete account",
+    description: "Soft delete current user's account.",
+  })
+  @ApiResponse({
+    status: 204,
+    description: "Account deleted successfully.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Authentication failed. Invalid credentials.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "User not found.",
+  })
+  @ApiCookieAuth("accessToken")
+  @UseGuards(JwtGuard)
+  async deleteMe(@Req() req: RequestWithTokenPayload): Promise<void> {
+    const payload: TokenPayload = req.tokenPayload;
+  }
+
+  @Post("me/restore")
+  @ApiOperation({
+    summary: "Restore account",
+    description: "Restore previously deleted user account.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Account restored successfully.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Authentication failed. Invalid credentials.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Account not found.",
+  })
+  async restoreMe(): Promise<void> {}
 
   @Get("google/signin")
   @ApiOperation({
