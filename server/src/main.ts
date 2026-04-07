@@ -124,7 +124,7 @@ async function bootstrap(): Promise<void> {
       // .addOAuth2({}, "githubOAuth2")
       .build();
 
-    // This is necessary patch nestjs swagger function to support zod validation;
+    // Swagger patch function to support zod validation;
     patchNestjsSwagger();
 
     /**
@@ -132,10 +132,7 @@ async function bootstrap(): Promise<void> {
      *
      * @returns {OpenAPIObject} - The OpenAPI document.
      */
-    const documentFactory = (): OpenAPIObject => {
-      return SwaggerModule.createDocument(app, swaggerConfiguration);
-    };
-
+    const documentFactory = (): OpenAPIObject => SwaggerModule.createDocument(app, swaggerConfiguration);
     SwaggerModule.setup("docs", app, documentFactory, {
       jsonDocumentUrl: "docs/json",
       yamlDocumentUrl: "docs/yaml",

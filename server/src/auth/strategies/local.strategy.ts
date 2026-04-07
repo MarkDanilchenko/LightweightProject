@@ -3,7 +3,7 @@ import { PassportStrategy } from "@nestjs/passport";
 import { Strategy } from "passport-local";
 import UsersService from "@server/users/users.service";
 import UserEntity from "@server/users/users.entity";
-import { AuthenticationProvider, AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider, AuthenticationInstanceMetadata } from "@server/auth/interfaces/auth.interfaces";
 import { verifyHash } from "@server/utils/hasher";
 
 @Injectable()
@@ -47,7 +47,7 @@ export default class LocalAuthStrategy extends PassportStrategy(Strategy, "local
       return done(new UnauthorizedException("Authentication failed. User not found."), false);
     }
 
-    const authenticationMetadata: AuthMetadata = user.authentications[0].metadata;
+    const authenticationMetadata: AuthenticationInstanceMetadata = user.authentications[0].metadata;
     if (!authenticationMetadata.local?.isEmailVerified) {
       return done(new UnauthorizedException("Authentication failed. Email is not verified."), false);
     }

@@ -1,4 +1,4 @@
-import { AuthMetadata } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationInstanceMetadata } from "@server/auth/interfaces/auth.interfaces";
 import { MetadataEmail } from "@server/events/types/events.types";
 
 enum EventName {
@@ -23,7 +23,7 @@ interface AuthLocalEmailVerifiedEvent extends BaseEvent {
   metadata: MetadataEmail;
 }
 interface AuthLocalCreatedEvent extends BaseEvent {
-  metadata: NonNullable<NonNullable<AuthMetadata["local"]>["temporaryInfo"]> & MetadataEmail;
+  metadata: NonNullable<NonNullable<AuthenticationInstanceMetadata["local"]>["temporaryInfo"]> & MetadataEmail;
 }
 interface AuthLocalPasswordResetEvent extends BaseEvent {
   username?: string | null;
