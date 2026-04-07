@@ -128,14 +128,7 @@ export default class AuthController {
     @Body() localSignInDto: LocalSignInDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    const user: UserEntity = req.user;
-
-    const { accessToken } = await this.authService.signIn(user, AuthenticationProvider.LOCAL);
-    if (!accessToken) {
-      throw new UnauthorizedException(
-        "Authentication failed. " + "Invalid credentials or " + "user not found or " + "email is not verified.",
-      );
-    }
+    const { accessToken } = await this.authService.signIn(req.user, AuthenticationProvider.LOCAL);
 
     setCookie(res, "accessToken", accessToken, this.https);
 
@@ -286,7 +279,6 @@ export default class AuthController {
     // Nothing more to do here;
   }
 
-  // TODO: Perform tests
   @Get("google/redirect")
   @ApiOperation({
     summary: "OAuth2 Google authentication",
@@ -313,13 +305,9 @@ export default class AuthController {
   @UseGuards(GoogleOAuth2Guard)
   async googleRedirect(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
     const { accessToken } = await this.authService.signIn(req.user, AuthenticationProvider.GOOGLE);
-    if (!accessToken) {
-      throw new UnauthorizedException("Authentication failed. " + "Invalid credentials or " + "user not found.");
-    }
 
     setCookie(res, "accessToken", accessToken, this.https);
 
-    // TODO: should redirect to the home client page (frontend-app) after successful google redirect;
     res.redirect(302, `${this.clientBaseUrl}/home`);
   }
 

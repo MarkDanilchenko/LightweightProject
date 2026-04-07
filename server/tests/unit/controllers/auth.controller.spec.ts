@@ -19,6 +19,7 @@ import { setCookie, clearCookie } from "@server/utils/cookie";
 import { randomValidJwt } from "../../utils";
 import { v4 as uuidv4 } from "uuid";
 import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import GoogleOAuth2Guard from "@server/auth/guards/google.guard";
 
 jest.mock("@server/utils/cookie", () => ({
   setCookie: jest.fn(),
@@ -30,6 +31,7 @@ describe("AuthController", (): void => {
   let authController: AuthController;
   let authService: jest.Mocked<AuthService>;
   let mockResponse: Partial<Response>;
+  let googleOAuth2Guard: jest.Mocked<GoogleOAuth2Guard>;
 
   beforeEach(async (): Promise<void> => {
     const mockAuthService = {
@@ -42,6 +44,10 @@ describe("AuthController", (): void => {
       refreshAccessToken: jest.fn(),
       retrieveProfile: jest.fn(),
     };
+
+    const mockGoogleOAuth2Guard = jest.fn().mockImplementation(() => ({
+      canActivate: jest.fn().mockReturnValue(true),
+    }));
 
     const mockConfigService = {
       get: jest.fn((key: string) => {
@@ -72,11 +78,13 @@ describe("AuthController", (): void => {
       providers: [
         { provide: AuthService, useValue: mockAuthService },
         { provide: ConfigService, useValue: mockConfigService },
+        { provide: GoogleOAuth2Guard, useValue: mockGoogleOAuth2Guard },
       ],
     }).compile();
 
     authController = testingModule.get<AuthController>(AuthController);
     authService = testingModule.get<jest.Mocked<AuthService>>(AuthService);
+    googleOAuth2Guard = testingModule.get<jest.Mocked<GoogleOAuth2Guard>>(GoogleOAuth2Guard);
   });
 
   afterEach((): void => {
@@ -183,22 +191,6 @@ describe("AuthController", (): void => {
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
     });
-
-    it("should throw an 401 error when accessToken is not retrieved", async (): Promise<void> => {
-      const req = { user } as RequestWithUser;
-      const dto: LocalSignInDto = { login: user.username as string, password: "Test1234!_" };
-
-      authService.signIn.mockResolvedValue({ accessToken: undefined as unknown as string });
-
-      await expect(authController.localSignIn(req, dto, mockResponse as Response)).rejects.toThrow(
-        new UnauthorizedException(
-          "Authentication failed. " + "Invalid credentials or " + "user not found or " + "email is not verified.",
-        ),
-      );
-
-      expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.LOCAL);
-      expect(setCookie).not.toHaveBeenCalled();
-    });
   });
 
   describe("localPasswordForgot", (): void => {
@@ -302,6 +294,36 @@ describe("AuthController", (): void => {
 
       expect(authService.retrieveProfile).toHaveBeenCalledWith(user.id);
       expect(result).toEqual(profile);
+    });
+  });
+
+  describe("googleSignIn", (): void => {
+    it("should return void and let GoogleOAuth2Guard handle the redirect", async (): Promise<void> => {
+      const result: void = await authController.googleSignIn();
+
+      expect(result).toBeUndefined();
+      expect(googleOAuth2Guard).toBeDefined();
+    });
+  });
+
+  describe("googleRedirect", (): void => {
+    it("should sign in with Google provider, set cookie and redirect to home on success", async (): Promise<void> => {
+      const req = { user } as RequestWithUser;
+      const tokenData = {
+        accessToken: randomValidJwt({
+          userId: user.id,
+          provider: AuthenticationProvider.GOOGLE,
+          jwti: uuidv4(),
+        }),
+      };
+
+      authService.signIn.mockResolvedValue(tokenData);
+
+      await authController.googleRedirect(req, mockResponse as Response);
+
+      expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.GOOGLE);
+      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", tokenData.accessToken, true);
+      expect(mockResponse.redirect).toHaveBeenCalledWith(302, "https://127.0.0.1:3001/home");
     });
   });
 });
