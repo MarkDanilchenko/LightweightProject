@@ -20,22 +20,32 @@ export default class UsersService {
    * Finds a users entity by its primary key (users ID).
    *
    * @param {string} userId - The ID of the users to find.
+   * @param {EntityManager} [manager] - The entity manager to use for the query within a transaction.
    *
    * @returns {Promise<UserEntity | null>} A promise that resolves with the users entity if found, otherwise null.
    */
-  async findUserByPk(userId: string): Promise<UserEntity | null> {
-    return this.userRepository.findOneBy({ id: userId });
+  async findUserByPk(userId: string, manager?: EntityManager): Promise<UserEntity | null> {
+    if (!manager) {
+      return this.userRepository.findOneBy({ id: userId });
+    }
+
+    return manager.findOne(UserEntity, { where: { id: userId } });
   }
 
   /**
    * Finds a single user's entity.
    *
    * @param {FindOneOptions<UserEntity>} options - Additional find options to customize the query.
+   * @param {EntityManager} [manager] - The entity manager to use for the query within a transaction.
    *
    * @returns {Promise<UserEntity | null>} A promise that resolves with the users entity if found, otherwise null.
    */
-  async findUser(options: FindOneOptions<UserEntity>): Promise<UserEntity | null> {
-    return this.userRepository.findOne(options);
+  async findUser(options: FindOneOptions<UserEntity>, manager?: EntityManager): Promise<UserEntity | null> {
+    if (!manager) {
+      return this.userRepository.findOne(options);
+    }
+
+    return manager.findOne(UserEntity, options);
   }
 
   /**

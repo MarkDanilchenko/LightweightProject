@@ -64,7 +64,7 @@
 //       }
 //
 //       const userInfo: KeycloakSAML = {
-//         userName: profile!.attributes.email,
+//         username: profile!.attributes.email,
 //         firstName: profile!.attributes.firstName,
 //         lastName: profile!.attributes.lastName,
 //         email: profile!.attributes.email,

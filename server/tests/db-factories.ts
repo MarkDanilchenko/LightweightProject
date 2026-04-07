@@ -14,7 +14,6 @@ import { randomValidJwt } from "./utils";
  *
  * All methods accept optional overrides to customize specific properties and return database-persisted entities.
  */
-
 class DbFactories {
   private readonly dataSource: DataSource;
   private readonly userRepository: Repository<UserEntity>;
@@ -32,7 +31,7 @@ class DbFactories {
     this.eventRepository = this.dataSource.getRepository(EventEntity);
   }
 
-  async buildUser(overrides: Partial<UserEntity> = {}): Promise<UserEntity> {
+  async buildUserFactory(overrides: Partial<UserEntity> = {}): Promise<UserEntity> {
     const defaultInfo = {
       email: faker.internet.email(),
       firstName: faker.person.firstName(),
@@ -46,7 +45,7 @@ class DbFactories {
     return this.userRepository.save(user);
   }
 
-  async buildAuthentication(overrides: Partial<AuthenticationEntity> = {}): Promise<AuthenticationEntity> {
+  async buildAuthenticationFactory(overrides: Partial<AuthenticationEntity> = {}): Promise<AuthenticationEntity> {
     let { provider, userId, metadata } = overrides;
     let user: UserEntity | null;
 
@@ -56,7 +55,7 @@ class DbFactories {
         throw new Error("User not found");
       }
     } else {
-      user = await this.buildUser();
+      user = await this.buildUserFactory();
       userId = user.id;
     }
 
@@ -138,7 +137,7 @@ class DbFactories {
     return this.authenticationRepository.save(authentication);
   }
 
-  async buildEvent(overrides: Partial<EventEntity> = {}): Promise<EventEntity> {
+  async buildEventFactory(overrides: Partial<EventEntity> = {}): Promise<EventEntity> {
     let { name, userId } = overrides;
 
     if (!name || !Object.keys(EventName).includes(name)) {
@@ -158,7 +157,7 @@ class DbFactories {
         throw new Error("User not found");
       }
     } else {
-      const user: UserEntity = await this.buildUser();
+      const user: UserEntity = await this.buildUserFactory();
       userId = user.id;
     }
 

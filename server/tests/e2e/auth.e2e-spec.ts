@@ -131,7 +131,7 @@ describe("AuthController E2E", (): void => {
           password: "Password123",
         };
 
-        const user: UserEntity = await factories.buildUser({
+        const user: UserEntity = await factories.buildUserFactory({
           email: payload.email,
           username: payload.username,
           firstName: payload.firstName,
@@ -142,7 +142,7 @@ describe("AuthController E2E", (): void => {
           userId: user.id,
           provider: AuthenticationProvider.GOOGLE,
         });
-        await factories.buildAuthentication({
+        await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.GOOGLE,
           refreshToken,
@@ -184,7 +184,7 @@ describe("AuthController E2E", (): void => {
           password: "Password123",
         };
 
-        await factories.buildUser({ username: existingUsername });
+        await factories.buildUserFactory({ username: existingUsername });
 
         const response = await httpServer.post("/api/v1/auth/local/signup").send(payload);
 
@@ -202,14 +202,14 @@ describe("AuthController E2E", (): void => {
           password: "Password123",
         };
 
-        const existingUser: UserEntity = await factories.buildUser({
+        const existingUser: UserEntity = await factories.buildUserFactory({
           email: existingEmail,
           username: payload.username,
           firstName: payload.firstName,
           lastName: payload.lastName,
           avatarUrl: payload.avatarUrl,
         });
-        await factories.buildAuthentication({
+        await factories.buildAuthenticationFactory({
           userId: existingUser.id,
           provider: AuthenticationProvider.LOCAL,
           metadata: {
@@ -243,15 +243,15 @@ describe("AuthController E2E", (): void => {
           password: "Password123",
         };
 
-        const existingUser: UserEntity = await factories.buildUser({
+        const existingUser: UserEntity = await factories.buildUserFactory({
           email: existingEmail,
           username: payload.username,
           firstName: payload.firstName,
           lastName: payload.lastName,
           avatarUrl: payload.avatarUrl,
         });
-        // buildAuthentication() has by default isEmailVerified: true;
-        await factories.buildAuthentication({
+        // buildAuthenticationFactory() has by default isEmailVerified: true;
+        await factories.buildAuthenticationFactory({
           userId: existingUser.id,
           provider: AuthenticationProvider.LOCAL,
         });
@@ -276,7 +276,7 @@ describe("AuthController E2E", (): void => {
           avatarUrl: faker.image.avatar(),
         };
 
-        const user: UserEntity = await factories.buildUser({
+        const user: UserEntity = await factories.buildUserFactory({
           email: faker.internet.email(),
           username: null,
           firstName: null,
@@ -284,7 +284,7 @@ describe("AuthController E2E", (): void => {
           avatarUrl: null,
         });
         const token: string = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
-        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
           metadata: {
@@ -335,7 +335,7 @@ describe("AuthController E2E", (): void => {
           avatarUrl: faker.image.avatar(),
         };
 
-        const user: UserEntity = await factories.buildUser({
+        const user: UserEntity = await factories.buildUserFactory({
           email: faker.internet.email(),
           username: null,
           firstName: null,
@@ -343,7 +343,7 @@ describe("AuthController E2E", (): void => {
           avatarUrl: null,
         });
         const token: string = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
-        const localAuthentication: AuthenticationEntity = await factories.buildAuthentication({
+        const localAuthentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
           metadata: {
@@ -355,7 +355,7 @@ describe("AuthController E2E", (): void => {
             },
           },
         });
-        const googleAuthentication: AuthenticationEntity = await factories.buildAuthentication({
+        const googleAuthentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.GOOGLE,
           metadata: {
@@ -419,7 +419,7 @@ describe("AuthController E2E", (): void => {
       });
 
       it("should return 302 and redirect to signin page with error message when token is expired", async (): Promise<void> => {
-        const user: UserEntity = await factories.buildUser();
+        const user: UserEntity = await factories.buildUserFactory();
         const expiredToken: string = await tokensService.generate(
           { userId: user.id, provider: AuthenticationProvider.LOCAL },
           { expiresIn: "-1h" },
@@ -437,7 +437,7 @@ describe("AuthController E2E", (): void => {
       });
 
       it("should return 302 and redirect to signin page with error message when user has no local authentication", async (): Promise<void> => {
-        const user: UserEntity = await factories.buildUser();
+        const user: UserEntity = await factories.buildUserFactory();
         const token: string = await tokensService.generate({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
@@ -452,13 +452,13 @@ describe("AuthController E2E", (): void => {
       });
 
       it("should return 302 and redirect to signin page with error message when email is already verified", async (): Promise<void> => {
-        const user: UserEntity = await factories.buildUser();
+        const user: UserEntity = await factories.buildUserFactory();
         const token: string = await tokensService.generate({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
         });
         // Email in local authentication has already been verified here;
-        await factories.buildAuthentication({
+        await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
         });
@@ -472,7 +472,7 @@ describe("AuthController E2E", (): void => {
       });
 
       it("should return 302 and redirect to signin page with error message when provider in token does not match local authentication provider", async (): Promise<void> => {
-        const user: UserEntity = await factories.buildUser();
+        const user: UserEntity = await factories.buildUserFactory();
         const token: string = await tokensService.generate({
           userId: user.id,
           provider: AuthenticationProvider.GOOGLE, // Different provider
@@ -499,14 +499,14 @@ describe("AuthController E2E", (): void => {
         password = "Password123";
         hashedPassword = await hash(password);
 
-        user = await factories.buildUser({
+        user = await factories.buildUserFactory({
           email: faker.internet.email(),
           username: faker.string.alphanumeric(10),
           firstName: faker.person.firstName(),
           lastName: faker.person.lastName(),
           avatarUrl: faker.image.avatar(),
         });
-        authentication = await factories.buildAuthentication({
+        authentication = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
         });
@@ -571,8 +571,8 @@ describe("AuthController E2E", (): void => {
         const password = "Password123";
         const hashedPassword: string = await hash(password);
 
-        const user: UserEntity = await factories.buildUser();
-        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+        const user: UserEntity = await factories.buildUserFactory();
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
         });
@@ -600,8 +600,8 @@ describe("AuthController E2E", (): void => {
         const password = "Password123";
         const hashedPassword: string = await hash(password);
 
-        const user: UserEntity = await factories.buildUser();
-        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+        const user: UserEntity = await factories.buildUserFactory();
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
         });
@@ -646,8 +646,8 @@ describe("AuthController E2E", (): void => {
         const password = "Password123";
         const hashedPassword: string = await hash(password);
 
-        const user: UserEntity = await factories.buildUser();
-        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+        const user: UserEntity = await factories.buildUserFactory();
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
         });
@@ -686,8 +686,8 @@ describe("AuthController E2E", (): void => {
         const password = "Password123";
         const hashedPassword: string = await hash(password);
 
-        const user: UserEntity = await factories.buildUser();
-        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+        const user: UserEntity = await factories.buildUserFactory();
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
         });
@@ -721,8 +721,8 @@ describe("AuthController E2E", (): void => {
         const newPassword = "NewPassword123";
         const oldHashedPassword: string = await hash(oldPassword);
 
-        const user: UserEntity = await factories.buildUser();
-        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+        const user: UserEntity = await factories.buildUserFactory();
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
         });
@@ -782,8 +782,8 @@ describe("AuthController E2E", (): void => {
         const oldPassword = "OldPassword123";
         const oldHashedPassword: string = await hash(oldPassword);
 
-        const user: UserEntity = await factories.buildUser();
-        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+        const user: UserEntity = await factories.buildUserFactory();
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
         });
@@ -834,9 +834,9 @@ describe("AuthController E2E", (): void => {
         const password = "Password123";
         const hashedPassword: string = await hash(password);
 
-        const user: UserEntity = await factories.buildUser();
+        const user: UserEntity = await factories.buildUserFactory();
         const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
-        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
         });
@@ -913,9 +913,9 @@ describe("AuthController E2E", (): void => {
         password = "Password123";
         hashedPassword = await hash(password);
 
-        user = await factories.buildUser();
+        user = await factories.buildUserFactory();
         refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
-        authentication = await factories.buildAuthentication({
+        authentication = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
         });
@@ -1005,7 +1005,7 @@ describe("AuthController E2E", (): void => {
         const password = "Password123";
         const hashedPassword: string = await hash(password);
 
-        const user: UserEntity = await factories.buildUser({
+        const user: UserEntity = await factories.buildUserFactory({
           email: faker.internet.email(),
           username: faker.string.alphanumeric(10),
           firstName: faker.person.firstName(),
@@ -1013,7 +1013,7 @@ describe("AuthController E2E", (): void => {
           avatarUrl: faker.image.avatar(),
         });
         const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
-        const authentication: AuthenticationEntity = await factories.buildAuthentication({
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,
         });

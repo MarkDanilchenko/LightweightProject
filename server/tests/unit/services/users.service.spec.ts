@@ -60,6 +60,19 @@ describe("UsersService", (): void => {
       expect(result).toEqual(user);
     });
 
+    it("should find a user by a primary key with provided entity manager", async (): Promise<void> => {
+      const providedManager = {
+        findOne: jest.fn().mockResolvedValue(user),
+      } as unknown as EntityManager;
+
+      const result: UserEntity | null = await usersService.findUserByPk(user.id, providedManager);
+
+      expect(userRepository.findOneBy).not.toHaveBeenCalled();
+      expect(providedManager.findOne).toHaveBeenCalledTimes(1);
+      expect(providedManager.findOne).toHaveBeenCalledWith(UserEntity, { where: { id: user.id } });
+      expect(result).toEqual(user);
+    });
+
     it("should return null when user not found", async (): Promise<void> => {
       userRepository.findOneBy.mockResolvedValue(null);
 
@@ -81,6 +94,20 @@ describe("UsersService", (): void => {
 
       expect(userRepository.findOne).toHaveBeenCalledTimes(1);
       expect(userRepository.findOne).toHaveBeenCalledWith(options);
+      expect(result).toEqual(user);
+    });
+
+    it("should find a user with custom options and provided entity manager", async (): Promise<void> => {
+      const options: FindOneOptions<UserEntity> = { where: { email: user.email } };
+      const providedManager = {
+        findOne: jest.fn().mockResolvedValue(user),
+      } as unknown as EntityManager;
+
+      const result: UserEntity | null = await usersService.findUser(options, providedManager);
+
+      expect(userRepository.findOne).not.toHaveBeenCalled();
+      expect(providedManager.findOne).toHaveBeenCalledTimes(1);
+      expect(providedManager.findOne).toHaveBeenCalledWith(UserEntity, options);
       expect(result).toEqual(user);
     });
 

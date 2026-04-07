@@ -5,26 +5,11 @@
 // }
 //
 
-//
 // interface JwtAuthGuardResponse {
 //   userId: string;
 //   username: string;
 //   email: string;
 //   provider: string;
-// }
-//
-// interface GoogleOAuth2 {
-//   authorizationParams: {
-//     access_type: string;
-//     prompt: string;
-//   };
-//   userInfo: {
-//     userName?: string;
-//     firstName?: string;
-//     lastName?: string;
-//     email: string;
-//     avatarUrl?: string;
-//   };
 // }
 //
 // interface KeycloakOAuth2OIDC {
@@ -52,7 +37,7 @@
 // }
 //
 // interface KeycloakSAML {
-//   userName?: string;
+//   username?: string;
 //   firstName?: string;
 //   lastName?: string;
 //   email: string;
@@ -67,7 +52,14 @@
 //   username?: string;
 // }
 
-interface AuthMetadata {
+enum AuthenticationProvider {
+  LOCAL = "local",
+  GOOGLE = "google",
+  KEYCLOAK = "keycloak",
+  GITHUB = "github",
+}
+
+interface AuthenticationInstanceMetadata {
   local?: {
     isEmailVerified: boolean;
     password: string;
@@ -84,18 +76,25 @@ interface AuthMetadata {
   github?: Record<string, any>;
 }
 
-enum AuthenticationProvider {
-  LOCAL = "local",
-  GOOGLE = "google",
-  KEYCLOAK = "keycloak",
-  GITHUB = "github",
+interface AuthenticationViaIdP {
+  userClaims: {
+    username?: string;
+    firstName?: string;
+    lastName?: string;
+    email: string;
+    avatarUrl?: string;
+  };
+  //   authorizationParams: {
+  //     access_type: string;
+  //     prompt: string;
+  //   };
 }
 
 export {
   AuthenticationProvider,
-  AuthMetadata,
+  AuthenticationInstanceMetadata,
+  AuthenticationViaIdP,
   // JwtAuthGuardResponse,
-  // GoogleOAuth2,
   // KeycloakOAuth2OIDC,
   // AuthAccordingToStrategyOptions,
   // AuthCredentials,
