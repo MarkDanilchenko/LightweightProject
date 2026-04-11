@@ -53,7 +53,7 @@
     "@types/pg": "8.20.0",
     "amqp-connection-manager": "5.0.0",
     "amqplib": "1.0.2",
-    "axios": "1.14.0",
+    "axios": "1.15.0",
     "class-transformer": "0.5.1",
     "class-validator": "0.15.1",
     "cookie-parser": "1.4.7",
