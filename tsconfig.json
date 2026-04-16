@@ -16,10 +16,9 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "baseUrl": "./",
     "paths": {
-      "@server/*": ["server/src/*"],
-      "@shared/*": ["shared/*"]
+      "@server/*": ["./server/src/*"],
+      "@shared/*": ["./shared/*"]
     }
   }
 }
