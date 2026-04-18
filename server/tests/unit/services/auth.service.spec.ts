@@ -210,7 +210,9 @@ describe("AuthService", (): void => {
   describe("localSignUp", (): void => {
     it("should create user and authentication when user does not exist", async (): Promise<void> => {
       usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
-      eventsService.buildInstance.mockReturnValueOnce(expect.any(Object));
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValueOnce(
+        expect.any(Object),
+      );
       (entityManager.create as jest.Mock)
         .mockReturnValueOnce({ id: user.id, email: user.email })
         .mockReturnValueOnce(authentication);
@@ -221,7 +223,7 @@ describe("AuthService", (): void => {
         lastName: user.lastName!,
         email: user.email,
         avatarUrl: user.avatarUrl!,
-        password: authentication.metadata.local!.password!,
+        password: authentication.metadata.local!.password,
       });
 
       expect(usersService.findUser).toHaveBeenCalledTimes(2);
@@ -240,7 +242,7 @@ describe("AuthService", (): void => {
           lastName: user.lastName!,
           email: user.email,
           avatarUrl: user.avatarUrl!,
-          password: authentication.metadata.local!.password!,
+          password: authentication.metadata.local!.password,
         }),
       ).rejects.toThrow(new BadRequestException("Username is already taken."));
     });
@@ -257,7 +259,7 @@ describe("AuthService", (): void => {
           lastName: user.lastName!,
           email: user.email,
           avatarUrl: user.avatarUrl!,
-          password: authentication.metadata.local!.password!,
+          password: authentication.metadata.local!.password,
         }),
       ).rejects.toThrow(
         new BadRequestException("Already signed up. Please, sign in with local authentication credentials."),
@@ -276,7 +278,7 @@ describe("AuthService", (): void => {
           lastName: user.lastName!,
           email: user.email,
           avatarUrl: user.avatarUrl!,
-          password: authentication.metadata.local!.password!,
+          password: authentication.metadata.local!.password,
         }),
       ).rejects.toThrow(new BadRequestException("Already signed up. Email verification is required to proceed."));
     });
@@ -312,7 +314,9 @@ describe("AuthService", (): void => {
       tokensService.verify.mockResolvedValue(payload as TokenPayload);
       authenticationRepository.findOne.mockResolvedValue(authentication);
       tokensService.generate.mockResolvedValueOnce(newAccessToken).mockResolvedValueOnce(newRefreshToken);
-      eventsService.buildInstance.mockReturnValueOnce(expect.any(Object));
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValueOnce(
+        expect.any(Object),
+      );
 
       const result: { accessToken: string } = await authService.localVerificationEmail(dto);
 
@@ -648,7 +652,9 @@ describe("AuthService", (): void => {
 
     it("should emit password reset event when user found and email verified", async (): Promise<void> => {
       usersService.findUser.mockResolvedValue(user);
-      eventsService.buildInstance.mockReturnValue(expect.any(Object));
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValue(
+        expect.any(Object),
+      );
 
       await authService.localPasswordForgot({ email: user.email });
 
@@ -713,7 +719,9 @@ describe("AuthService", (): void => {
       usersService.findUser.mockResolvedValue(user);
       tokensService.verify.mockResolvedValue({} as TokenPayload);
       entityManager.update.mockResolvedValue(updateResult);
-      eventsService.buildInstance.mockReturnValue(expect.any(Object));
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValue(
+        expect.any(Object),
+      );
 
       await authService.localPasswordReset(dto);
 

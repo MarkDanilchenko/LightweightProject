@@ -1,6 +1,6 @@
 import { INestApplication } from "@nestjs/common";
 import { DataSource } from "typeorm";
-import * as request from "supertest";
+import request from "supertest";
 import DbFactories from "../db-factories";
 import { bootstrapMainTestApp } from "./bootstrapMainTestApp";
 import TestAgent from "supertest/lib/agent";

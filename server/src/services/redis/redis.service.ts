@@ -44,7 +44,7 @@ export default class RedisService {
         throw new Error(`Redis: Key contains invalid characters: ${dangerousChars.join(", ")}`);
       }
     } catch (error) {
-      this.logger.error(error.message);
+      this.logger.error((error as Error).message);
 
       throw new BadRequestException("Redis: Invalid key");
     }

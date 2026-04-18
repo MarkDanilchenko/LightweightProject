@@ -11,23 +11,23 @@ import CommonEntity from "@server/common/common.entity";
 export default class EventEntity extends CommonEntity {
   @PrimaryGeneratedColumn("uuid")
   @IsUUID()
-  id: string;
+  id!: string;
 
   @Column({ type: "varchar" })
   @IsString()
   @IsEnum(EventName)
-  name: EventName;
+  name!: EventName;
 
   @Column({
     type: "uuid",
     comment: "actor who performed the events",
   })
   @IsUUID()
-  userId: string;
+  userId!: string;
 
   @Column({ type: "uuid", comment: "events related model, e.g. users, organization, etc., so FK is not set" })
   @IsUUID()
-  modelId: string;
+  modelId!: string;
 
   @Column({
     type: "jsonb",
@@ -35,11 +35,11 @@ export default class EventEntity extends CommonEntity {
     comment: "additional events metadata",
   })
   @Type(() => Object)
-  metadata: Record<string, any>;
+  metadata!: Record<string, any>;
 
   @CreateDateColumn({ type: "timestamptz" })
   @IsDate()
-  createdAt: Date;
+  createdAt!: Date;
 
   // Associations;
   @ManyToOne(() => UserEntity, (user) => user.events, {
@@ -49,5 +49,5 @@ export default class EventEntity extends CommonEntity {
   })
   @JoinColumn({ name: "userId", referencedColumnName: "id" })
   @Type(() => UserEntity)
-  user: UserEntity;
+  user!: UserEntity;
 }

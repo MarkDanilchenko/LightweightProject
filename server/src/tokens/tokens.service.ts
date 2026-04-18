@@ -55,7 +55,7 @@ export default class TokensService {
 
       return args;
     } catch (error) {
-      if (error.name === "TokenExpiredError") {
+      if ((error as Error).name === "TokenExpiredError") {
         throw new UnauthorizedException("Token expired");
       }
 

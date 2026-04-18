@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
-import * as cookieParser from "cookie-parser";
+import cookieParser from "cookie-parser";
 import { INestApplication, InternalServerErrorException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 import AppModule from "@server/app.module";

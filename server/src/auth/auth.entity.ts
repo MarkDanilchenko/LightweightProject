@@ -19,16 +19,16 @@ import CommonEntity from "@server/common/common.entity";
 export default class AuthenticationEntity extends CommonEntity {
   @PrimaryGeneratedColumn("uuid")
   @IsUUID()
-  id: string;
+  id!: string;
 
   @Column({ type: "uuid" })
   @IsUUID()
-  userId: string;
+  userId!: string;
 
   @Column({ type: "enum", enum: AuthenticationProvider })
   @IsString()
   @IsEnum(AuthenticationProvider)
-  provider: AuthenticationProvider;
+  provider!: AuthenticationProvider;
 
   @Column({
     type: "varchar",
@@ -45,18 +45,18 @@ export default class AuthenticationEntity extends CommonEntity {
     comment: "additional authentication metadata",
   })
   @Type(() => Object)
-  metadata: AuthenticationInstanceMetadata;
+  metadata!: AuthenticationInstanceMetadata;
 
   @CreateDateColumn({ type: "timestamptz" })
   @IsDate()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({
     type: "timestamptz",
     comment: `the last time the authentication was accessed, similar to "updatedAt"`,
   })
   @IsDate()
-  lastAccessedAt: Date;
+  lastAccessedAt!: Date;
 
   // associations
   @ManyToOne(() => UserEntity, (user) => user.authentications, {
@@ -66,5 +66,5 @@ export default class AuthenticationEntity extends CommonEntity {
   })
   @JoinColumn({ name: "userId", referencedColumnName: "id" })
   @Type(() => UserEntity)
-  user: UserEntity;
+  user!: UserEntity;
 }
