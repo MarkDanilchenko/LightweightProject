@@ -30,6 +30,11 @@ jest.mock("nodemailer", () => ({
   }),
 }));
 
+const mockEjsRenderFile = jest.fn();
+jest.mock("ejs", () => ({
+  renderFile: (...args: any[]) => mockEjsRenderFile(...args),
+}));
+
 // Mock the app configuration to provide complete configuration for tests
 jest.mock("@server/configs/app.configuration", () => ({
   __esModule: true,
@@ -148,7 +153,7 @@ describe("RmqEmailService", (): void => {
 
     beforeEach((): void => {
       jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
-      jest.spyOn(ejs, "renderFile").mockResolvedValue(testHtml);
+      mockEjsRenderFile.mockResolvedValue(testHtml);
       jest.spyOn(transporter, "sendMail").mockResolvedValue({} as any);
 
       authService.findAuthenticationByPk.mockResolvedValue(authentication);
@@ -165,7 +170,7 @@ describe("RmqEmailService", (): void => {
       expect(fs.promises.access).toHaveBeenCalled();
       expect(authService.findAuthenticationByPk).toHaveBeenCalledWith(payload.modelId);
       expect(tokensService.generate).toHaveBeenCalled();
-      expect(ejs.renderFile).toHaveBeenCalled();
+      expect(mockEjsRenderFile).toHaveBeenCalled();
       expect(authService.updateAuthentication).toHaveBeenCalled();
       expect(eventEmitter2.emit).toHaveBeenCalled();
       expect(transporter.sendMail).toHaveBeenCalled();
@@ -210,7 +215,7 @@ describe("RmqEmailService", (): void => {
 
     beforeEach((): void => {
       jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
-      jest.spyOn(ejs, "renderFile").mockResolvedValue(testHtml);
+      mockEjsRenderFile.mockResolvedValue(testHtml);
       jest.spyOn(transporter, "sendMail").mockResolvedValue({} as any);
 
       authService.findAuthenticationByPk.mockResolvedValue(authentication);
@@ -231,7 +236,7 @@ describe("RmqEmailService", (): void => {
         { userId: user.id, provider: AuthenticationProvider.LOCAL },
         { expiresIn: "15m", secret: authentication.metadata.local?.password },
       );
-      expect(ejs.renderFile).toHaveBeenCalled();
+      expect(mockEjsRenderFile).toHaveBeenCalled();
       expect(eventEmitter2.emit).toHaveBeenCalled();
       expect(transporter.sendMail).toHaveBeenCalled();
       expect(dataSource.createQueryRunner().commitTransaction).toHaveBeenCalled();
