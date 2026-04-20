@@ -12,7 +12,6 @@ import { randomValidJwt } from "../../utils";
 
 describe("TokensService", (): void => {
   let tokensService: TokensService;
-  let configService: jest.Mocked<ConfigService>;
   let jwtService: jest.Mocked<JwtService>;
   let redisService: jest.Mocked<RedisService>;
   let mockTokenPayload: TokenPayload;
@@ -69,7 +68,6 @@ describe("TokensService", (): void => {
 
     tokensService = testingModule.get<TokensService>(TokensService);
     jwtService = testingModule.get<JwtService>(JwtService) as jest.Mocked<JwtService>;
-    configService = testingModule.get<ConfigService>(ConfigService) as jest.Mocked<ConfigService>;
     redisService = testingModule.get<RedisService>(RedisService) as jest.Mocked<RedisService>;
   });
 

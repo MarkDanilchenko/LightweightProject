@@ -7,14 +7,12 @@ import RedisService from "#server/services/redis/redis.service";
 
 @Injectable()
 export default class TokensService {
-  private readonly configService: ConfigService;
   private readonly jwtService: JwtService;
   private readonly redisService: RedisService;
   public readonly jwtRefreshTokenExpiresIn: string;
   public readonly jwtAccessTokenExpiresIn: string;
 
   constructor(configService: ConfigService, jwtService: JwtService, redisService: RedisService) {
-    this.configService = configService;
     this.jwtService = jwtService;
     this.redisService = redisService;
     this.jwtRefreshTokenExpiresIn = configService.get<AppConfiguration["jwtConfiguration"]["refreshTokenExpiresIn"]>(

@@ -8,7 +8,6 @@ import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces"
 
 @Injectable()
 export class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "googleOAuth2") {
-  private readonly configService: ConfigService;
   private readonly authService: AuthService;
 
   constructor(configService: ConfigService, authService: AuthService) {
@@ -28,7 +27,6 @@ export class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "googleOAut
       scope: ["email", "profile"],
     });
 
-    this.configService = configService;
     this.authService = authService;
   }
 

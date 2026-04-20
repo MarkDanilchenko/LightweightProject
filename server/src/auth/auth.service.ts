@@ -2,8 +2,6 @@ import {
   BadRequestException,
   Inject,
   Injectable,
-  Logger,
-  LoggerService,
   NotFoundException,
   UnauthorizedException,
 } from "@nestjs/common";
@@ -45,7 +43,6 @@ export default class AuthService {
   private readonly userService: UsersService;
   private readonly eventsService: EventsService;
   private readonly eventEmitter: EventEmitter2;
-  private readonly logger: LoggerService;
 
   constructor(
     @InjectDataSource()
@@ -64,7 +61,6 @@ export default class AuthService {
     this.userService = userService;
     this.eventsService = eventsService;
     this.eventEmitter = eventEmitter;
-    this.logger = new Logger(AuthService.name);
   }
 
   /**

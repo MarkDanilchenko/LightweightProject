@@ -7,7 +7,6 @@ import { Channel } from "amqplib";
 
 describe("RmqRetryService", (): void => {
   let rmqRetryService: RmqRetryService;
-  let configService: jest.Mocked<ConfigService>;
   let channel: jest.Mocked<Channel>;
 
   const mainQueueOptions = {
@@ -52,7 +51,6 @@ describe("RmqRetryService", (): void => {
     }).compile();
 
     rmqRetryService = testingModule.get<RmqRetryService>(RmqRetryService);
-    configService = testingModule.get<jest.Mocked<ConfigService>>(ConfigService);
 
     channel = {
       ack: jest.fn(),

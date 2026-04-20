@@ -8,7 +8,6 @@ import {
   AuthLocalPasswordResetEvent,
   EventName,
 } from "#server/events/interfaces/events.interfaces";
-import { Logger } from "@nestjs/common";
 import UserEntity from "#server/users/users.entity";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import AuthenticationEntity from "#server/auth/auth.entity";
@@ -61,7 +60,6 @@ describe("RmqEmailConsumer", (): void => {
   let rmqEmailConsumer: RmqEmailConsumer;
   let rmqEmailService: jest.Mocked<RmqEmailService>;
   let rmqRetryService: jest.Mocked<RmqRetryService>;
-  let logger: jest.SpyInstance;
   let user: UserEntity;
   let authentication: AuthenticationEntity;
 
@@ -89,8 +87,6 @@ describe("RmqEmailConsumer", (): void => {
     rmqEmailConsumer = testingModule.get<RmqEmailConsumer>(RmqEmailConsumer);
     rmqEmailService = testingModule.get<jest.Mocked<RmqEmailService>>(RmqEmailService);
     rmqRetryService = testingModule.get<jest.Mocked<RmqRetryService>>(RmqRetryService);
-
-    logger = jest.spyOn(Logger.prototype, "error").mockImplementation((): void => {});
   });
 
   afterEach((): void => {

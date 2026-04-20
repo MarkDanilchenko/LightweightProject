@@ -6,7 +6,6 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import {
   AuthenticationProvider,
-  AuthenticationInstanceMetadata,
   AuthenticationViaIdP,
 } from "#server/auth/interfaces/auth.interfaces";
 import {

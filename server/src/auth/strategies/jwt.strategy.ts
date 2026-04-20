@@ -9,7 +9,6 @@ import TokensService from "#server/tokens/tokens.service";
 
 @Injectable()
 export default class JwtStrategy extends PassportStrategy(Strategy, "jwtStrategy") {
-  private readonly configService: ConfigService;
   private readonly tokensService: TokensService;
 
   constructor(configService: ConfigService, tokensService: TokensService) {
@@ -24,7 +23,6 @@ export default class JwtStrategy extends PassportStrategy(Strategy, "jwtStrategy
       secretOrKey: configService.get<AppConfiguration["jwtConfiguration"]["secret"]>("jwtConfiguration.secret")!,
     });
 
-    this.configService = configService;
     this.tokensService = tokensService;
   }
 

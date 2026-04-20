@@ -65,9 +65,7 @@ jest.mock("@server/configs/app.configuration", () => ({
 
 describe("RmqEmailService", (): void => {
   let rmqEmailService: RmqEmailService;
-  let configService: jest.Mocked<ConfigService>;
   let dataSource: jest.Mocked<DataSource>;
-  let eventsService: jest.Mocked<EventsService>;
   let eventEmitter2: jest.Mocked<EventEmitter2>;
   let tokensService: jest.Mocked<TokensService>;
   let authService: jest.Mocked<AuthService>;
@@ -118,9 +116,7 @@ describe("RmqEmailService", (): void => {
     }).compile();
 
     rmqEmailService = testingModule.get<RmqEmailService>(RmqEmailService);
-    configService = testingModule.get<jest.Mocked<ConfigService>>(ConfigService);
     dataSource = testingModule.get<jest.Mocked<DataSource>>(DataSource);
-    eventsService = testingModule.get<jest.Mocked<EventsService>>(EventsService);
     eventEmitter2 = testingModule.get<jest.Mocked<EventEmitter2>>(EventEmitter2);
     tokensService = testingModule.get<jest.Mocked<TokensService>>(TokensService);
     authService = testingModule.get<jest.Mocked<AuthService>>(AuthService);

@@ -35,13 +35,11 @@ import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces"
 @ApiTags("auth")
 @Controller("auth")
 export default class AuthController {
-  private readonly configService: ConfigService;
   private readonly authService: AuthService;
   private readonly https: boolean;
   private readonly clientBaseUrl: string;
 
   constructor(configService: ConfigService, authService: AuthService) {
-    this.configService = configService;
     this.authService = authService;
     this.https = configService.get<AppConfiguration["serverConfiguration"]["https"]>("serverConfiguration.https")!;
     this.clientBaseUrl =
