@@ -10,6 +10,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { RMQ_MICROSERVICE } from "#server/configs/constants";
 import { HttpsOptions } from "@nestjs/common/interfaces/external/https-options.interface";
 import { GoogleOAuth2Strategy } from "#server/auth/strategies/google.strategy";
+import { Profile, VerifyCallback } from "passport-google-oauth20";
 
 /**
  * Bootstrap the main test app.
@@ -42,7 +43,11 @@ export async function bootstrapMainTestApp(): Promise<INestApplication> {
     .overrideProvider(GoogleOAuth2Strategy)
     .useValue({
       constructor: jest.fn(),
-      validate: jest.fn().mockImplementation((accessToken, refreshToken, profile, done) => done(null, profile)),
+      validate: jest
+        .fn()
+        .mockImplementation((accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback): void =>
+          done(null, profile),
+        ),
     })
     .compile();
 
