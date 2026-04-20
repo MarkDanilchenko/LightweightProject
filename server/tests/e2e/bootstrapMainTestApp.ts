@@ -9,10 +9,12 @@ import AppConfiguration from "#server/configs/interfaces/appConfiguration.interf
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { RMQ_MICROSERVICE } from "#server/configs/constants";
 import { HttpsOptions } from "@nestjs/common/interfaces/external/https-options.interface";
+import { GoogleOAuth2Strategy } from "#server/auth/strategies/google.strategy";
 
 /**
  * Bootstrap the main test app.
  * Overrides the RMQ_MICROSERVICE provider to prevent open handles.
+ * Overrides the GoogleOAuth2Strategy provider to prevent missing OAuth configuration errors in CI.
  *
  * @returns {Promise<INestApplication>} A Promise that resolves to the test app.
  */
@@ -37,6 +39,11 @@ export async function bootstrapMainTestApp(): Promise<INestApplication> {
   })
     .overrideProvider(RMQ_MICROSERVICE)
     .useValue({ emit: jest.fn() })
+    .overrideProvider(GoogleOAuth2Strategy)
+    .useValue({
+      constructor: jest.fn(),
+      validate: jest.fn().mockImplementation((accessToken, refreshToken, profile, done) => done(null, profile)),
+    })
     .compile();
 
   const app: INestApplication = testingModule.createNestApplication({
