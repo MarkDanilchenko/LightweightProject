@@ -10,7 +10,7 @@ jest.mock("crypto", () => ({
 }));
 
 // Mock the app configuration to provide complete configuration for tests;
-jest.mock("@server/configs/app.configuration", () => ({
+jest.mock("#server/configs/app.configuration", () => ({
   __esModule: true,
   default: jest.fn().mockImplementation(() => ({
     serverConfiguration: {
