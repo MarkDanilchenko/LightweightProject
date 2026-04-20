@@ -146,8 +146,8 @@
       "node_modules/(?!uuid|@faker-js/faker)"
     ],
     "moduleNameMapper": {
-      "^@server/(.*)": "<rootDir>/src/$1",
-      "^@shared/(.*)": "<rootDir>/../shared/$1"
+      "^#server/(.*)": "<rootDir>/src/$1",
+      "^#shared/(.*)": "<rootDir>/../shared/$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s",
