@@ -7,7 +7,7 @@ import AppConfiguration from "#server/configs/interfaces/appConfiguration.interf
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 
 @Injectable()
-export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "googleOAuth2") {
+export class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "googleOAuth2") {
   private readonly configService: ConfigService;
   private readonly authService: AuthService;
 

@@ -39,7 +39,7 @@ export default class RmqEmailConsumer {
   @MessagePattern(EventName.AUTH_LOCAL_CREATED)
   async handleAuthLocalCreated(@Payload() payload: AuthLocalCreatedEvent, @Ctx() context: RmqContext): Promise<void> {
     const channel: Channel = context.getChannelRef();
-    const originalMsg: Message = context.getMessage();
+    const originalMsg = context.getMessage() as Message;
 
     try {
       await this.rmqEmailService.sendWelcomeVerificationEmail(payload);
@@ -68,7 +68,7 @@ export default class RmqEmailConsumer {
     @Ctx() context: RmqContext,
   ): Promise<void> {
     const channel: Channel = context.getChannelRef();
-    const originalMsg: Message = context.getMessage();
+    const originalMsg = context.getMessage() as Message;
 
     try {
       await this.rmqEmailService.sendPasswordResetEmail(payload);

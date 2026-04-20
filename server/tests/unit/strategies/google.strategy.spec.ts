@@ -3,7 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { PassportModule } from "@nestjs/passport";
 import { ConfigService } from "@nestjs/config";
 import { UnauthorizedException } from "@nestjs/common";
-import GoogleOAuth2Strategy from "#server/auth/strategies/google.strategy";
+import { GoogleOAuth2Strategy } from "#server/auth/strategies/google.strategy";
 import AuthService from "#server/auth/auth.service";
 import { Profile } from "passport-google-oauth20";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";

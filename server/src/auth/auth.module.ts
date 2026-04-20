@@ -8,7 +8,7 @@ import AuthController from "#server/auth/auth.controller";
 import AuthService from "#server/auth/auth.service";
 import LocalAuthStrategy from "#server/auth/strategies/local.strategy";
 import JwtStrategy from "#server/auth/strategies/jwt.strategy";
-import GoogleOAuth2Strategy from "#server/auth/strategies/google.strategy";
+import { GoogleOAuth2Strategy } from "#server/auth/strategies/google.strategy";
 
 @Module({
   imports: [TypeOrmModule.forFeature([AuthenticationEntity]), PassportModule, UsersModule, EventsModule],
