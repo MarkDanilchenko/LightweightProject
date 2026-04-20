@@ -85,7 +85,7 @@ describe("RmqRetryService", (): void => {
     });
 
     it("should parse retriesCount from string header and send to retry queue", (): void => {
-      const msg = buildMsg({ headers: { "x-retry-count": "3" } });
+      const msg = buildMsg({ properties: { headers: { "x-retry-count": "3" } } });
       const error = new Error("Consumer failed");
 
       // Cast to any to bypass type checking, because these methods are private;
@@ -99,7 +99,7 @@ describe("RmqRetryService", (): void => {
     });
 
     it("should send message to dead letter queue and ack original message when retriesCount reaches max", (): void => {
-      const msg = buildMsg({ headers: { "x-retry-count": 5 } });
+      const msg = buildMsg({ properties: { headers: { "x-retry-count": 5 } } });
       const error = new Error("Consumer failed");
 
       // Cast to any to bypass type checking, because these methods are private;
