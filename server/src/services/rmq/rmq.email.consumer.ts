@@ -7,6 +7,7 @@ import {
   EventName,
 } from "#server/events/interfaces/events.interfaces";
 import RmqRetryService from "#server/services/rmq/rmq.retry.service";
+import { Channel, Message } from "amqplib";
 
 /**
  * Controller that handles incoming RabbitMQ messages for email-related events.
@@ -37,8 +38,8 @@ export default class RmqEmailConsumer {
    */
   @MessagePattern(EventName.AUTH_LOCAL_CREATED)
   async handleAuthLocalCreated(@Payload() payload: AuthLocalCreatedEvent, @Ctx() context: RmqContext): Promise<void> {
-    const channel = context.getChannelRef();
-    const originalMsg = context.getMessage();
+    const channel: Channel = context.getChannelRef();
+    const originalMsg: Message = context.getMessage();
 
     try {
       await this.rmqEmailService.sendWelcomeVerificationEmail(payload);
@@ -66,8 +67,8 @@ export default class RmqEmailConsumer {
     @Payload() payload: AuthLocalPasswordResetEvent,
     @Ctx() context: RmqContext,
   ): Promise<void> {
-    const channel = context.getChannelRef();
-    const originalMsg = context.getMessage();
+    const channel: Channel = context.getChannelRef();
+    const originalMsg: Message = context.getMessage();
 
     try {
       await this.rmqEmailService.sendPasswordResetEmail(payload);
