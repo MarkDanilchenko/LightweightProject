@@ -3,11 +3,11 @@ import * as fs from "node:fs";
 import cookieParser from "cookie-parser";
 import { INestApplication, InternalServerErrorException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import AppModule from "@server/app.module";
+import AppModule from "#server/app.module";
 import { ConfigService } from "@nestjs/config";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
-import { RMQ_MICROSERVICE } from "@server/configs/constants";
+import { RMQ_MICROSERVICE } from "#server/configs/constants";
 import { HttpsOptions } from "@nestjs/common/interfaces/external/https-options.interface";
 
 /**

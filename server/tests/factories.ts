@@ -1,10 +1,10 @@
 import { faker } from "@faker-js/faker";
-import UserEntity from "@server/users/users.entity";
-import AuthenticationEntity from "@server/auth/auth.entity";
-import EventEntity from "@server/events/events.entity";
-import { EventName } from "@server/events/interfaces/events.interfaces";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
-import appConfiguration from "@server/configs/app.configuration";
+import UserEntity from "#server/users/users.entity";
+import AuthenticationEntity from "#server/auth/auth.entity";
+import EventEntity from "#server/events/events.entity";
+import { EventName } from "#server/events/interfaces/events.interfaces";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
+import appConfiguration from "#server/configs/app.configuration";
 import { randomValidJwt } from "./utils";
 
 /**

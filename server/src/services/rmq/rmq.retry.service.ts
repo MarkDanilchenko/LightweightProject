@@ -1,7 +1,7 @@
 import { Injectable, Logger, LoggerService } from "@nestjs/common";
 import { Channel } from "amqplib";
 import { ConfigService } from "@nestjs/config";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 
 @Injectable()
 export default class RmqRetryService {

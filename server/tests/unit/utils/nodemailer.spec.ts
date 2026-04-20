@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { createTransport } from "nodemailer";
-import appConfiguration from "@server/configs/app.configuration";
+import appConfiguration from "#server/configs/app.configuration";
 
 jest.mock("nodemailer", () => ({
   createTransport: jest.fn().mockReturnValue({
@@ -11,7 +11,7 @@ jest.mock("nodemailer", () => ({
 }));
 
 // Mock the app SMTP configuration;
-jest.mock("@server/configs/app.configuration", () => ({
+jest.mock("#server/configs/app.configuration", () => ({
   __esModule: true,
   default: jest.fn().mockImplementation(() => ({
     smtpConfiguration: {
@@ -30,7 +30,7 @@ describe("Nodemailer Utility", (): void => {
   });
 
   it("should create a transporter with correct configuration", (): void => {
-    jest.requireActual("@server/utils/nodemailer");
+    jest.requireActual("#server/utils/nodemailer");
 
     expect(createTransport).toHaveBeenCalledTimes(1);
     expect(createTransport).toHaveBeenCalledWith({
@@ -63,7 +63,7 @@ describe("Nodemailer Utility", (): void => {
     jest.isolateModules((): void => {
       // Ensure, that process.exit is called with code 1;
       expect((): void => {
-        jest.requireActual("@server/utils/nodemailer");
+        jest.requireActual("#server/utils/nodemailer");
       }).toThrow("Process exited with code 1");
     });
 
@@ -82,7 +82,7 @@ describe("Nodemailer Utility", (): void => {
     });
 
     jest.isolateModules((): void => {
-      jest.requireActual("@server/utils/nodemailer");
+      jest.requireActual("#server/utils/nodemailer");
 
       // Ensure, that createTransport is called with secure: true;
       expect(createTransport).toHaveBeenCalledTimes(1);
@@ -103,27 +103,26 @@ describe("Nodemailer Utility", (): void => {
     (createTransport as jest.Mock).mockReturnValueOnce({ verify: mockVerify });
 
     jest.isolateModules((): void => {
-      jest.requireActual("@server/utils/nodemailer");
+      jest.requireActual("#server/utils/nodemailer");
 
       expect(mockVerify).toHaveBeenCalledTimes(1);
     });
   });
 
   it("should throw error, if verify of the transporter configuration fails", (): void => {
-    const mockVerify = jest.fn((callback: (error: Error | null) => void): void =>
-      callback(new Error("Verification failed")),
-    );
+    const mockVerify = jest.fn((callback): void => callback(new Error("Verification failed")));
     const originalProcessExit = process.exit;
     const mockProcessExit = jest.fn().mockImplementationOnce((code: number): void => {
       throw new Error(`Process exited with code ${code}`);
     });
+
     process.exit = mockProcessExit as unknown as (code: number) => never;
 
     (createTransport as jest.Mock).mockReturnValueOnce({ verify: mockVerify });
 
     jest.isolateModules((): void => {
       expect((): void => {
-        jest.requireActual("@server/utils/nodemailer");
+        jest.requireActual("#server/utils/nodemailer");
       }).toThrow("Process exited with code 1");
     });
 

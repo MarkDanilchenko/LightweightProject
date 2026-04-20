@@ -6,8 +6,8 @@ import {
   AuthLocalPasswordResetedEvent,
   AuthLocalPasswordResetSentEvent,
   EventName,
-} from "@server/events/interfaces/events.interfaces";
-import EventsService from "@server/events/events.service";
+} from "#server/events/interfaces/events.interfaces";
+import EventsService from "#server/events/events.service";
 import { EntityManager } from "typeorm";
 
 @Injectable()

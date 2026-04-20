@@ -9,7 +9,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { InternalServerErrorException } from "@nestjs/common";
 import { patchNestjsSwagger } from "@anatine/zod-nestjs";
-import AppModule from "@server/app.module";
+import AppModule from "#server/app.module";
 import { HttpsOptions } from "@nestjs/common/interfaces/external/https-options.interface";
 
 /**

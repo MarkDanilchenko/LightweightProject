@@ -1,11 +1,11 @@
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ConfigService } from "@nestjs/config";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 import { ExtractJwt, Strategy, VerifiedCallback } from "passport-jwt";
-import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
-import { RequestWithSignedCookies } from "@server/common/types/common.types";
-import TokensService from "@server/tokens/tokens.service";
+import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
+import { RequestWithSignedCookies } from "#server/common/types/common.types";
+import TokensService from "#server/tokens/tokens.service";
 
 @Injectable()
 export default class JwtStrategy extends PassportStrategy(Strategy, "jwtStrategy") {

@@ -1,9 +1,9 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService, JwtVerifyOptions } from "@nestjs/jwt";
-import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
-import RedisService from "@server/services/redis/redis.service";
+import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
+import RedisService from "#server/services/redis/redis.service";
 
 @Injectable()
 export default class TokensService {
@@ -71,9 +71,13 @@ export default class TokensService {
    * @returns {TokenPayload} The decoded token payload.
    */
   decode(token: string): TokenPayload {
-    const { ...args } = this.jwtService.decode<TokenPayload>(token);
+    try {
+      const { ...args } = this.jwtService.decode<TokenPayload>(token);
 
-    return args;
+      return args;
+    } catch {
+      throw new BadRequestException("Invalid token");
+    }
   }
 
   /**

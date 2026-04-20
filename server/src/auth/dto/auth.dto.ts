@@ -5,7 +5,7 @@ import {
   localSignUpSchema,
   localForgotPasswordSchema,
   localResetPasswordSchema,
-} from "@server/auth/schemas/auth.schema";
+} from "#server/auth/schemas/auth.schema";
 
 class LocalSignUpDto extends createZodDto(localSignUpSchema) {}
 

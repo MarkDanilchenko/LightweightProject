@@ -3,11 +3,11 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
 import { JwtService } from "@nestjs/jwt";
 import { UnauthorizedException } from "@nestjs/common";
-import TokensService from "@server/tokens/tokens.service";
-import RedisService from "@server/services/redis/redis.service";
-import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
+import TokensService from "#server/tokens/tokens.service";
+import RedisService from "#server/services/redis/redis.service";
+import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import { faker } from "@faker-js/faker";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import { randomValidJwt } from "../../utils";
 
 describe("TokensService", (): void => {

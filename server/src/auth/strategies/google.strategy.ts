@@ -2,9 +2,9 @@ import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Profile, Strategy, VerifyCallback } from "passport-google-oauth20";
 import { ConfigService } from "@nestjs/config";
-import AuthService from "@server/auth/auth.service";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import AuthService from "#server/auth/auth.service";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 
 @Injectable()
 export default class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "googleOAuth2") {

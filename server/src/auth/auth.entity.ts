@@ -8,11 +8,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import UserEntity from "@server/users/users.entity";
-import { AuthenticationProvider, AuthenticationInstanceMetadata } from "@server/auth/interfaces/auth.interfaces";
+import UserEntity from "#server/users/users.entity";
+import { AuthenticationProvider, AuthenticationInstanceMetadata } from "#server/auth/interfaces/auth.interfaces";
 import { IsDate, IsEnum, IsOptional, IsString, IsUUID } from "class-validator";
 import { Type } from "class-transformer";
-import CommonEntity from "@server/common/common.entity";
+import CommonEntity from "#server/common/common.entity";
 
 @Entity({ name: "authentications", schema: "public" })
 @Index(["userId", "provider"], { unique: true })

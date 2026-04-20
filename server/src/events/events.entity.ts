@@ -1,9 +1,9 @@
 import { Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { EventName } from "@server/events/interfaces/events.interfaces";
-import UserEntity from "@server/users/users.entity";
+import { EventName } from "#server/events/interfaces/events.interfaces";
+import UserEntity from "#server/users/users.entity";
 import { IsDate, IsEnum, IsString, IsUUID } from "class-validator";
 import { Type } from "class-transformer";
-import CommonEntity from "@server/common/common.entity";
+import CommonEntity from "#server/common/common.entity";
 
 @Entity({ name: "events", schema: "public" })
 @Index(["userId"])

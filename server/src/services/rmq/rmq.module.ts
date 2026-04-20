@@ -1,13 +1,13 @@
 import { Global, Module } from "@nestjs/common";
-import RmqEmailService from "@server/services/rmq/rmq.email.service";
-import RmqEmailConsumer from "@server/services/rmq/rmq.email.consumer";
-import AuthModule from "@server/auth/auth.module";
-import EventsModule from "@server/events/events.module";
+import RmqEmailService from "#server/services/rmq/rmq.email.service";
+import RmqEmailConsumer from "#server/services/rmq/rmq.email.consumer";
+import AuthModule from "#server/auth/auth.module";
+import EventsModule from "#server/events/events.module";
 import { ClientsModule } from "@nestjs/microservices";
-import { RMQ_MICROSERVICE } from "@server/configs/constants";
+import { RMQ_MICROSERVICE } from "#server/configs/constants";
 import { ConfigService } from "@nestjs/config";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
-import RmqRetryService from "@server/services/rmq/rmq.retry.service";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
+import RmqRetryService from "#server/services/rmq/rmq.retry.service";
 
 @Global()
 @Module({

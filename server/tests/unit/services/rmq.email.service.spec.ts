@@ -1,24 +1,23 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import * as fs from "node:fs";
-import * as ejs from "ejs";
 import { Test, TestingModule } from "@nestjs/testing";
-import RmqEmailService from "@server/services/rmq/rmq.email.service";
+import RmqEmailService from "#server/services/rmq/rmq.email.service";
 import { ConfigService } from "@nestjs/config";
 import { DataSource, QueryRunner } from "typeorm";
-import EventsService from "@server/events/events.service";
+import EventsService from "#server/events/events.service";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import TokensService from "@server/tokens/tokens.service";
-import AuthService from "@server/auth/auth.service";
+import TokensService from "#server/tokens/tokens.service";
+import AuthService from "#server/auth/auth.service";
 import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   EventName,
-} from "@server/events/interfaces/events.interfaces";
-import UserEntity from "@server/users/users.entity";
-import AuthenticationEntity from "@server/auth/auth.entity";
-import transporter from "@server/utils/nodemailer";
+} from "#server/events/interfaces/events.interfaces";
+import UserEntity from "#server/users/users.entity";
+import AuthenticationEntity from "#server/auth/auth.entity";
+import transporter from "#server/utils/nodemailer";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 
 // Mock the nodemailer createTransport before import both RmqEmailConsumer and RmqEmailService;
 jest.mock("nodemailer", () => ({

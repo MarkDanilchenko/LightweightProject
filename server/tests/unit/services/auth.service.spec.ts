@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-import UserEntity from "@server/users/users.entity";
-import AuthenticationEntity from "@server/auth/auth.entity";
-import AuthService from "@server/auth/auth.service";
+import UserEntity from "#server/users/users.entity";
+import AuthenticationEntity from "#server/auth/auth.entity";
+import AuthService from "#server/auth/auth.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import {
   AuthenticationProvider,
   AuthenticationInstanceMetadata,
   AuthenticationViaIdP,
-} from "@server/auth/interfaces/auth.interfaces";
+} from "#server/auth/interfaces/auth.interfaces";
 import {
   DataSource,
   EntityManager,
@@ -21,19 +21,19 @@ import {
 } from "typeorm";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { ClientProxy } from "@nestjs/microservices";
-import { RMQ_MICROSERVICE } from "@server/configs/constants";
-import TokensService from "@server/tokens/tokens.service";
-import UsersService from "@server/users/users.service";
-import EventsService from "@server/events/events.service";
+import { RMQ_MICROSERVICE } from "#server/configs/constants";
+import TokensService from "#server/tokens/tokens.service";
+import UsersService from "#server/users/users.service";
+import EventsService from "#server/events/events.service";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { randomValidJwt } from "../../utils";
 import { faker } from "@faker-js/faker";
-import { EventName } from "@server/events/interfaces/events.interfaces";
+import { EventName } from "#server/events/interfaces/events.interfaces";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
-import { LocalPasswordResetDto, LocalVerificationEmailDto } from "@server/auth/dto/auth.dto";
+import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
+import { LocalPasswordResetDto, LocalVerificationEmailDto } from "#server/auth/dto/auth.dto";
 
-jest.mock("@server/utils/hasher", () => ({
+jest.mock("#server/utils/hasher", () => ({
   hash: jest.fn().mockImplementation((password: string): Promise<string> => Promise.resolve("hashed-password")),
 }));
 
@@ -730,11 +730,14 @@ describe("AuthService", (): void => {
       expect(entityManager.update).toHaveBeenCalledWith(
         AuthenticationEntity,
         { provider: decoded.provider, userId: decoded.userId, id: authentication.id },
-        expect.objectContaining({
-          metadata: expect.objectContaining({
-            local: expect.objectContaining({ password: "hashed-password" }) as AuthenticationInstanceMetadata["local"],
-          }) as AuthenticationInstanceMetadata,
-        }),
+        {
+          metadata: {
+            local: {
+              ...authentication.metadata.local,
+              password: "hashed-password",
+            },
+          },
+        },
       );
       expect(eventEmitter2.emit).toHaveBeenCalledWith(
         EventName.AUTH_LOCAL_PASSWORD_RESETED,

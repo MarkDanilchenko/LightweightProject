@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import { encrypt, decrypt } from "@server/utils/encrypter";
+import { encrypt, decrypt } from "#server/utils/encrypter";
 
 // Mock the crypto module;
 jest.mock("crypto", () => ({

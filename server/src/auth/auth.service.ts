@@ -18,24 +18,24 @@ import {
   Repository,
   UpdateResult,
 } from "typeorm";
-import AuthenticationEntity from "@server/auth/auth.entity";
-import UsersService from "@server/users/users.service";
-import UserEntity from "@server/users/users.entity";
+import AuthenticationEntity from "#server/auth/auth.entity";
+import UsersService from "#server/users/users.service";
+import UserEntity from "#server/users/users.entity";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import { EventName } from "@server/events/interfaces/events.interfaces";
-import EventsService from "@server/events/events.service";
-import { AuthenticationProvider, AuthenticationViaIdP } from "@server/auth/interfaces/auth.interfaces";
-import { hash } from "@server/utils/hasher";
-import TokensService from "@server/tokens/tokens.service";
+import { EventName } from "#server/events/interfaces/events.interfaces";
+import EventsService from "#server/events/events.service";
+import { AuthenticationProvider, AuthenticationViaIdP } from "#server/auth/interfaces/auth.interfaces";
+import { hash } from "#server/utils/hasher";
+import TokensService from "#server/tokens/tokens.service";
 import { v4 as uuidv4 } from "uuid";
-import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
+import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import {
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
   LocalSignUpDto,
   LocalVerificationEmailDto,
-} from "@server/auth/dto/auth.dto";
-import { RMQ_MICROSERVICE } from "@server/configs/constants";
+} from "#server/auth/dto/auth.dto";
+import { RMQ_MICROSERVICE } from "#server/configs/constants";
 import { ClientProxy } from "@nestjs/microservices";
 
 @Injectable()
@@ -505,7 +505,7 @@ export default class AuthService {
         EventName.AUTH_LOCAL_PASSWORD_RESET,
         user.id,
         user.authentications[0].id,
-        user.username!,
+        user.username,
         user.email,
       ),
     );

@@ -1,12 +1,12 @@
 import { Controller, Logger, LoggerService } from "@nestjs/common";
-import RmqEmailService from "@server/services/rmq/rmq.email.service";
+import RmqEmailService from "#server/services/rmq/rmq.email.service";
 import { Ctx, MessagePattern, Payload, RmqContext } from "@nestjs/microservices";
 import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   EventName,
-} from "@server/events/interfaces/events.interfaces";
-import RmqRetryService from "@server/services/rmq/rmq.retry.service";
+} from "#server/events/interfaces/events.interfaces";
+import RmqRetryService from "#server/services/rmq/rmq.retry.service";
 
 /**
  * Controller that handles incoming RabbitMQ messages for email-related events.

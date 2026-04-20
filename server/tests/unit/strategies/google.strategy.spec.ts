@@ -3,12 +3,12 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { PassportModule } from "@nestjs/passport";
 import { ConfigService } from "@nestjs/config";
 import { UnauthorizedException } from "@nestjs/common";
-import GoogleOAuth2Strategy from "@server/auth/strategies/google.strategy";
-import AuthService from "@server/auth/auth.service";
+import GoogleOAuth2Strategy from "#server/auth/strategies/google.strategy";
+import AuthService from "#server/auth/auth.service";
 import { Profile } from "passport-google-oauth20";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import { buildUserFactory } from "../../factories";
-import UserEntity from "@server/users/users.entity";
+import UserEntity from "#server/users/users.entity";
 
 describe("GoogleOAuth2Strategy", (): void => {
   const mockDone: jest.MockedFunction<(...args: unknown[]) => void> = jest.fn();

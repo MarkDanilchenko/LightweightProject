@@ -1,9 +1,9 @@
 import { Repository } from "typeorm";
-import EventEntity from "@server/events/events.entity";
+import EventEntity from "#server/events/events.entity";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { buildEventFactory } from "../../factories";
-import { EventName } from "@server/events/interfaces/events.interfaces";
+import { EventName } from "#server/events/interfaces/events.interfaces";
 
 describe("EventsEntity", (): void => {
   let eventRepository: Repository<EventEntity>;
@@ -75,8 +75,7 @@ describe("EventsEntity", (): void => {
 
     it("should throw an error when some property is invalid", async (): Promise<void> => {
       expect(event).toBeInstanceOf(EventEntity);
-      // @ts-expect-error - invalid name value initialization only for test purpose;
-      event.name = "invalid name";
+      (event.name as unknown) = "invalid name";
 
       await expect(event.validate()).rejects.toThrow();
     });

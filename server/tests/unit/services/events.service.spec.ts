@@ -2,17 +2,17 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource, EntityManager, Repository } from "typeorm";
-import EventsService from "@server/events/events.service";
-import EventEntity from "@server/events/events.entity";
+import EventsService from "#server/events/events.service";
+import EventEntity from "#server/events/events.entity";
 import {
   AuthLocalEmailVerificationSentEvent,
   AuthLocalEmailVerifiedEvent,
   AuthLocalPasswordResetedEvent,
   EventName,
-} from "@server/events/interfaces/events.interfaces";
+} from "#server/events/interfaces/events.interfaces";
 import { buildEventFactory, buildUserFactory } from "../../factories";
-import { EventType } from "@server/events/types/events.types";
-import UserEntity from "@server/users/users.entity";
+import { EventType } from "#server/events/types/events.types";
+import UserEntity from "#server/users/users.entity";
 
 describe("EventsService", (): void => {
   const randomUuid: string = "3fd5e553-73a2-486b-8120-90cd007c9843";

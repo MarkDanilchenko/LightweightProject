@@ -7,11 +7,11 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from "typeorm";
-import AuthenticationEntity from "@server/auth/auth.entity";
-import EventEntity from "@server/events/events.entity";
+import AuthenticationEntity from "#server/auth/auth.entity";
+import EventEntity from "#server/events/events.entity";
 import { IsArray, IsDate, IsEmail, IsOptional, IsString, IsUUID } from "class-validator";
 import { Type } from "class-transformer";
-import CommonEntity from "@server/common/common.entity";
+import CommonEntity from "#server/common/common.entity";
 
 @Entity({ name: "users", schema: "public" })
 export default class UserEntity extends CommonEntity {

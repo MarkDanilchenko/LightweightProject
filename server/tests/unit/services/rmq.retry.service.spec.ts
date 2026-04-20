@@ -1,4 +1,4 @@
-import RmqRetryService from "@server/services/rmq/rmq.retry.service";
+import RmqRetryService from "#server/services/rmq/rmq.retry.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
 import { Logger } from "@nestjs/common";
