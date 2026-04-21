@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 import crypto from "crypto";
-import { hash, verifyHash } from "@server/utils/hasher";
+import { hash, verifyHash } from "#server/utils/hasher";
 
 // Mock the crypto module;
 jest.mock("crypto", () => ({
@@ -10,7 +10,7 @@ jest.mock("crypto", () => ({
 }));
 
 // Mock the app configuration to provide complete configuration for tests;
-jest.mock("@server/configs/app.configuration", () => ({
+jest.mock("#server/configs/app.configuration", () => ({
   __esModule: true,
   default: jest.fn().mockImplementation(() => ({
     serverConfiguration: {

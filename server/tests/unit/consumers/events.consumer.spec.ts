@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from "@nestjs/testing";
-import EventsConsumer from "@server/events/events.consumer";
-import EventsService from "@server/events/events.service";
+import EventsConsumer from "#server/events/events.consumer";
+import EventsService from "#server/events/events.service";
 import {
   AuthLocalEmailVerificationSentEvent,
   AuthLocalEmailVerifiedEvent,
   AuthLocalPasswordResetedEvent,
   AuthLocalPasswordResetSentEvent,
   EventName,
-} from "@server/events/interfaces/events.interfaces";
+} from "#server/events/interfaces/events.interfaces";
 import { buildUserFactory, buildAuthenticationFactory } from "../../factories";
-import UserEntity from "@server/users/users.entity";
-import AuthenticationEntity from "@server/auth/auth.entity";
+import UserEntity from "#server/users/users.entity";
+import AuthenticationEntity from "#server/auth/auth.entity";
 import { EntityManager } from "typeorm";
 
 describe("EventsConsumer", (): void => {

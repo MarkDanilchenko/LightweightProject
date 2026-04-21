@@ -1,7 +1,7 @@
 import * as jwt from "jsonwebtoken";
-import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
+import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import { faker } from "@faker-js/faker";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import { DataSource } from "typeorm";
 
 /**

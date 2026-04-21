@@ -1,9 +1,9 @@
 import { Injectable } from "@nestjs/common";
-import { eventsRegistry } from "@server/events/events.factory";
-import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
-import EventEntity from "@server/events/events.entity";
-import { DataSource, EntityManager, Repository } from "typeorm";
-import { EventType } from "@server/events/types/events.types";
+import { eventsRegistry } from "#server/events/events.factory";
+import { InjectDataSource } from "@nestjs/typeorm";
+import EventEntity from "#server/events/events.entity";
+import { DataSource, EntityManager } from "typeorm";
+import { EventType } from "#server/events/types/events.types";
 
 @Injectable()
 export default class EventsService {
@@ -13,8 +13,6 @@ export default class EventsService {
   constructor(
     @InjectDataSource()
     dataSource: DataSource,
-    @InjectRepository(EventEntity)
-    private readonly eventRepository: Repository<EventEntity>,
   ) {
     this.dataSource = dataSource;
   }

@@ -2,26 +2,26 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
 import { Response } from "express";
-import AuthController from "@server/auth/auth.controller";
-import AuthService from "@server/auth/auth.service";
+import AuthController from "#server/auth/auth.controller";
+import AuthService from "#server/auth/auth.service";
 import {
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
   LocalSignInDto,
   LocalSignUpDto,
   LocalVerificationEmailDto,
-} from "@server/auth/dto/auth.dto";
+} from "#server/auth/dto/auth.dto";
 import { buildUserFactory } from "../../factories";
-import UserEntity from "@server/users/users.entity";
-import { RequestWithSignedCookies, RequestWithTokenPayload, RequestWithUser } from "@server/common/types/common.types";
+import UserEntity from "#server/users/users.entity";
+import { RequestWithSignedCookies, RequestWithTokenPayload, RequestWithUser } from "#server/common/types/common.types";
 import { UnauthorizedException } from "@nestjs/common";
-import { setCookie, clearCookie } from "@server/utils/cookie";
+import { setCookie, clearCookie } from "#server/utils/cookie";
 import { randomValidJwt } from "../../utils";
 import { v4 as uuidv4 } from "uuid";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
-import GoogleOAuth2Guard from "@server/auth/guards/google.guard";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
+import GoogleOAuth2Guard from "#server/auth/guards/google.guard";
 
-jest.mock("@server/utils/cookie", () => ({
+jest.mock("#server/utils/cookie", () => ({
   setCookie: jest.fn(),
   clearCookie: jest.fn(),
 }));

@@ -5,12 +5,24 @@
   "author": "https://github.com/MarkDanilchenko",
   "private": true,
   "license": "UNLICENSED",
+  "type": "commonjs",
   "engines": {
     "node": ">=24.0.0"
   },
-  "type": "commonjs",
+  "imports": {
+    "#server/*": [
+      "./server/dist/src/*.js",
+      "./server/dist/src/*/index.js",
+      "./server/dist/src/*"
+    ],
+    "#shared/*": [
+      "./shared/*.js",
+      "./shared/*/index.js",
+      "./shared/*"
+    ]
+  },
   "scripts": {
-    "build:server": "cd server && nest build && tsc-alias",
+    "build:server": "cd server && npm run clear:server && nest build && tsc-alias",
     "clear:server": "rm -rf ./server/dist",
     "start:server": "cd server && nest start",
     "start:server:dev": "cd server && nest start --watch",
@@ -18,7 +30,7 @@
     "start:server:prod": "cd server && node dist/src/main",
     "start:microservice:rmq": "cd server && ts-node -r tsconfig-paths/register src/microservice.rmq.ts",
     "start:microservice:rmq:dev": "cd server && nodemon --watch 'src/**/*.ts' --exec ts-node -r tsconfig-paths/register src/microservice.rmq.ts",
-    "start:microservice:rmq:prod": "cd server && node dist/src/microservice.rmq.ts",
+    "start:microservice:rmq:prod": "cd server && node dist/src/microservice.rmq.js",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "typeorm:create": "npm run typeorm migration:create",
     "typeorm:run": "npm run typeorm migration:run -- -d ./server/src/configs/typeorm.configuration.ts",
@@ -84,6 +96,7 @@
     "@nestjs/testing": "11.1.18",
     "@swc/cli": "0.6.0",
     "@swc/core": "1.15.24",
+    "@types/amqplib": "^0.10.8",
     "@types/cookie-parser": "1.4.10",
     "@types/ejs": "3.1.5",
     "@types/express": "5.0.6",
@@ -110,7 +123,7 @@
     "ts-node": "10.9.2",
     "tsc-alias": "1.8.16",
     "tsconfig-paths": "4.2.0",
-    "typescript": "5.9.3",
+    "typescript": "6.0.2",
     "typescript-eslint": "8.58.1"
   },
   "jest": {
@@ -133,8 +146,8 @@
       "node_modules/(?!uuid|@faker-js/faker)"
     ],
     "moduleNameMapper": {
-      "^@server/(.*)": "<rootDir>/src/$1",
-      "^@shared/(.*)": "<rootDir>/../shared/$1"
+      "^#server/(.*)": "<rootDir>/src/$1",
+      "^#shared/(.*)": "<rootDir>/../shared/$1"
     },
     "collectCoverageFrom": [
       "**/*.(t|j)s",

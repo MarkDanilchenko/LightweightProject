@@ -1,19 +1,19 @@
 import { INestApplication } from "@nestjs/common";
 import { DataSource } from "typeorm";
-import * as request from "supertest";
+import request from "supertest";
 import DbFactories from "../db-factories";
 import { bootstrapMainTestApp } from "./bootstrapMainTestApp";
 import TestAgent from "supertest/lib/agent";
-import UserEntity from "@server/users/users.entity";
+import UserEntity from "#server/users/users.entity";
 import { faker } from "@faker-js/faker";
-import AuthenticationEntity from "@server/auth/auth.entity";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import AuthenticationEntity from "#server/auth/auth.entity";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import { ConfigService } from "@nestjs/config";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
-import EventEntity from "@server/events/events.entity";
-import { EventName } from "@server/events/interfaces/events.interfaces";
-import TokensService from "@server/tokens/tokens.service";
-import { hash } from "@server/utils/hasher";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
+import EventEntity from "#server/events/events.entity";
+import { EventName } from "#server/events/interfaces/events.interfaces";
+import TokensService from "#server/tokens/tokens.service";
+import { hash } from "#server/utils/hasher";
 
 // Mock nodemailer to prevent open handles;
 jest.mock("nodemailer", () => ({
@@ -24,10 +24,10 @@ jest.mock("nodemailer", () => ({
 }));
 
 // Mock the app configuration partially;
-jest.mock("@server/configs/app.configuration", () => {
+jest.mock("#server/configs/app.configuration", () => {
   const mockSecret = "d227161a1d43c195902210e8e03d1021d5b0cd4d0662982597c431bafa3eb884";
   const appConfiguration = {
-    ...jest.requireActual("@server/configs/app.configuration").default(),
+    ...jest.requireActual("#server/configs/app.configuration").default(),
   };
 
   appConfiguration["serverConfiguration"]["cookieSecret"] = mockSecret;
@@ -775,7 +775,7 @@ describe("AuthController E2E", (): void => {
         const response = await httpServer.post("/api/v1/auth/local/password/reset").send(payload);
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.message).toContain("Token is invalid.");
+        expect(response.body.message).toContain("Invalid token");
       });
 
       it("should return 401 for expired token", async (): Promise<void> => {

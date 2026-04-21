@@ -1,4 +1,4 @@
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 
 interface TokenPayload {
   jwti?: string;

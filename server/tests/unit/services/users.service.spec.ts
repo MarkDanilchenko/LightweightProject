@@ -2,8 +2,8 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
-import UsersService from "@server/users/users.service";
-import UserEntity from "@server/users/users.entity";
+import UsersService from "#server/users/users.service";
+import UserEntity from "#server/users/users.entity";
 import { buildUserFactory } from "../../factories";
 
 describe("UsersService", (): void => {

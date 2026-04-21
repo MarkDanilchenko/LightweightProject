@@ -1,9 +1,9 @@
 import { Repository } from "typeorm";
-import AuthenticationEntity from "@server/auth/auth.entity";
+import AuthenticationEntity from "#server/auth/auth.entity";
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { buildAuthenticationFactory } from "../../factories";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 
 describe("Authentication Entity", (): void => {
   let authenticationRepository: Repository<AuthenticationEntity>;

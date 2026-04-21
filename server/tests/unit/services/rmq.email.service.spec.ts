@@ -1,24 +1,23 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import * as fs from "node:fs";
-import * as ejs from "ejs";
 import { Test, TestingModule } from "@nestjs/testing";
-import RmqEmailService from "@server/services/rmq/rmq.email.service";
+import RmqEmailService from "#server/services/rmq/rmq.email.service";
 import { ConfigService } from "@nestjs/config";
 import { DataSource, QueryRunner } from "typeorm";
-import EventsService from "@server/events/events.service";
+import EventsService from "#server/events/events.service";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import TokensService from "@server/tokens/tokens.service";
-import AuthService from "@server/auth/auth.service";
+import TokensService from "#server/tokens/tokens.service";
+import AuthService from "#server/auth/auth.service";
 import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   EventName,
-} from "@server/events/interfaces/events.interfaces";
-import UserEntity from "@server/users/users.entity";
-import AuthenticationEntity from "@server/auth/auth.entity";
-import transporter from "@server/utils/nodemailer";
+} from "#server/events/interfaces/events.interfaces";
+import UserEntity from "#server/users/users.entity";
+import AuthenticationEntity from "#server/auth/auth.entity";
+import transporter from "#server/utils/nodemailer";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 
 // Mock the nodemailer createTransport before import both RmqEmailConsumer and RmqEmailService;
 jest.mock("nodemailer", () => ({
@@ -30,8 +29,13 @@ jest.mock("nodemailer", () => ({
   }),
 }));
 
+const mockEjsRenderFile = jest.fn();
+jest.mock("ejs", () => ({
+  renderFile: (...args: any[]) => mockEjsRenderFile(...args),
+}));
+
 // Mock the app configuration to provide complete configuration for tests
-jest.mock("@server/configs/app.configuration", () => ({
+jest.mock("#server/configs/app.configuration", () => ({
   __esModule: true,
   default: jest.fn().mockImplementation(() => ({
     smtpConfiguration: {
@@ -61,9 +65,7 @@ jest.mock("@server/configs/app.configuration", () => ({
 
 describe("RmqEmailService", (): void => {
   let rmqEmailService: RmqEmailService;
-  let configService: jest.Mocked<ConfigService>;
   let dataSource: jest.Mocked<DataSource>;
-  let eventsService: jest.Mocked<EventsService>;
   let eventEmitter2: jest.Mocked<EventEmitter2>;
   let tokensService: jest.Mocked<TokensService>;
   let authService: jest.Mocked<AuthService>;
@@ -114,9 +116,7 @@ describe("RmqEmailService", (): void => {
     }).compile();
 
     rmqEmailService = testingModule.get<RmqEmailService>(RmqEmailService);
-    configService = testingModule.get<jest.Mocked<ConfigService>>(ConfigService);
     dataSource = testingModule.get<jest.Mocked<DataSource>>(DataSource);
-    eventsService = testingModule.get<jest.Mocked<EventsService>>(EventsService);
     eventEmitter2 = testingModule.get<jest.Mocked<EventEmitter2>>(EventEmitter2);
     tokensService = testingModule.get<jest.Mocked<TokensService>>(TokensService);
     authService = testingModule.get<jest.Mocked<AuthService>>(AuthService);
@@ -148,7 +148,7 @@ describe("RmqEmailService", (): void => {
 
     beforeEach((): void => {
       jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
-      jest.spyOn(ejs, "renderFile").mockResolvedValue(testHtml);
+      mockEjsRenderFile.mockResolvedValue(testHtml);
       jest.spyOn(transporter, "sendMail").mockResolvedValue({} as any);
 
       authService.findAuthenticationByPk.mockResolvedValue(authentication);
@@ -165,7 +165,7 @@ describe("RmqEmailService", (): void => {
       expect(fs.promises.access).toHaveBeenCalled();
       expect(authService.findAuthenticationByPk).toHaveBeenCalledWith(payload.modelId);
       expect(tokensService.generate).toHaveBeenCalled();
-      expect(ejs.renderFile).toHaveBeenCalled();
+      expect(mockEjsRenderFile).toHaveBeenCalled();
       expect(authService.updateAuthentication).toHaveBeenCalled();
       expect(eventEmitter2.emit).toHaveBeenCalled();
       expect(transporter.sendMail).toHaveBeenCalled();
@@ -210,7 +210,7 @@ describe("RmqEmailService", (): void => {
 
     beforeEach((): void => {
       jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
-      jest.spyOn(ejs, "renderFile").mockResolvedValue(testHtml);
+      mockEjsRenderFile.mockResolvedValue(testHtml);
       jest.spyOn(transporter, "sendMail").mockResolvedValue({} as any);
 
       authService.findAuthenticationByPk.mockResolvedValue(authentication);
@@ -231,7 +231,7 @@ describe("RmqEmailService", (): void => {
         { userId: user.id, provider: AuthenticationProvider.LOCAL },
         { expiresIn: "15m", secret: authentication.metadata.local?.password },
       );
-      expect(ejs.renderFile).toHaveBeenCalled();
+      expect(mockEjsRenderFile).toHaveBeenCalled();
       expect(eventEmitter2.emit).toHaveBeenCalled();
       expect(transporter.sendMail).toHaveBeenCalled();
       expect(dataSource.createQueryRunner().commitTransaction).toHaveBeenCalled();

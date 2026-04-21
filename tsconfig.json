@@ -1,25 +1,24 @@
 {
   "compilerOptions": {
-    "ignoreDeprecations": "5.0",
+    "target": "es2022",
     "module": "commonjs",
+    "allowJs": false,
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "allowSyntheticDefaultImports": true,
-    "target": "es2024",
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
     "sourceMap": true,
     "incremental": true,
     "skipLibCheck": true,
-    "strictNullChecks": true,
-    "forceConsistentCasingInFileNames": true,
-    "noImplicitAny": false,
-    "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false,
-    "baseUrl": "./",
+    "esModuleInterop": true,
+    "noUnusedLocals": true,
     "paths": {
-      "@server/*": ["server/src/*"],
-      "@shared/*": ["shared/*"]
-    }
-  }
+      "#server/*": ["./server/src/*"],
+      "#shared/*": ["./shared/*"]
+    },
+    "types": ["jest", "node"]
+  },
+  "exclude": ["node_modules", "dist", "eslint.config.mjs"]
 }

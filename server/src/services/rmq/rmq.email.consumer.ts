@@ -1,12 +1,13 @@
 import { Controller, Logger, LoggerService } from "@nestjs/common";
-import RmqEmailService from "@server/services/rmq/rmq.email.service";
+import RmqEmailService from "#server/services/rmq/rmq.email.service";
 import { Ctx, MessagePattern, Payload, RmqContext } from "@nestjs/microservices";
 import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   EventName,
-} from "@server/events/interfaces/events.interfaces";
-import RmqRetryService from "@server/services/rmq/rmq.retry.service";
+} from "#server/events/interfaces/events.interfaces";
+import RmqRetryService from "#server/services/rmq/rmq.retry.service";
+import { Channel, Message } from "amqplib";
 
 /**
  * Controller that handles incoming RabbitMQ messages for email-related events.
@@ -37,15 +38,15 @@ export default class RmqEmailConsumer {
    */
   @MessagePattern(EventName.AUTH_LOCAL_CREATED)
   async handleAuthLocalCreated(@Payload() payload: AuthLocalCreatedEvent, @Ctx() context: RmqContext): Promise<void> {
-    const channel = context.getChannelRef();
-    const originalMsg = context.getMessage();
+    const channel: Channel = context.getChannelRef();
+    const originalMsg = context.getMessage() as Message;
 
     try {
       await this.rmqEmailService.sendWelcomeVerificationEmail(payload);
 
       channel.ack(originalMsg);
     } catch (error) {
-      this.logger.error("RmqEmailConsumer ~ handleAuthCreatedLocal", error);
+      this.logger.error("RmqEmailConsumer ~ handleAuthCreatedLocal: " + (error as Error).message);
 
       this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
     }
@@ -66,15 +67,15 @@ export default class RmqEmailConsumer {
     @Payload() payload: AuthLocalPasswordResetEvent,
     @Ctx() context: RmqContext,
   ): Promise<void> {
-    const channel = context.getChannelRef();
-    const originalMsg = context.getMessage();
+    const channel: Channel = context.getChannelRef();
+    const originalMsg = context.getMessage() as Message;
 
     try {
       await this.rmqEmailService.sendPasswordResetEmail(payload);
 
       channel.ack(originalMsg);
     } catch (error) {
-      this.logger.error("RmqEmailConsumer ~ handleAuthLocalPasswordReset", error);
+      this.logger.error("RmqEmailConsumer ~ handleAuthLocalPasswordReset: " + (error as Error).message);
 
       this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
     }

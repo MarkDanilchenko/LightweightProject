@@ -1,7 +1,7 @@
 import { createTransport, Transporter } from "nodemailer";
-import appConfiguration from "@server/configs/app.configuration";
+import appConfiguration from "#server/configs/app.configuration";
 import { Logger } from "@nestjs/common";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 
 const logger = new Logger("Nodemailer");
 const smtpConfiguration: AppConfiguration["smtpConfiguration"] = appConfiguration().smtpConfiguration;
@@ -30,7 +30,7 @@ const transporter: Transporter = createTransport({
 
 transporter.verify((error: Error | null): void => {
   if (error) {
-    logger.error("Error with SMTP configuration");
+    logger.error("Error with SMTP configuration: " + error.message);
 
     process.exit(1);
   }

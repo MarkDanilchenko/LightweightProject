@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/unbound-method */
-import UserEntity from "@server/users/users.entity";
-import AuthenticationEntity from "@server/auth/auth.entity";
-import AuthService from "@server/auth/auth.service";
+import UserEntity from "#server/users/users.entity";
+import AuthenticationEntity from "#server/auth/auth.entity";
+import AuthService from "#server/auth/auth.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import {
   AuthenticationProvider,
-  AuthenticationInstanceMetadata,
   AuthenticationViaIdP,
-} from "@server/auth/interfaces/auth.interfaces";
+} from "#server/auth/interfaces/auth.interfaces";
 import {
   DataSource,
   EntityManager,
@@ -21,19 +20,19 @@ import {
 } from "typeorm";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { ClientProxy } from "@nestjs/microservices";
-import { RMQ_MICROSERVICE } from "@server/configs/constants";
-import TokensService from "@server/tokens/tokens.service";
-import UsersService from "@server/users/users.service";
-import EventsService from "@server/events/events.service";
+import { RMQ_MICROSERVICE } from "#server/configs/constants";
+import TokensService from "#server/tokens/tokens.service";
+import UsersService from "#server/users/users.service";
+import EventsService from "#server/events/events.service";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import { randomValidJwt } from "../../utils";
 import { faker } from "@faker-js/faker";
-import { EventName } from "@server/events/interfaces/events.interfaces";
+import { EventName } from "#server/events/interfaces/events.interfaces";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
-import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
-import { LocalPasswordResetDto, LocalVerificationEmailDto } from "@server/auth/dto/auth.dto";
+import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
+import { LocalPasswordResetDto, LocalVerificationEmailDto } from "#server/auth/dto/auth.dto";
 
-jest.mock("@server/utils/hasher", () => ({
+jest.mock("#server/utils/hasher", () => ({
   hash: jest.fn().mockImplementation((password: string): Promise<string> => Promise.resolve("hashed-password")),
 }));
 
@@ -210,7 +209,9 @@ describe("AuthService", (): void => {
   describe("localSignUp", (): void => {
     it("should create user and authentication when user does not exist", async (): Promise<void> => {
       usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(null);
-      eventsService.buildInstance.mockReturnValueOnce(expect.any(Object));
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValueOnce(
+        expect.any(Object),
+      );
       (entityManager.create as jest.Mock)
         .mockReturnValueOnce({ id: user.id, email: user.email })
         .mockReturnValueOnce(authentication);
@@ -221,7 +222,7 @@ describe("AuthService", (): void => {
         lastName: user.lastName!,
         email: user.email,
         avatarUrl: user.avatarUrl!,
-        password: authentication.metadata.local!.password!,
+        password: authentication.metadata.local!.password,
       });
 
       expect(usersService.findUser).toHaveBeenCalledTimes(2);
@@ -240,7 +241,7 @@ describe("AuthService", (): void => {
           lastName: user.lastName!,
           email: user.email,
           avatarUrl: user.avatarUrl!,
-          password: authentication.metadata.local!.password!,
+          password: authentication.metadata.local!.password,
         }),
       ).rejects.toThrow(new BadRequestException("Username is already taken."));
     });
@@ -257,7 +258,7 @@ describe("AuthService", (): void => {
           lastName: user.lastName!,
           email: user.email,
           avatarUrl: user.avatarUrl!,
-          password: authentication.metadata.local!.password!,
+          password: authentication.metadata.local!.password,
         }),
       ).rejects.toThrow(
         new BadRequestException("Already signed up. Please, sign in with local authentication credentials."),
@@ -276,7 +277,7 @@ describe("AuthService", (): void => {
           lastName: user.lastName!,
           email: user.email,
           avatarUrl: user.avatarUrl!,
-          password: authentication.metadata.local!.password!,
+          password: authentication.metadata.local!.password,
         }),
       ).rejects.toThrow(new BadRequestException("Already signed up. Email verification is required to proceed."));
     });
@@ -312,7 +313,9 @@ describe("AuthService", (): void => {
       tokensService.verify.mockResolvedValue(payload as TokenPayload);
       authenticationRepository.findOne.mockResolvedValue(authentication);
       tokensService.generate.mockResolvedValueOnce(newAccessToken).mockResolvedValueOnce(newRefreshToken);
-      eventsService.buildInstance.mockReturnValueOnce(expect.any(Object));
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValueOnce(
+        expect.any(Object),
+      );
 
       const result: { accessToken: string } = await authService.localVerificationEmail(dto);
 
@@ -648,7 +651,9 @@ describe("AuthService", (): void => {
 
     it("should emit password reset event when user found and email verified", async (): Promise<void> => {
       usersService.findUser.mockResolvedValue(user);
-      eventsService.buildInstance.mockReturnValue(expect.any(Object));
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValue(
+        expect.any(Object),
+      );
 
       await authService.localPasswordForgot({ email: user.email });
 
@@ -713,7 +718,9 @@ describe("AuthService", (): void => {
       usersService.findUser.mockResolvedValue(user);
       tokensService.verify.mockResolvedValue({} as TokenPayload);
       entityManager.update.mockResolvedValue(updateResult);
-      eventsService.buildInstance.mockReturnValue(expect.any(Object));
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValue(
+        expect.any(Object),
+      );
 
       await authService.localPasswordReset(dto);
 
@@ -722,11 +729,14 @@ describe("AuthService", (): void => {
       expect(entityManager.update).toHaveBeenCalledWith(
         AuthenticationEntity,
         { provider: decoded.provider, userId: decoded.userId, id: authentication.id },
-        expect.objectContaining({
-          metadata: expect.objectContaining({
-            local: expect.objectContaining({ password: "hashed-password" }) as AuthenticationInstanceMetadata["local"],
-          }) as AuthenticationInstanceMetadata,
-        }),
+        {
+          metadata: {
+            local: {
+              ...authentication.metadata.local,
+              password: "hashed-password",
+            },
+          },
+        },
       );
       expect(eventEmitter2.emit).toHaveBeenCalledWith(
         EventName.AUTH_LOCAL_PASSWORD_RESETED,

@@ -6,20 +6,20 @@ import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   EventName,
-} from "@server/events/interfaces/events.interfaces";
+} from "#server/events/interfaces/events.interfaces";
 import { ConfigService } from "@nestjs/config";
 import { Transporter } from "nodemailer";
 import { MailOptions } from "nodemailer/lib/smtp-pool";
-import transporter from "@server/utils/nodemailer";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
-import AuthenticationEntity from "@server/auth/auth.entity";
+import transporter from "#server/utils/nodemailer";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
+import AuthenticationEntity from "#server/auth/auth.entity";
 import { DataSource, EntityManager, QueryRunner } from "typeorm";
 import { InjectDataSource } from "@nestjs/typeorm";
-import EventsService from "@server/events/events.service";
+import EventsService from "#server/events/events.service";
 import { EventEmitter2 } from "@nestjs/event-emitter";
-import AuthService from "@server/auth/auth.service";
-import TokensService from "@server/tokens/tokens.service";
+import AuthService from "#server/auth/auth.service";
+import TokensService from "#server/tokens/tokens.service";
 
 @Injectable()
 export default class RmqEmailService {

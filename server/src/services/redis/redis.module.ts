@@ -1,9 +1,9 @@
 import { Global, Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
-import RedisService from "@server/services/redis/redis.service";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
+import RedisService from "#server/services/redis/redis.service";
 import Redis from "ioredis";
-import { REDIS_CLIENT } from "@server/configs/constants";
+import { REDIS_CLIENT } from "#server/configs/constants";
 
 @Global()
 @Module({

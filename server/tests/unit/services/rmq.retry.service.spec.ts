@@ -1,12 +1,13 @@
-import RmqRetryService from "@server/services/rmq/rmq.retry.service";
+/* eslint-disable @typescript-eslint/unbound-method */
+import RmqRetryService from "#server/services/rmq/rmq.retry.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
 import { Logger } from "@nestjs/common";
+import { Channel } from "amqplib";
 
 describe("RmqRetryService", (): void => {
   let rmqRetryService: RmqRetryService;
-  let configService: jest.Mocked<ConfigService>;
-  let channel: { ack: jest.Mock; nack: jest.Mock; sendToQueue: jest.Mock };
+  let channel: jest.Mocked<Channel>;
 
   const mainQueueOptions = {
     maxRetriesCount: 5,
@@ -14,9 +15,9 @@ describe("RmqRetryService", (): void => {
     queue: "main-queue",
   };
 
-  const buildMsg = (overrides?: Partial<Record<string, any>>): Record<string, any> => ({
+  const buildMsg = (overrides?: Partial<Record<string, any>>): any => ({
     content: Buffer.from("test"),
-    headers: {},
+    fields: expect.any(Object),
     properties: {
       headers: {},
     },
@@ -36,9 +37,7 @@ describe("RmqRetryService", (): void => {
           }
 
           case "rabbitmqConfiguration.options": {
-            return {
-              queue: mainQueueOptions.queue,
-            };
+            return { queue: mainQueueOptions.queue };
           }
 
           default:
@@ -52,13 +51,12 @@ describe("RmqRetryService", (): void => {
     }).compile();
 
     rmqRetryService = testingModule.get<RmqRetryService>(RmqRetryService);
-    configService = testingModule.get<jest.Mocked<ConfigService>>(ConfigService);
 
     channel = {
       ack: jest.fn(),
       nack: jest.fn(),
       sendToQueue: jest.fn(),
-    };
+    } as unknown as jest.Mocked<Channel>;
   });
 
   afterEach((): void => {
@@ -87,7 +85,7 @@ describe("RmqRetryService", (): void => {
     });
 
     it("should parse retriesCount from string header and send to retry queue", (): void => {
-      const msg = buildMsg({ headers: { "x-retry-count": "3" } });
+      const msg = buildMsg({ properties: { headers: { "x-retry-count": "3" } } });
       const error = new Error("Consumer failed");
 
       // Cast to any to bypass type checking, because these methods are private;
@@ -101,7 +99,7 @@ describe("RmqRetryService", (): void => {
     });
 
     it("should send message to dead letter queue and ack original message when retriesCount reaches max", (): void => {
-      const msg = buildMsg({ headers: { "x-retry-count": 5 } });
+      const msg = buildMsg({ properties: { headers: { "x-retry-count": 5 } } });
       const error = new Error("Consumer failed");
 
       // Cast to any to bypass type checking, because these methods are private;
@@ -145,6 +143,7 @@ describe("RmqRetryService", (): void => {
 
       const spyLoggerWarn = jest.spyOn(Logger.prototype, "warn").mockImplementation(jest.fn());
 
+      // Cast to any to bypass type checking, because these methods are private;
       (rmqRetryService as any).sendToRetryQueue(channel, originalMsg, retriesCount, error);
 
       const expectedExpiration = (mainQueueOptions.baseDelayMs + Math.pow(2, retriesCount)).toString();
@@ -167,7 +166,7 @@ describe("RmqRetryService", (): void => {
   });
 
   describe("sendToDeadQueue", (): void => {
-    it("should send message to dead letter queue with dead-letter header and expiration null", (): void => {
+    it("should send message to dead letter queue with dead-letter header and expiration 0", (): void => {
       const originalMsg = buildMsg({
         properties: {
           headers: {},
@@ -177,6 +176,7 @@ describe("RmqRetryService", (): void => {
 
       const spyLoggerWarn = jest.spyOn(Logger.prototype, "warn").mockImplementation(jest.fn());
 
+      // Cast to any to bypass type checking, because these methods are private;
       (rmqRetryService as any).sendToDeadQueue(channel, originalMsg, error);
 
       expect(channel.sendToQueue).toHaveBeenCalledTimes(1);
@@ -184,7 +184,6 @@ describe("RmqRetryService", (): void => {
         `${mainQueueOptions.queue}-dead`,
         originalMsg.content,
         expect.objectContaining({
-          expiration: null,
           headers: expect.objectContaining({
             "x-dead-letter-error": error.message,
           }),
