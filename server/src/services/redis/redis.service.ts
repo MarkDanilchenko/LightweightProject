@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, Logger, LoggerService } from "@nestjs/common";
-import { REDIS_CLIENT, REDIS_KEY_MAX_BYTE_LEN, REDIS_KEY_TTL_SEC } from "@server/configs/constants";
+import { REDIS_CLIENT, REDIS_KEY_MAX_BYTE_LEN, REDIS_KEY_TTL_SEC } from "#server/configs/constants";
 import Redis from "ioredis";
 
 @Injectable()
@@ -44,7 +44,7 @@ export default class RedisService {
         throw new Error(`Redis: Key contains invalid characters: ${dangerousChars.join(", ")}`);
       }
     } catch (error) {
-      this.logger.error(error.message);
+      this.logger.error((error as Error).message);
 
       throw new BadRequestException("Redis: Invalid key");
     }

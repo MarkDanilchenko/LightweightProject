@@ -3,10 +3,10 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { PassportModule } from "@nestjs/passport";
 import { ConfigService } from "@nestjs/config";
 import { UnauthorizedException } from "@nestjs/common";
-import JwtStrategy from "@server/auth/strategies/jwt.strategy";
-import TokensService from "@server/tokens/tokens.service";
-import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import JwtStrategy from "#server/auth/strategies/jwt.strategy";
+import TokensService from "#server/tokens/tokens.service";
+import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import { faker } from "@faker-js/faker";
 
 describe("JwtStrategy", (): void => {

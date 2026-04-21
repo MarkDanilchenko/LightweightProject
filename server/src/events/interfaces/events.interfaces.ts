@@ -1,5 +1,5 @@
-import { AuthenticationInstanceMetadata } from "@server/auth/interfaces/auth.interfaces";
-import { MetadataEmail } from "@server/events/types/events.types";
+import { AuthenticationInstanceMetadata } from "#server/auth/interfaces/auth.interfaces";
+import { MetadataEmail } from "#server/events/types/events.types";
 
 enum EventName {
   AUTH_LOCAL_EMAIL_VERIFICATION_SENT = "auth.local.email-verification.sent",

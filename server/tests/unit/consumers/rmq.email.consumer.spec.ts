@@ -1,18 +1,17 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from "@nestjs/testing";
-import RmqEmailConsumer from "@server/services/rmq/rmq.email.consumer";
-import RmqEmailService from "@server/services/rmq/rmq.email.service";
+import RmqEmailConsumer from "#server/services/rmq/rmq.email.consumer";
+import RmqEmailService from "#server/services/rmq/rmq.email.service";
 import { RmqContext } from "@nestjs/microservices";
 import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   EventName,
-} from "@server/events/interfaces/events.interfaces";
-import { Logger } from "@nestjs/common";
-import UserEntity from "@server/users/users.entity";
+} from "#server/events/interfaces/events.interfaces";
+import UserEntity from "#server/users/users.entity";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
-import AuthenticationEntity from "@server/auth/auth.entity";
-import RmqRetryService from "@server/services/rmq/rmq.retry.service";
+import AuthenticationEntity from "#server/auth/auth.entity";
+import RmqRetryService from "#server/services/rmq/rmq.retry.service";
 
 jest.mock("nodemailer", () => ({
   createTransport: jest.fn().mockReturnValue({
@@ -23,7 +22,7 @@ jest.mock("nodemailer", () => ({
 }));
 
 // Mock the app configuration to provide complete configuration for tests
-jest.mock("@server/configs/app.configuration", () => ({
+jest.mock("#server/configs/app.configuration", () => ({
   __esModule: true,
   default: jest.fn().mockImplementation(() => ({
     smtpConfiguration: {
@@ -61,7 +60,6 @@ describe("RmqEmailConsumer", (): void => {
   let rmqEmailConsumer: RmqEmailConsumer;
   let rmqEmailService: jest.Mocked<RmqEmailService>;
   let rmqRetryService: jest.Mocked<RmqRetryService>;
-  let logger: jest.SpyInstance;
   let user: UserEntity;
   let authentication: AuthenticationEntity;
 
@@ -89,8 +87,6 @@ describe("RmqEmailConsumer", (): void => {
     rmqEmailConsumer = testingModule.get<RmqEmailConsumer>(RmqEmailConsumer);
     rmqEmailService = testingModule.get<jest.Mocked<RmqEmailService>>(RmqEmailService);
     rmqRetryService = testingModule.get<jest.Mocked<RmqRetryService>>(RmqRetryService);
-
-    logger = jest.spyOn(Logger.prototype, "error").mockImplementation((): void => {});
   });
 
   afterEach((): void => {

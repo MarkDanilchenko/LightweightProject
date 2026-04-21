@@ -1,8 +1,8 @@
-import { eventsRegistry } from "@server/events/events.factory";
-import { EventName } from "@server/events/interfaces/events.interfaces";
+import { eventsRegistry } from "#server/events/events.factory";
+import { EventName } from "#server/events/interfaces/events.interfaces";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
-import UserEntity from "@server/users/users.entity";
-import AuthenticationEntity from "@server/auth/auth.entity";
+import UserEntity from "#server/users/users.entity";
+import AuthenticationEntity from "#server/auth/auth.entity";
 
 describe("EventsFactory", (): void => {
   const user: UserEntity = buildUserFactory();

@@ -7,8 +7,8 @@ import {
   AuthLocalPasswordResetSentEvent,
   BaseEvent,
   EventName,
-} from "@server/events/interfaces/events.interfaces";
-import { MetadataEmail } from "@server/events/types/events.types";
+} from "#server/events/interfaces/events.interfaces";
+import { MetadataEmail } from "#server/events/types/events.types";
 
 // Base Event;
 class BaseEventClass implements BaseEvent {

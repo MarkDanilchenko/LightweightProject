@@ -73,8 +73,6 @@ export default (): AppConfiguration => {
     TYPEORM_LOGGING,
     TYPEORM_MIGRATIONS_RUN,
     SWAGGER_ENABLED,
-    CERT_PATH,
-    KEY_PATH,
     COMMON_SECRET,
     COOKIE_SECRET,
     JWT_SECRET,
@@ -96,12 +94,10 @@ export default (): AppConfiguration => {
     SMTP_FROM,
     RABBITMQ_HOST,
     RABBITMQ_PORT,
-    RABBITMQ_WEBCLIENT_PORT,
     RABBITMQ_DEFAULT_USER,
     RABBITMQ_DEFAULT_PASS,
     RABBITMQ_MAIN_QUEUE,
     RABBITMQ_PREFETCH_COUNT,
-    RABBITMQ_NO_ACK, // Is used only when creates an INestMicroservice instance;
     RABBITMQ_DURABLE,
     RABBITMQ_PERSISTENT,
     RABBITMQ_HEARTBEAT_INTERVAL,
@@ -184,9 +180,8 @@ export default (): AppConfiguration => {
     password: DATABASE_PASSWORD,
     logging: TYPEORM_LOGGING === "true",
     migrationsRun: TYPEORM_MIGRATIONS_RUN === "true",
-    entities: [process.cwd() + "/server/**/*.entity{.ts,.js}"],
-    autoLoadEntities: true,
-    migrations: [process.cwd() + "/server/**/migrations/*.js"],
+    entities: [path.join(__dirname, "../../**/*.entity{.ts,.js}")],
+    migrations: [path.join(__dirname, "../../**/migrations/*.js")],
     applicationName: "LightweightProject",
   };
 

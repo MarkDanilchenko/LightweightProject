@@ -1,18 +1,21 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
-import * as cookieParser from "cookie-parser";
+import cookieParser from "cookie-parser";
 import { INestApplication, InternalServerErrorException } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
-import AppModule from "@server/app.module";
+import AppModule from "#server/app.module";
 import { ConfigService } from "@nestjs/config";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
-import { RMQ_MICROSERVICE } from "@server/configs/constants";
+import { RMQ_MICROSERVICE } from "#server/configs/constants";
 import { HttpsOptions } from "@nestjs/common/interfaces/external/https-options.interface";
+import { GoogleOAuth2Strategy } from "#server/auth/strategies/google.strategy";
+import { Profile, VerifyCallback } from "passport-google-oauth20";
 
 /**
  * Bootstrap the main test app.
  * Overrides the RMQ_MICROSERVICE provider to prevent open handles.
+ * Overrides the GoogleOAuth2Strategy provider to prevent missing OAuth configuration errors in CI.
  *
  * @returns {Promise<INestApplication>} A Promise that resolves to the test app.
  */
@@ -37,6 +40,15 @@ export async function bootstrapMainTestApp(): Promise<INestApplication> {
   })
     .overrideProvider(RMQ_MICROSERVICE)
     .useValue({ emit: jest.fn() })
+    .overrideProvider(GoogleOAuth2Strategy)
+    .useValue({
+      constructor: jest.fn(),
+      validate: jest
+        .fn()
+        .mockImplementation((accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback): void =>
+          done(null, profile),
+        ),
+    })
     .compile();
 
   const app: INestApplication = testingModule.createNestApplication({

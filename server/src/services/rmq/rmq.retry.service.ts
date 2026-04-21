@@ -1,7 +1,7 @@
 import { Injectable, Logger, LoggerService } from "@nestjs/common";
-import { Channel } from "amqplib";
+import { Channel, Message } from "amqplib";
 import { ConfigService } from "@nestjs/config";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 
 @Injectable()
 export default class RmqRetryService {
@@ -38,14 +38,14 @@ export default class RmqRetryService {
    * Processes a failed message by implementing retry logic with dead letter queue support.
    *
    * @param {Channel} channel - RabbitMQ channel instance for message operations;
-   * @param {Record<string, any>} originalMsg - The original message;
+   * @param {Message} originalMsg - The original message;
    * @param {Error} consumerError - The error that occurred in consumer during message processing;
    *
    * @returns {void}
    */
-  processFailedMessage(channel: Channel, originalMsg: Record<string, any>, consumerError: Error): void {
+  processFailedMessage(channel: Channel, originalMsg: Message, consumerError: Error): void {
     try {
-      const headers: Record<string, any> = originalMsg.headers || {};
+      const headers = originalMsg.properties.headers || {};
       const retriesCount: number =
         typeof headers["x-retry-count"] === "string"
           ? parseInt(headers["x-retry-count"])
@@ -71,22 +71,17 @@ export default class RmqRetryService {
    * Sends a failed message to the retry queue with exponential backoff delay.
    *
    * @param {Channel} channel - RabbitMQ channel instance for message operations;
-   * @param {Record<string, any>} originalMsg - The original message that failed processing;
+   * @param {Message} originalMsg - The original message that failed processing;
    * @param {number} retriesCount - Current retry count from message headers;
    * @param {Error} consumerError - The error that occurred during message processing;
    *
    * @returns {void}
    */
-  private sendToRetryQueue(
-    channel: Channel,
-    originalMsg: Record<string, any>,
-    retriesCount: number,
-    consumerError: Error,
-  ): void {
+  private sendToRetryQueue(channel: Channel, originalMsg: Message, retriesCount: number, consumerError: Error): void {
     const nextRetriesCount = retriesCount + 1;
     const nextDelayMs = this.baseDelayMs + Math.pow(2, retriesCount);
 
-    const messageProperties: Record<string, any> = {
+    const messageProperties = {
       ...originalMsg.properties,
       expiration: nextDelayMs.toString(),
       headers: {
@@ -100,7 +95,7 @@ export default class RmqRetryService {
 
     this.logger.warn(
       `Message was sent to retry queue: ${this.retryQueue}` +
-        `delay: ${10};` +
+        `delay: ${nextDelayMs};` +
         ` attempt: ${retriesCount};` +
         ` reason: ${consumerError.message};`,
     );
@@ -110,15 +105,14 @@ export default class RmqRetryService {
    * Sends a failed message to the dead letter queue after all retry attempts are exhausted.
    *
    * @param {Channel} channel - RabbitMQ channel instance for message operations;
-   * @param {Record<string, any>} originalMsg - The original message that failed processing;
+   * @param {Message} originalMsg - The original message that failed processing;
    * @param {Error} consumerError - The error that occurred during message processing;
    *
    * @returns {void}
    */
-  private sendToDeadQueue(channel: Channel, originalMsg: Record<string, any>, consumerError: Error): void {
-    const messageProperties: Record<string, any> = {
+  private sendToDeadQueue(channel: Channel, originalMsg: Message, consumerError: Error): void {
+    const messageProperties = {
       ...originalMsg.properties,
-      expiration: null,
       headers: {
         ...originalMsg.properties.headers,
         "x-dead-letter-error": consumerError.message,

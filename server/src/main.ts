@@ -1,6 +1,6 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
-import * as cookieParser from "cookie-parser";
+import cookieParser from "cookie-parser";
 import { NestFactory } from "@nestjs/core";
 import { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@nestjs/config";
@@ -9,7 +9,7 @@ import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
 import { DocumentBuilder, OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
 import { InternalServerErrorException } from "@nestjs/common";
 import { patchNestjsSwagger } from "@anatine/zod-nestjs";
-import AppModule from "@server/app.module";
+import AppModule from "#server/app.module";
 import { HttpsOptions } from "@nestjs/common/interfaces/external/https-options.interface";
 
 /**

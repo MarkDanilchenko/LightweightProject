@@ -5,7 +5,7 @@ import {
   AuthLocalPasswordResetEvent,
   AuthLocalPasswordResetSentEvent,
   AuthLocalPasswordResetedEvent,
-} from "@server/events/interfaces/events.interfaces";
+} from "#server/events/interfaces/events.interfaces";
 
 type MetadataEmail = {
   email: string;

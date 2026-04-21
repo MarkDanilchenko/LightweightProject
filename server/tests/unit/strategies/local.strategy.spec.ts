@@ -2,16 +2,16 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { PassportModule } from "@nestjs/passport";
 import { UnauthorizedException } from "@nestjs/common";
-import LocalAuthStrategy from "@server/auth/strategies/local.strategy";
-import UsersService from "@server/users/users.service";
-import UserEntity from "@server/users/users.entity";
-import AuthenticationEntity from "@server/auth/auth.entity";
+import LocalAuthStrategy from "#server/auth/strategies/local.strategy";
+import UsersService from "#server/users/users.service";
+import UserEntity from "#server/users/users.entity";
+import AuthenticationEntity from "#server/auth/auth.entity";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import { faker } from "@faker-js/faker";
-import { verifyHash } from "@server/utils/hasher";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+import { verifyHash } from "#server/utils/hasher";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 
-jest.mock("@server/utils/hasher", () => ({
+jest.mock("#server/utils/hasher", () => ({
   verifyHash: jest.fn(),
 }));
 

@@ -3,14 +3,14 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import { WinstonModule } from "nest-winston";
 import AppConfiguration from "./configs/interfaces/appConfiguration.interfaces";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import AuthModule from "@server/auth/auth.module";
-import UsersModule from "@server/users/users.module";
-import EventsModule from "@server/events/events.module";
-import TokensModule from "@server/tokens/tokens.module";
-import appConfiguration from "@server/configs/app.configuration";
-import { RmqModule } from "@server/services/rmq/rmq.module";
+import AuthModule from "#server/auth/auth.module";
+import UsersModule from "#server/users/users.module";
+import EventsModule from "#server/events/events.module";
+import TokensModule from "#server/tokens/tokens.module";
+import appConfiguration from "#server/configs/app.configuration";
+import { RmqModule } from "#server/services/rmq/rmq.module";
 import { JwtModule } from "@nestjs/jwt";
-import { RedisModule } from "@server/services/redis/redis.module";
+import { RedisModule } from "#server/services/redis/redis.module";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 
 @Module({

@@ -3,7 +3,7 @@ import { NestFactory } from "@nestjs/core";
 import { INestMicroservice, LoggerService } from "@nestjs/common";
 import { RmqOptions, Transport } from "@nestjs/microservices";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
-import AppModule from "@server/app.module";
+import AppModule from "#server/app.module";
 
 interface RabbitMQConnectionOptions {
   defaultUser: string;

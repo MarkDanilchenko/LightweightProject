@@ -16,33 +16,31 @@ import { Response } from "express";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces";
 import { ZodValidationPipe } from "@anatine/zod-nestjs";
-import AuthService from "@server/auth/auth.service";
+import AuthService from "#server/auth/auth.service";
 import {
   LocalVerificationEmailDto,
   LocalSignInDto,
   LocalSignUpDto,
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
-} from "@server/auth/dto/auth.dto";
-import { clearCookie, setCookie } from "@server/utils/cookie";
-import LocalAuthGuard from "@server/auth/guards/local.guard";
-import UserEntity from "@server/users/users.entity";
-import JwtGuard from "@server/auth/guards/jwt.guard";
-import { RequestWithSignedCookies, RequestWithTokenPayload, RequestWithUser } from "@server/common/types/common.types";
-import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
-import GoogleOAuth2Guard from "@server/auth/guards/google.guard";
-import { AuthenticationProvider } from "@server/auth/interfaces/auth.interfaces";
+} from "#server/auth/dto/auth.dto";
+import { clearCookie, setCookie } from "#server/utils/cookie";
+import LocalAuthGuard from "#server/auth/guards/local.guard";
+import UserEntity from "#server/users/users.entity";
+import JwtGuard from "#server/auth/guards/jwt.guard";
+import { RequestWithSignedCookies, RequestWithTokenPayload, RequestWithUser } from "#server/common/types/common.types";
+import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
+import GoogleOAuth2Guard from "#server/auth/guards/google.guard";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 
 @ApiTags("auth")
 @Controller("auth")
 export default class AuthController {
-  private readonly configService: ConfigService;
   private readonly authService: AuthService;
   private readonly https: boolean;
   private readonly clientBaseUrl: string;
 
   constructor(configService: ConfigService, authService: AuthService) {
-    this.configService = configService;
     this.authService = authService;
     this.https = configService.get<AppConfiguration["serverConfiguration"]["https"]>("serverConfiguration.https")!;
     this.clientBaseUrl =

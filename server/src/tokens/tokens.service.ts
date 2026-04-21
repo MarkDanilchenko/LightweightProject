@@ -1,20 +1,18 @@
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { BadRequestException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { JwtService, JwtVerifyOptions } from "@nestjs/jwt";
-import { TokenPayload } from "@server/tokens/interfaces/token.interfaces";
-import AppConfiguration from "@server/configs/interfaces/appConfiguration.interfaces";
-import RedisService from "@server/services/redis/redis.service";
+import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
+import RedisService from "#server/services/redis/redis.service";
 
 @Injectable()
 export default class TokensService {
-  private readonly configService: ConfigService;
   private readonly jwtService: JwtService;
   private readonly redisService: RedisService;
   public readonly jwtRefreshTokenExpiresIn: string;
   public readonly jwtAccessTokenExpiresIn: string;
 
   constructor(configService: ConfigService, jwtService: JwtService, redisService: RedisService) {
-    this.configService = configService;
     this.jwtService = jwtService;
     this.redisService = redisService;
     this.jwtRefreshTokenExpiresIn = configService.get<AppConfiguration["jwtConfiguration"]["refreshTokenExpiresIn"]>(
@@ -55,7 +53,7 @@ export default class TokensService {
 
       return args;
     } catch (error) {
-      if (error.name === "TokenExpiredError") {
+      if ((error as Error).name === "TokenExpiredError") {
         throw new UnauthorizedException("Token expired");
       }
 
@@ -71,9 +69,13 @@ export default class TokensService {
    * @returns {TokenPayload} The decoded token payload.
    */
   decode(token: string): TokenPayload {
-    const { ...args } = this.jwtService.decode<TokenPayload>(token);
+    try {
+      const { ...args } = this.jwtService.decode<TokenPayload>(token);
 
-    return args;
+      return args;
+    } catch {
+      throw new BadRequestException("Invalid token");
+    }
   }
 
   /**

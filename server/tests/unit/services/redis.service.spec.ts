@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from "@nestjs/testing";
-import RedisService from "@server/services/redis/redis.service";
+import RedisService from "#server/services/redis/redis.service";
 import Redis from "ioredis";
-import { BadRequestException, Logger } from "@nestjs/common";
-import { REDIS_CLIENT, REDIS_KEY_MAX_BYTE_LEN, REDIS_KEY_TTL_SEC } from "@server/configs/constants";
+import { BadRequestException } from "@nestjs/common";
+import { REDIS_CLIENT, REDIS_KEY_MAX_BYTE_LEN, REDIS_KEY_TTL_SEC } from "#server/configs/constants";
 import { faker } from "@faker-js/faker";
 
 describe("RedisService", (): void => {
@@ -12,7 +12,6 @@ describe("RedisService", (): void => {
   const mockValue = { somekey1: "zGfKvWwA", somekey2: "Ln8PAuG", somekey3: "5f1YX4L" };
   let redisService: RedisService;
   let redisClient: jest.Mocked<Redis>;
-  let logger: jest.SpyInstance;
 
   beforeEach(async (): Promise<void> => {
     const mockedRedisClient = {
@@ -28,7 +27,6 @@ describe("RedisService", (): void => {
 
     redisService = testingModule.get<RedisService>(RedisService);
     redisClient = testingModule.get<jest.Mocked<Redis>>(REDIS_CLIENT);
-    logger = jest.spyOn(Logger.prototype, "error").mockImplementation((): void => {});
   });
 
   afterEach((): void => {
