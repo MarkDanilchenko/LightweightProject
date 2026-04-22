@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Post,
   Query,
@@ -23,6 +22,7 @@ import {
   LocalSignUpDto,
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
+  ReactivateDto,
 } from "#server/auth/dto/auth.dto";
 import { clearCookie, setCookie } from "#server/utils/cookie";
 import LocalAuthGuard from "#server/auth/guards/local.guard";
@@ -117,7 +117,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Authentication failed. " + "Invalid credentials or " + "email is not verified.",
+    description: "Authentication failed. Invalid credentials or email is not verified.",
   })
   @ApiBody({ type: LocalSignInDto })
   @UsePipes(ZodValidationPipe)
@@ -263,14 +263,14 @@ export default class AuthController {
     return this.authService.retrieveProfile(payload.userId);
   }
 
-  @Delete("me")
+  @Post("me/deactivate")
   @ApiOperation({
-    summary: "Delete account",
-    description: "Soft delete current user's account.",
+    summary: "Deactivate account",
+    description: "Deactivate current user's account until the next login.",
   })
   @ApiResponse({
-    status: 204,
-    description: "Account deleted successfully.",
+    status: 200,
+    description: "Account deactivated successfully.",
   })
   @ApiResponse({
     status: 401,
@@ -282,28 +282,35 @@ export default class AuthController {
   })
   @ApiCookieAuth("accessToken")
   @UseGuards(JwtGuard)
-  async deleteMe(@Req() req: RequestWithTokenPayload): Promise<void> {
+  async deactivateMe(@Req() req: RequestWithTokenPayload): Promise<void> {
     const payload: TokenPayload = req.tokenPayload;
   }
 
-  @Post("me/restore")
+  @Post("me/reactivate")
   @ApiOperation({
-    summary: "Restore account",
-    description: "Restore previously deleted user account.",
+    summary: "Reactivate account",
+    description: "Reactivate previously deactivated user account.",
   })
   @ApiResponse({
     status: 200,
-    description: "Account restored successfully.",
+    description: "Account reactivated successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
   })
   @ApiResponse({
     status: 401,
     description: "Authentication failed. Invalid credentials.",
   })
-  @ApiResponse({
-    status: 404,
-    description: "Account not found.",
-  })
-  async restoreMe(): Promise<void> {}
+  @ApiBody({ type: ReactivateDto })
+  @UsePipes(ZodValidationPipe)
+  @UseGuards(LocalAuthGuard)
+  async reactivateMe(
+    @Req() req: RequestWithUser,
+    @Body() reactivateDto: ReactivateDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {}
 
   @Get("google/signin")
   @ApiOperation({

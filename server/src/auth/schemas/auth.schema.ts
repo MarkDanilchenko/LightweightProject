@@ -100,10 +100,17 @@ const localResetPasswordSchema = z
     example: { token: "Token in jwt format", password: "12345678Aa_" },
   });
 
+const reactivateSchema = localSignInSchema.openapi({
+  title: "Reactivate schema",
+  description: "Reactivation credentials.",
+  example: { login: "johndoe or johndoe@me.com", password: "12345678Aa_" },
+});
+
 export {
   localSignInSchema,
   localSignUpSchema,
   localVerificationEmailSchema,
   localForgotPasswordSchema,
   localResetPasswordSchema,
+  reactivateSchema,
 };
