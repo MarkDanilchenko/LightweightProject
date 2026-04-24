@@ -63,6 +63,11 @@ describe("UserEntity", (): void => {
       expect(typeof user.avatarUrl).toBe("string");
       expect(user.avatarUrl).toMatch(/^http(s)?:\/\//);
     });
+
+    it("should have isActive boolean field", (): void => {
+      expect(user.isActive).toBeDefined();
+      expect(typeof user.isActive).toBe("boolean");
+    });
   });
 
   describe("UserEntity validation", (): void => {

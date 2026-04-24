@@ -9,7 +9,7 @@ import {
 } from "typeorm";
 import AuthenticationEntity from "#server/auth/auth.entity";
 import EventEntity from "#server/events/events.entity";
-import { IsArray, IsDate, IsEmail, IsOptional, IsString, IsUUID } from "class-validator";
+import { IsArray, IsDate, IsEmail, IsOptional, IsString, IsUUID, IsBoolean } from "class-validator";
 import { Type } from "class-transformer";
 import CommonEntity from "#server/common/common.entity";
 
@@ -42,6 +42,10 @@ export default class UserEntity extends CommonEntity {
   @IsString()
   @IsOptional()
   avatarUrl?: string | null;
+
+  @Column({ type: "boolean", default: true })
+  @IsBoolean()
+  isActive!: boolean;
 
   @CreateDateColumn({ type: "timestamptz" })
   @IsDate()
