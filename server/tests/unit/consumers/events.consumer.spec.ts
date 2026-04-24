@@ -8,6 +8,7 @@ import {
   AuthLocalPasswordResetedEvent,
   AuthLocalPasswordResetSentEvent,
   EventName,
+  UserDeactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
 import { buildUserFactory, buildAuthenticationFactory } from "../../factories";
 import UserEntity from "#server/users/users.entity";
@@ -110,6 +111,38 @@ describe("EventsConsumer", (): void => {
       };
 
       await eventsConsumer.handleAuthLocalEvents(payload, mockManager);
+
+      expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
+      expect(eventsService.createEvent).toHaveBeenCalledWith(payload, mockManager);
+    });
+  });
+
+  describe("handleUserDeactivatedEvent", () => {
+    let payload: UserDeactivatedEvent;
+
+    beforeAll((): void => {
+      payload = {
+        name: EventName.USER_DEACTIVATED,
+        userId: user.id,
+        modelId: user.id,
+        metadata: {
+          username: user.username,
+          email: user.email,
+        },
+      };
+    });
+
+    it("should handle USER_DEACTIVATED event", async (): Promise<void> => {
+      await eventsConsumer.handleUserDeactivatedEvent(payload);
+
+      expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
+      expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
+    });
+
+    it("should pass EntityManager when provided", async (): Promise<void> => {
+      const mockManager = {} as EntityManager;
+
+      await eventsConsumer.handleUserDeactivatedEvent(payload, mockManager);
 
       expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
       expect(eventsService.createEvent).toHaveBeenCalledWith(payload, mockManager);

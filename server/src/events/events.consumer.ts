@@ -6,6 +6,7 @@ import {
   AuthLocalPasswordResetedEvent,
   AuthLocalPasswordResetSentEvent,
   EventName,
+  UserDeactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
 import EventsService from "#server/events/events.service";
 import { EntityManager } from "typeorm";
@@ -45,6 +46,21 @@ export default class EventsConsumer {
       | AuthLocalPasswordResetedEvent,
     manager?: EntityManager,
   ): Promise<void> {
+    await this.eventsService.createEvent(payload, manager);
+  }
+
+  /**
+   * Handles the USER_DEACTIVATED event from the event emitter.
+   * This method is responsible for processing user deactivation events and creating
+   * a corresponding event record in the database for account history tracking.
+   *
+   * @param {UserDeactivatedEvent} payload - The event containing the user's deactivation information.
+   * @param {EntityManager} [manager] - The entity manager to use. If not provided, a new transaction will be started.
+   *
+   * @returns {Promise<void>} A promise that resolves when the event has been successfully handled.
+   */
+  @OnEvent(EventName.USER_DEACTIVATED)
+  async handleUserDeactivatedEvent(payload: UserDeactivatedEvent, manager?: EntityManager): Promise<void> {
     await this.eventsService.createEvent(payload, manager);
   }
 }
