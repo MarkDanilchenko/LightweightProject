@@ -6,6 +6,7 @@ import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   EventName,
+  UserDeactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
 import { ConfigService } from "@nestjs/config";
 import { Transporter } from "nodemailer";
@@ -17,9 +18,11 @@ import AuthenticationEntity from "#server/auth/auth.entity";
 import { DataSource, EntityManager, QueryRunner } from "typeorm";
 import { InjectDataSource } from "@nestjs/typeorm";
 import EventsService from "#server/events/events.service";
+import UserService from "#server/users/users.service";
 import { EventEmitter2 } from "@nestjs/event-emitter";
 import AuthService from "#server/auth/auth.service";
 import TokensService from "#server/tokens/tokens.service";
+import UserEntity from "#server/users/users.entity";
 
 @Injectable()
 export default class RmqEmailService {
@@ -30,6 +33,7 @@ export default class RmqEmailService {
   private readonly eventEmitter: EventEmitter2;
   private readonly tokensService: TokensService;
   private readonly authService: AuthService;
+  private readonly userService: UserService;
 
   constructor(
     configService: ConfigService,
@@ -39,6 +43,7 @@ export default class RmqEmailService {
     eventEmitter: EventEmitter2,
     tokensService: TokensService,
     authService: AuthService,
+    userService: UserService,
   ) {
     this.configService = configService;
     this.dataSource = dataSource;
@@ -47,6 +52,7 @@ export default class RmqEmailService {
     this.eventEmitter = eventEmitter;
     this.tokensService = tokensService;
     this.authService = authService;
+    this.userService = userService;
   }
 
   /**
@@ -67,7 +73,7 @@ export default class RmqEmailService {
 
     const authentication: AuthenticationEntity | null = await this.authService.findAuthenticationByPk(modelId);
     if (!authentication) {
-      throw new Error(`Email verification: Authentication not found`);
+      throw new Error("Email verification: Authentication not found");
     }
 
     const token: string = await this.tokensService.generate({
@@ -82,7 +88,7 @@ export default class RmqEmailService {
     const mailOptions: MailOptions = {
       from,
       to: metadata.email,
-      subject: "Welcome to the LightweightProject",
+      subject: "LightweightProject: welcome to the LightweightProject",
       text: "Please, verify your email address to proceed.",
       html,
     };
@@ -166,7 +172,7 @@ export default class RmqEmailService {
     const mailOptions: MailOptions = {
       from,
       to: email,
-      subject: "Password Reset",
+      subject: "LightweightProject: password reset",
       text: "Please, click on the link below and follow the instructions to reset your password.",
       html,
     };
@@ -185,6 +191,56 @@ export default class RmqEmailService {
       );
 
       // Send an email after any successful database operations;
+      await this.transporter.sendMail(mailOptions);
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async sendDeactivatedEmail(payload: UserDeactivatedEvent): Promise<void> {
+    // First, verify, that the appropriate template exists;
+    const deactivationTemplatePath: string = path.resolve(process.cwd(), "templates/userDeactivatedEmail.ejs");
+    await fs.promises.access(deactivationTemplatePath, fs.constants.R_OK);
+
+    const { userId, modelId, metadata } = payload;
+    const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
+
+    const user: UserEntity | null = await this.userService.findUser({
+      where: [{ id: userId }, { id: modelId }],
+    });
+    if (!user) {
+      throw new Error("Deactivation email: User not found");
+    }
+
+    const html: string = await ejs.renderFile(deactivationTemplatePath, {
+      username: metadata.username,
+    });
+    const mailOptions: MailOptions = {
+      from,
+      to: metadata.email,
+      subject: "LightweightProject: deactivation notification",
+      text: "Deactivation user's account has been processed.",
+      html,
+    };
+
+    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    const manager: EntityManager = queryRunner.manager;
+
+    try {
+      this.eventEmitter.emit(
+        EventName.USER_DEACTIVATED,
+        this.eventsService.buildInstance(EventName.USER_DEACTIVATED, userId, modelId, metadata),
+        manager,
+      );
+
       await this.transporter.sendMail(mailOptions);
 
       await queryRunner.commitTransaction();
