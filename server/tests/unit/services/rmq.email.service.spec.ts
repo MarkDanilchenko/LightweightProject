@@ -18,6 +18,7 @@ import AuthenticationEntity from "#server/auth/auth.entity";
 import transporter from "#server/utils/nodemailer";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
+import UsersService from "#server/users/users.service";
 
 // Mock the nodemailer createTransport before import both RmqEmailConsumer and RmqEmailService;
 jest.mock("nodemailer", () => ({
@@ -68,6 +69,7 @@ describe("RmqEmailService", (): void => {
   let dataSource: jest.Mocked<DataSource>;
   let eventEmitter2: jest.Mocked<EventEmitter2>;
   let tokensService: jest.Mocked<TokensService>;
+  let usersService: jest.Mocked<UsersService>;
   let authService: jest.Mocked<AuthService>;
 
   const testHtml = "<html><body><h1>Test</h1></body></html>";
@@ -102,6 +104,7 @@ describe("RmqEmailService", (): void => {
       release: jest.fn(),
       manager: {},
     } as unknown as QueryRunner;
+    const mockUsersService = { findUserByPk: jest.fn(), findUser: jest.fn(), updateUser: jest.fn() };
 
     const testingModule: TestingModule = await Test.createTestingModule({
       providers: [
@@ -111,6 +114,7 @@ describe("RmqEmailService", (): void => {
         { provide: EventsService, useValue: mockEventsService },
         { provide: EventEmitter2, useValue: mockEventEmitter2 },
         { provide: TokensService, useValue: mockTokensService },
+        { provide: UsersService, useValue: mockUsersService },
         { provide: AuthService, useValue: mockAuthService },
       ],
     }).compile();
@@ -119,6 +123,7 @@ describe("RmqEmailService", (): void => {
     dataSource = testingModule.get<jest.Mocked<DataSource>>(DataSource);
     eventEmitter2 = testingModule.get<jest.Mocked<EventEmitter2>>(EventEmitter2);
     tokensService = testingModule.get<jest.Mocked<TokensService>>(TokensService);
+    usersService = testingModule.get<jest.Mocked<UsersService>>(UsersService);
     authService = testingModule.get<jest.Mocked<AuthService>>(AuthService);
   });
 
