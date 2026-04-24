@@ -203,6 +203,13 @@ export default class RmqEmailService {
     }
   }
 
+  /**
+   * Sends a deactivation notification email to the user.
+   *
+   * @param {UserDeactivatedEvent} payload - The event containing the user's information.
+   *
+   * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
+   */
   async sendDeactivatedEmail(payload: UserDeactivatedEvent): Promise<void> {
     // First, verify, that the appropriate template exists;
     const deactivationTemplatePath: string = path.resolve(process.cwd(), "templates/userDeactivatedEmail.ejs");
