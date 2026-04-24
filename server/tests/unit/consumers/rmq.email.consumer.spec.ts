@@ -7,6 +7,7 @@ import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   EventName,
+  UserDeactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
 import UserEntity from "#server/users/users.entity";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
@@ -70,6 +71,7 @@ describe("RmqEmailConsumer", (): void => {
     const mockRmqEmailService = {
       sendWelcomeVerificationEmail: jest.fn(),
       sendPasswordResetEmail: jest.fn(),
+      sendDeactivatedEmail: jest.fn(),
     };
 
     const mockRmqRetryService = {
@@ -166,6 +168,44 @@ describe("RmqEmailConsumer", (): void => {
       await rmqEmailConsumer.handleAuthLocalPasswordReset(payload, mockRmqContext);
 
       expect(rmqEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(payload);
+      expect(rmqRetryService.processFailedMessage).toHaveBeenCalledWith(
+        mockChannel,
+        mockRmqContext.getMessage(),
+        new Error("Failed to send email"),
+      );
+    });
+  });
+
+  describe("handleUserDeactivated", (): void => {
+    let payload: UserDeactivatedEvent;
+
+    beforeAll((): void => {
+      payload = {
+        name: EventName.USER_DEACTIVATED,
+        userId: user.id,
+        modelId: user.id,
+        metadata: {
+          username: user.username,
+          email: user.email,
+        },
+      };
+    });
+
+    it("should send a deactivation email and ack the message", async (): Promise<void> => {
+      await rmqEmailConsumer.handleUserDeactivated(payload, mockRmqContext);
+
+      expect(rmqEmailService.sendDeactivatedEmail).toHaveBeenCalledWith(payload);
+      expect(rmqRetryService.processFailedMessage).not.toHaveBeenCalled();
+      expect(mockChannel.ack).toHaveBeenCalled();
+      expect(mockChannel.nack).not.toHaveBeenCalled();
+    });
+
+    it("should nack the message if sending email fails", async (): Promise<void> => {
+      rmqEmailService.sendDeactivatedEmail.mockRejectedValueOnce(new Error("Failed to send email"));
+
+      await rmqEmailConsumer.handleUserDeactivated(payload, mockRmqContext);
+
+      expect(rmqEmailService.sendDeactivatedEmail).toHaveBeenCalledWith(payload);
       expect(rmqRetryService.processFailedMessage).toHaveBeenCalledWith(
         mockChannel,
         mockRmqContext.getMessage(),

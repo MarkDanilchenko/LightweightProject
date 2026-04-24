@@ -5,6 +5,7 @@ import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   EventName,
+  UserDeactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
 import RmqRetryService from "#server/services/rmq/rmq.retry.service";
 import { Channel, Message } from "amqplib";
@@ -76,6 +77,32 @@ export default class RmqEmailConsumer {
       channel.ack(originalMsg);
     } catch (error) {
       this.logger.error("RmqEmailConsumer ~ handleAuthLocalPasswordReset: " + (error as Error).message);
+
+      this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
+    }
+  }
+
+  /**
+   * Handles the USER_DEACTIVATED event from the message queue.
+   * This method processes user deactivation events by sending an email to notify the user
+   * about their profile deactivation completion.
+   *
+   * @param {UserDeactivatedEvent} payload - The event payload containing user details and deactivation metadata
+   * @param {RmqContext} context - The RabbitMQ context for message acknowledgment
+   *
+   * @returns {Promise<void>} A promise that resolves when the email is processed
+   */
+  @MessagePattern(EventName.USER_DEACTIVATED)
+  async handleUserDeactivated(@Payload() payload: UserDeactivatedEvent, @Ctx() context: RmqContext): Promise<void> {
+    const channel: Channel = context.getChannelRef();
+    const originalMsg = context.getMessage() as Message;
+
+    try {
+      await this.rmqEmailService.sendDeactivatedEmail(payload);
+
+      channel.ack(originalMsg);
+    } catch (error) {
+      this.logger.error("RmqEmailConsumer ~ handleUserDeactivated: " + (error as Error).message);
 
       this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
     }
