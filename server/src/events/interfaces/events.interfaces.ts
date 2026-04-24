@@ -1,5 +1,4 @@
 import { AuthenticationInstanceMetadata } from "#server/auth/interfaces/auth.interfaces";
-import { MetadataEmail } from "#server/events/types/events.types";
 
 enum EventName {
   AUTH_LOCAL_EMAIL_VERIFICATION_SENT = "auth.local.email-verification.sent",
@@ -8,6 +7,12 @@ enum EventName {
   AUTH_LOCAL_PASSWORD_RESET = "auth.local.password-reset",
   AUTH_LOCAL_PASSWORD_RESET_SENT = "auth.local.password-reset.sent",
   AUTH_LOCAL_PASSWORD_RESETED = "auth.local.password.reseted",
+  USER_DEACTIVATED = "user.deactivated",
+  USER_REACTIVATED = "user.reactivated",
+}
+
+interface EventMetadata {
+  email: string;
 }
 
 interface BaseEvent {
@@ -17,24 +22,37 @@ interface BaseEvent {
 }
 
 interface AuthLocalEmailVerificationSentEvent extends BaseEvent {
-  metadata: MetadataEmail;
+  metadata: EventMetadata;
 }
+
 interface AuthLocalEmailVerifiedEvent extends BaseEvent {
-  metadata: MetadataEmail;
+  metadata: EventMetadata;
 }
+
 interface AuthLocalCreatedEvent extends BaseEvent {
-  metadata: NonNullable<NonNullable<AuthenticationInstanceMetadata["local"]>["temporaryInfo"]> & MetadataEmail;
+  metadata: NonNullable<NonNullable<AuthenticationInstanceMetadata["local"]>["temporaryInfo"]> & EventMetadata;
 }
+
+// TODO: pass all two fields into one event metadata like in the UserDeactivatedEvent below;
 interface AuthLocalPasswordResetEvent extends BaseEvent {
   username?: string | null;
   email: string;
 }
+
 interface AuthLocalPasswordResetSentEvent extends BaseEvent {
-  metadata: MetadataEmail;
+  metadata: EventMetadata;
 }
+
 interface AuthLocalPasswordResetedEvent extends BaseEvent {}
 
+interface UserDeactivatedEvent extends BaseEvent {
+  metadata: EventMetadata & { username?: string | null };
+}
+
+interface UserReactivatedEvent extends BaseEvent {}
+
 export {
+  EventMetadata,
   EventName,
   BaseEvent,
   AuthLocalEmailVerificationSentEvent,
@@ -43,4 +61,6 @@ export {
   AuthLocalPasswordResetEvent,
   AuthLocalPasswordResetSentEvent,
   AuthLocalPasswordResetedEvent,
+  UserDeactivatedEvent,
+  UserReactivatedEvent,
 };
