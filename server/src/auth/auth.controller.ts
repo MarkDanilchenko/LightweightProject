@@ -23,6 +23,7 @@ import {
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
   ReactivateDto,
+  DeactivateDto,
 } from "#server/auth/dto/auth.dto";
 import { clearCookie, setCookie } from "#server/utils/cookie";
 import LocalAuthGuard from "#server/auth/guards/local.guard";
@@ -281,9 +282,23 @@ export default class AuthController {
     description: "User not found.",
   })
   @ApiCookieAuth("accessToken")
+  @ApiBody({ type: DeactivateDto })
+  @UsePipes(ZodValidationPipe)
   @UseGuards(JwtGuard)
-  async deactivateMe(@Req() req: RequestWithTokenPayload): Promise<void> {
+  async deactivateMe(
+    @Req() req: RequestWithTokenPayload,
+    @Body() deactivateDto: DeactivateDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
     const payload: TokenPayload = req.tokenPayload;
+
+    await this.authService.deactivateProfile(payload, deactivateDto);
+
+    clearCookie(res, "accessToken");
+
+    res.status(200).send({
+      message: "Account deactivated successfully.",
+    });
   }
 
   @Post("me/reactivate")

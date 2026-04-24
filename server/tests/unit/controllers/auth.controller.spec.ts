@@ -5,6 +5,7 @@ import { Response } from "express";
 import AuthController from "#server/auth/auth.controller";
 import AuthService from "#server/auth/auth.service";
 import {
+  DeactivateDto,
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
   LocalSignInDto,
@@ -43,6 +44,7 @@ describe("AuthController", (): void => {
       signOut: jest.fn(),
       refreshAccessToken: jest.fn(),
       retrieveProfile: jest.fn(),
+      deactivateProfile: jest.fn(),
     };
 
     const mockGoogleOAuth2Guard = jest.fn().mockImplementation(() => ({
@@ -324,6 +326,20 @@ describe("AuthController", (): void => {
       expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.GOOGLE);
       expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", tokenData.accessToken, true);
       expect(mockResponse.redirect).toHaveBeenCalledWith(302, "https://127.0.0.1:3001/home");
+    });
+  });
+
+  describe("deactivateMe", (): void => {
+    it("should call authService.deactivateProfile, clear cookie, and return 200", async (): Promise<void> => {
+      const req = { tokenPayload: { userId: user.id, provider: "local", jwti: uuidv4() } } as RequestWithTokenPayload;
+      const deactivateDto: DeactivateDto = { confirmationWord: "deactivate" };
+
+      await authController.deactivateMe(req, deactivateDto, mockResponse as Response);
+
+      expect(authService.deactivateProfile).toHaveBeenCalledWith(req.tokenPayload, deactivateDto);
+      expect(clearCookie).toHaveBeenCalledWith(mockResponse, "accessToken");
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.send).toHaveBeenCalledWith({ message: "Account deactivated successfully." });
     });
   });
 });
