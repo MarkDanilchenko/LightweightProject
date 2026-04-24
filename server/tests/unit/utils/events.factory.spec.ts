@@ -105,4 +105,21 @@ describe("EventsFactory", (): void => {
       expect(event.modelId).toBe(authentication.id);
     });
   });
+
+  describe("UserDeactivateEventClass", (): void => {
+    it("should create an instance with correct properties", (): void => {
+      const metadata = {
+        username: user.username,
+        email: user.email,
+      };
+
+      const EventClass = eventsRegistry[EventName.USER_DEACTIVATED];
+      const event = new EventClass(EventName.USER_DEACTIVATED, user.id, user.id, metadata);
+
+      expect(event.name).toBe(EventName.USER_DEACTIVATED);
+      expect(event.userId).toBe(user.id);
+      expect(event.modelId).toBe(user.id);
+      expect(event.metadata).toEqual(metadata);
+    });
+  });
 });
