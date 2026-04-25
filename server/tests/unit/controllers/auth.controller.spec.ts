@@ -330,13 +330,13 @@ describe("AuthController", (): void => {
   });
 
   describe("deactivateMe", (): void => {
-    it("should call authService.deactivateProfile, clear cookie, and return 200", async (): Promise<void> => {
+    it("should call authService.deactivateUserProfile, clear cookie, and return 200", async (): Promise<void> => {
       const req = { tokenPayload: { userId: user.id, provider: "local", jwti: uuidv4() } } as RequestWithTokenPayload;
       const deactivateDto: DeactivateDto = { confirmationWord: "deactivate" };
 
       await authController.deactivateMe(req, deactivateDto, mockResponse as Response);
 
-      expect(authService.deactivateProfile).toHaveBeenCalledWith(req.tokenPayload, deactivateDto);
+      expect(authService.deactivateUserProfile).toHaveBeenCalledWith(req.tokenPayload, deactivateDto);
       expect(clearCookie).toHaveBeenCalledWith(mockResponse, "accessToken");
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalledWith({ message: "Account deactivated successfully." });

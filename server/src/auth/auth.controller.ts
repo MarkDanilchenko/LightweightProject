@@ -292,7 +292,7 @@ export default class AuthController {
   ): Promise<void> {
     const payload: TokenPayload = req.tokenPayload;
 
-    await this.authService.deactivateProfile(payload, deactivateDto);
+    await this.authService.deactivateUserProfile(payload, deactivateDto);
 
     clearCookie(res, "accessToken");
 
