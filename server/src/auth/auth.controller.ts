@@ -285,7 +285,7 @@ export default class AuthController {
   @ApiBody({ type: DeactivateDto })
   @UsePipes(ZodValidationPipe)
   @UseGuards(JwtGuard)
-  async deactivateMe(
+  async deactivateUserProfile(
     @Req() req: RequestWithTokenPayload,
     @Body() deactivateDto: DeactivateDto,
     @Res({ passthrough: true }) res: Response,
@@ -301,31 +301,31 @@ export default class AuthController {
     });
   }
 
-  @Post("me/reactivate")
-  @ApiOperation({
-    summary: "Reactivate account",
-    description: "Reactivate previously deactivated user account.",
-  })
-  @ApiResponse({
-    status: 200,
-    description: "Account reactivated successfully.",
-  })
-  @ApiResponse({
-    status: 400,
-    description: "Invalid request.",
-  })
-  @ApiResponse({
-    status: 401,
-    description: "Authentication failed. Invalid credentials.",
-  })
-  @ApiBody({ type: ReactivateDto })
-  @UsePipes(ZodValidationPipe)
-  @UseGuards(LocalAuthGuard)
-  async reactivateMe(
-    @Req() req: RequestWithUser,
-    @Body() reactivateDto: ReactivateDto,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<void> {}
+  // @Post("me/reactivate")
+  // @ApiOperation({
+  //   summary: "Reactivate account",
+  //   description: "Reactivate previously deactivated user account.",
+  // })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: "Account reactivated successfully.",
+  // })
+  // @ApiResponse({
+  //   status: 400,
+  //   description: "Invalid request.",
+  // })
+  // @ApiResponse({
+  //   status: 401,
+  //   description: "Authentication failed. Invalid credentials.",
+  // })
+  // @ApiBody({ type: ReactivateDto })
+  // @UsePipes(ZodValidationPipe)
+  // @UseGuards(LocalAuthGuard)
+  // async reactivateMe(
+  //   @Req() req: RequestWithUser,
+  //   @Body() reactivateDto: ReactivateDto,
+  //   @Res({ passthrough: true }) res: Response,
+  // ): Promise<void> {}
 
   @Get("google/signin")
   @ApiOperation({
