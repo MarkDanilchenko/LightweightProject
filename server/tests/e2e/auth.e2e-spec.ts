@@ -50,20 +50,20 @@ jest.mock("#server/configs/app.configuration", () => {
 describe("AuthController E2E", (): void => {
   let app: INestApplication;
   let dataSource: DataSource;
-  let configService: ConfigService;
   let factories: DbFactories;
   let httpServer: TestAgent;
   let tokensService: TokensService;
+  let configService: ConfigService;
   let serverBaseUrl: string;
   let clientBaseUrl: string;
 
   beforeAll(async (): Promise<void> => {
     app = await bootstrapMainTestApp();
     dataSource = app.get(DataSource);
-    configService = app.get(ConfigService);
     factories = new DbFactories(dataSource);
     httpServer = request(app.getHttpServer());
     tokensService = app.get(TokensService);
+    configService = app.get(ConfigService);
     serverBaseUrl =
       configService.get<AppConfiguration["serverConfiguration"]["baseUrl"]>("serverConfiguration.baseUrl")!;
     clientBaseUrl =
@@ -1066,5 +1066,204 @@ describe("AuthController E2E", (): void => {
         expect(response.body.message).toContain("Unauthorized");
       });
     });
+  });
+
+  describe("POST /api/v1/auth/me/deactivate", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200 and deactivate account successfully", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory({
+          email: faker.internet.email(),
+          username: faker.string.alphanumeric(10),
+          firstName: faker.person.firstName(),
+          lastName: faker.person.lastName(),
+          avatarUrl: faker.image.avatar(),
+        });
+        const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie
+        const signinPayload = { login: user.email, password };
+        const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        const accessTokenCookie = signinResponse.header["set-cookie"][0];
+
+        const deactivatePayload = { confirmationWord: "deactivate" };
+        const response = await httpServer
+          .post("/api/v1/auth/me/deactivate")
+          .set("Cookie", accessTokenCookie)
+          .send(deactivatePayload);
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body.message).toBe("Account deactivated successfully.");
+        expect(response.header["set-cookie"]).not.toBeNull();
+        expect(response.header["set-cookie"][0]).toContain("accessToken=");
+      });
+
+      it("should return 200 and deactivate account with uppercase confirmation word", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory();
+        const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie
+        const signinPayload = { login: user.email, password };
+        const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        const accessTokenCookie = signinResponse.header["set-cookie"][0];
+
+        const deactivatePayload = { confirmationWord: "DEACTIVATE" };
+        const response = await httpServer
+          .post("/api/v1/auth/me/deactivate")
+          .set("Cookie", accessTokenCookie)
+          .send(deactivatePayload);
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body.message).toBe("Account deactivated successfully.");
+        expect(response.header["set-cookie"]).not.toBeNull();
+        expect(response.header["set-cookie"][0]).toContain("accessToken=");
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 401 for missing accessToken", async (): Promise<void> => {
+        const deactivatePayload = { confirmationWord: "deactivate" };
+        const response = await httpServer.post("/api/v1/auth/me/deactivate").send(deactivatePayload);
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Unauthorized");
+      });
+
+      it("should return 401 for invalid accessToken", async (): Promise<void> => {
+        const deactivatePayload = { confirmationWord: "deactivate" };
+        const response = await httpServer
+          .post("/api/v1/auth/me/deactivate")
+          .set("Cookie", "accessToken=invalid-token")
+          .send(deactivatePayload);
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Unauthorized");
+      });
+
+      it("should return 400 for missing confirmationWord", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory();
+        const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie
+        const signinPayload = { login: user.email, password };
+        const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        const accessTokenCookie = signinResponse.header["set-cookie"][0];
+
+        const deactivatePayload = {};
+        const response = await httpServer
+          .post("/api/v1/auth/me/deactivate")
+          .set("Cookie", accessTokenCookie)
+          .send(deactivatePayload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toEqual(expect.arrayContaining(["confirmationWord: Required"]));
+      });
+
+      it("should return 400 for invalid confirmationWord type", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory();
+        const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie
+        const signinPayload = { login: user.email, password };
+        const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        const accessTokenCookie = signinResponse.header["set-cookie"][0];
+
+        const deactivatePayload = { confirmationWord: 123 };
+        const response = await httpServer
+          .post("/api/v1/auth/me/deactivate")
+          .set("Cookie", accessTokenCookie)
+          .send(deactivatePayload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toEqual(
+          expect.arrayContaining(["confirmationWord: Expected string, received number"]),
+        );
+      });
+    });
+  });
+
+  describe("POST /api/v1/auth/me/reactivate", (): void => {
+    describe("positive scenarios", (): void => {});
+
+    describe("negative scenarios", (): void => {});
   });
 });
