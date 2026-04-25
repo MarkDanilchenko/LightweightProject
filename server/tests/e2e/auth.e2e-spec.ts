@@ -626,6 +626,36 @@ describe("AuthController E2E", (): void => {
         expect(response.body.message).toContain("Authentication failed");
       });
 
+      it("should return 401 for deactivated user profile", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory({ isActive: false });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+          },
+        );
+
+        const payload = { login: user.email, password };
+
+        const response = await httpServer.post("/api/v1/auth/local/signin").send(payload);
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Authentication failed. User profile is deactivated.");
+      });
+
       it("should return 400 for invalid request body", async (): Promise<void> => {
         const payload = {
           login: "test@example.com",
