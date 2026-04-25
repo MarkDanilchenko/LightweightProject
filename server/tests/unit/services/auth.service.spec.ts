@@ -4,10 +4,7 @@ import AuthenticationEntity from "#server/auth/auth.entity";
 import AuthService from "#server/auth/auth.service";
 import { Test, TestingModule } from "@nestjs/testing";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
-import {
-  AuthenticationProvider,
-  AuthenticationViaIdP,
-} from "#server/auth/interfaces/auth.interfaces";
+import { AuthenticationProvider, AuthenticationViaIdP } from "#server/auth/interfaces/auth.interfaces";
 import {
   DataSource,
   EntityManager,
@@ -30,7 +27,7 @@ import { faker } from "@faker-js/faker";
 import { EventName } from "#server/events/interfaces/events.interfaces";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
-import { LocalPasswordResetDto, LocalVerificationEmailDto } from "#server/auth/dto/auth.dto";
+import { DeactivateDto, LocalPasswordResetDto, LocalVerificationEmailDto } from "#server/auth/dto/auth.dto";
 
 jest.mock("#server/utils/hasher", () => ({
   hash: jest.fn().mockImplementation((password: string): Promise<string> => Promise.resolve("hashed-password")),
@@ -67,7 +64,7 @@ describe("AuthService", (): void => {
 
     const mockDataSource = { transaction: jest.fn().mockImplementation((callback) => callback(entityManager)) };
     const mockRmqMicroserviceClient = { emit: jest.fn() };
-    const mockUsersService = { findUser: jest.fn(), updateUser: jest.fn() };
+    const mockUsersService = { findUser: jest.fn(), findUserByPk: jest.fn(), updateUser: jest.fn() };
     const mockEventsService = { buildInstance: jest.fn(), createEvent: jest.fn() };
     const mockEventEmitter2 = { emit: jest.fn() };
     const mockTokensService = {
@@ -892,6 +889,104 @@ describe("AuthService", (): void => {
 
       await expect(authService.idPAuthentication("invalid" as AuthenticationProvider, userClaims)).rejects.toThrow(
         new BadRequestException("Invalid idP"),
+      );
+    });
+  });
+
+  describe("deactivateUserProfile", (): void => {
+    let payload: TokenPayload;
+    let deactivateDto: DeactivateDto;
+
+    beforeEach((): void => {
+      payload = {
+        userId: user.id,
+        provider: AuthenticationProvider.LOCAL,
+        jwti: faker.string.uuid(),
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      };
+      deactivateDto = { confirmationWord: "deactivate" };
+    });
+
+    it("should deactivate profile successfully", async (): Promise<void> => {
+      usersService.findUser.mockResolvedValue(user);
+
+      await authService.deactivateUserProfile(payload, deactivateDto);
+
+      expect(usersService.findUser).toHaveBeenCalledWith({
+        relations: ["authentications"],
+        select: {
+          id: true,
+          isActive: true,
+          email: true,
+          authentications: {
+            id: true,
+            metadata: true,
+          },
+        },
+        where: { id: user.id },
+      });
+      expect(usersService.updateUser).toHaveBeenCalledWith({ id: user.id }, { isActive: false }, entityManager);
+      expect(tokensService.addToBlacklist).toHaveBeenCalledWith(payload.jwti, payload.exp);
+      expect(rmqMicroserviceClient.emit).toHaveBeenCalled();
+      expect(eventsService.buildInstance).toHaveBeenCalledWith(EventName.USER_DEACTIVATED, user.id, user.id, {
+        email: user.email,
+        username: user.username,
+      });
+    });
+
+    it("should throw BadRequestException for invalid confirmation word", async (): Promise<void> => {
+      deactivateDto.confirmationWord = "invalid";
+
+      await expect(authService.deactivateUserProfile(payload, deactivateDto)).rejects.toThrow(
+        new BadRequestException("Deactivation failed. Invalid confirmation word."),
+      );
+
+      expect(usersService.findUser).not.toHaveBeenCalled();
+    });
+
+    it("should throw UnauthorizedException for invalid token (missing jwti)", async (): Promise<void> => {
+      delete payload.jwti;
+
+      await expect(authService.deactivateUserProfile(payload, deactivateDto)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. Token is invalid."),
+      );
+
+      expect(usersService.findUser).not.toHaveBeenCalled();
+    });
+
+    it("should throw UnauthorizedException for invalid token (missing exp)", async (): Promise<void> => {
+      delete payload.exp;
+
+      await expect(authService.deactivateUserProfile(payload, deactivateDto)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. Token is invalid."),
+      );
+
+      expect(usersService.findUser).not.toHaveBeenCalled();
+    });
+
+    it("should throw UnauthorizedException if user not found", async (): Promise<void> => {
+      usersService.findUser.mockResolvedValue(null);
+
+      await expect(authService.deactivateUserProfile(payload, deactivateDto)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. User is not found."),
+      );
+    });
+
+    it("should throw UnauthorizedException if user has no authentications", async (): Promise<void> => {
+      user.authentications = [];
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(authService.deactivateUserProfile(payload, deactivateDto)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. User is not found."),
+      );
+    });
+
+    it("should throw BadRequestException if user is already deactivated", async (): Promise<void> => {
+      user.isActive = false;
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(authService.deactivateUserProfile(payload, deactivateDto)).rejects.toThrow(
+        new BadRequestException("User's profile is already deactivated."),
       );
     });
   });
