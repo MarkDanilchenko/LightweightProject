@@ -479,6 +479,7 @@ export default class AuthService {
         id: true,
         isActive: true,
         email: true,
+        username: true,
         authentications: {
           id: true,
           metadata: true,

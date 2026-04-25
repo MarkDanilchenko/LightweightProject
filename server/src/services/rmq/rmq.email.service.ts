@@ -242,6 +242,8 @@ export default class RmqEmailService {
     const manager: EntityManager = queryRunner.manager;
 
     try {
+      delete metadata.username; // Remove username from event metadata for "user.deactivated";
+
       this.eventEmitter.emit(
         EventName.USER_DEACTIVATED,
         this.eventsService.buildInstance(EventName.USER_DEACTIVATED, userId, modelId, metadata),
