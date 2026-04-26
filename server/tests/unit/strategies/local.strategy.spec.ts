@@ -66,7 +66,7 @@ describe("LocalAuthStrategy", (): void => {
         relations: ["authentications"],
         select: {
           id: true,
-          isActive: true,
+          isDeactivated: true,
           authentications: {
             id: true,
             provider: true,
@@ -128,7 +128,7 @@ describe("LocalAuthStrategy", (): void => {
     });
 
     it("should handle deactivated user profile", async (): Promise<void> => {
-      user.isActive = false;
+      user.isDeactivated = true;
       user.authentications = [authentication];
 
       usersService.findUser.mockResolvedValue(user);

@@ -64,9 +64,9 @@ describe("UserEntity", (): void => {
       expect(user.avatarUrl).toMatch(/^http(s)?:\/\//);
     });
 
-    it("should have isActive boolean field", (): void => {
-      expect(user.isActive).toBeDefined();
-      expect(typeof user.isActive).toBe("boolean");
+    it("should have isDeactivated boolean field", (): void => {
+      expect(user.isDeactivated).toBeDefined();
+      expect(typeof user.isDeactivated).toBe("boolean");
     });
   });
 

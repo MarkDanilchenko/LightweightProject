@@ -477,7 +477,7 @@ export default class AuthService {
       relations: ["authentications"],
       select: {
         id: true,
-        isActive: true,
+        isDeactivated: true,
         email: true,
         username: true,
         authentications: {
@@ -491,12 +491,12 @@ export default class AuthService {
       throw new UnauthorizedException("Authentication failed. User is not found.");
     }
 
-    if (!user.isActive) {
+    if (user.isDeactivated) {
       throw new BadRequestException("User's profile is already deactivated.");
     }
 
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
-      await this.userService.updateUser({ id: user.id }, { isActive: false }, manager);
+      await this.userService.updateUser({ id: user.id }, { isDeactivated: true }, manager);
       await this.updateAuthentication(
         { userId: user.id },
         { refreshToken: null, lastAccessedAt: (): string => "lastAccessedAt" },

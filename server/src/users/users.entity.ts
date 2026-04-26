@@ -43,9 +43,9 @@ export default class UserEntity extends CommonEntity {
   @IsOptional()
   avatarUrl?: string | null;
 
-  @Column({ type: "boolean", default: true })
+  @Column({ type: "boolean", default: false })
   @IsBoolean()
-  isActive!: boolean;
+  isDeactivated!: boolean;
 
   @CreateDateColumn({ type: "timestamptz" })
   @IsDate()

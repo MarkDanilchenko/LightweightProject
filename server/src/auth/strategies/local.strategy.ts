@@ -26,7 +26,7 @@ export default class LocalAuthStrategy extends PassportStrategy(Strategy, "local
       relations: ["authentications"],
       select: {
         id: true,
-        isActive: true,
+        isDeactivated: true,
         authentications: {
           id: true,
           provider: true,
@@ -48,7 +48,7 @@ export default class LocalAuthStrategy extends PassportStrategy(Strategy, "local
       return done(new UnauthorizedException("Authentication failed. User not found."), false);
     }
 
-    if (!user.isActive) {
+    if (user.isDeactivated) {
       return done(new UnauthorizedException("Authentication failed. User profile is deactivated."), false);
     }
 

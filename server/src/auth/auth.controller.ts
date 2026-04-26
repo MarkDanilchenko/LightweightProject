@@ -22,7 +22,6 @@ import {
   LocalSignUpDto,
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
-  ReactivateDto,
   DeactivateDto,
 } from "#server/auth/dto/auth.dto";
 import { clearCookie, setCookie } from "#server/utils/cookie";

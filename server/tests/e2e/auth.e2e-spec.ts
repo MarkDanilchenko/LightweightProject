@@ -630,7 +630,7 @@ describe("AuthController E2E", (): void => {
         const password = "Password123";
         const hashedPassword: string = await hash(password);
 
-        const user: UserEntity = await factories.buildUserFactory({ isActive: false });
+        const user: UserEntity = await factories.buildUserFactory({ isDeactivated: true });
         const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
           userId: user.id,
           provider: AuthenticationProvider.LOCAL,

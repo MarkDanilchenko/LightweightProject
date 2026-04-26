@@ -916,7 +916,8 @@ describe("AuthService", (): void => {
         relations: ["authentications"],
         select: {
           id: true,
-          isActive: true,
+          username: true,
+          isDeactivated: true,
           email: true,
           authentications: {
             id: true,
@@ -925,7 +926,7 @@ describe("AuthService", (): void => {
         },
         where: { id: user.id },
       });
-      expect(usersService.updateUser).toHaveBeenCalledWith({ id: user.id }, { isActive: false }, entityManager);
+      expect(usersService.updateUser).toHaveBeenCalledWith({ id: user.id }, { isDeactivated: true }, entityManager);
       expect(tokensService.addToBlacklist).toHaveBeenCalledWith(payload.jwti, payload.exp);
       expect(rmqMicroserviceClient.emit).toHaveBeenCalled();
       expect(eventsService.buildInstance).toHaveBeenCalledWith(EventName.USER_DEACTIVATED, user.id, user.id, {
@@ -982,7 +983,7 @@ describe("AuthService", (): void => {
     });
 
     it("should throw BadRequestException if user is already deactivated", async (): Promise<void> => {
-      user.isActive = false;
+      user.isDeactivated = true;
       usersService.findUser.mockResolvedValue(user);
 
       await expect(authService.deactivateUserProfile(payload, deactivateDto)).rejects.toThrow(

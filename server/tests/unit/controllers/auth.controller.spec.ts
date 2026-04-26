@@ -44,7 +44,7 @@ describe("AuthController", (): void => {
       signOut: jest.fn(),
       refreshAccessToken: jest.fn(),
       retrieveProfile: jest.fn(),
-      deactivateProfile: jest.fn(),
+      deactivateUserProfile: jest.fn(),
     };
 
     const mockGoogleOAuth2Guard = jest.fn().mockImplementation(() => ({

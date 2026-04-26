@@ -3,4 +3,6 @@ import { Controller } from "@nestjs/common";
 
 @ApiTags("users")
 @Controller("users")
-export default class UsersController {}
+export default class UsersController {
+  constructor() {}
+}
