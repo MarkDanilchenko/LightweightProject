@@ -264,7 +264,7 @@ export default class AuthController {
     return this.authService.retrieveProfile(payload.userId);
   }
 
-  @Post("me/deactivate")
+  @Post("deactivate")
   @ApiOperation({
     summary: "Deactivate account",
     description: "Deactivate current user's account until the next login.",

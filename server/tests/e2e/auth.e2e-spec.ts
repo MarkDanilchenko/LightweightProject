@@ -1098,7 +1098,7 @@ describe("AuthController E2E", (): void => {
     });
   });
 
-  describe("POST /api/v1/auth/me/deactivate", (): void => {
+  describe("POST /api/v1/auth/deactivate", (): void => {
     describe("positive scenarios", (): void => {
       it("should return 200 and deactivate account successfully", async (): Promise<void> => {
         const password = "Password123";
@@ -1137,7 +1137,7 @@ describe("AuthController E2E", (): void => {
 
         const deactivatePayload = { confirmationWord: "deactivate" };
         const response = await httpServer
-          .post("/api/v1/auth/me/deactivate")
+          .post("/api/v1/auth/deactivate")
           .set("Cookie", accessTokenCookie)
           .send(deactivatePayload);
 
@@ -1178,7 +1178,7 @@ describe("AuthController E2E", (): void => {
 
         const deactivatePayload = { confirmationWord: "DEACTIVATE" };
         const response = await httpServer
-          .post("/api/v1/auth/me/deactivate")
+          .post("/api/v1/auth/deactivate")
           .set("Cookie", accessTokenCookie)
           .send(deactivatePayload);
 
@@ -1192,7 +1192,7 @@ describe("AuthController E2E", (): void => {
     describe("negative scenarios", (): void => {
       it("should return 401 for missing accessToken", async (): Promise<void> => {
         const deactivatePayload = { confirmationWord: "deactivate" };
-        const response = await httpServer.post("/api/v1/auth/me/deactivate").send(deactivatePayload);
+        const response = await httpServer.post("/api/v1/auth/deactivate").send(deactivatePayload);
 
         expect(response.statusCode).toBe(401);
         expect(response.body.message).toContain("Unauthorized");
@@ -1201,7 +1201,7 @@ describe("AuthController E2E", (): void => {
       it("should return 401 for invalid accessToken", async (): Promise<void> => {
         const deactivatePayload = { confirmationWord: "deactivate" };
         const response = await httpServer
-          .post("/api/v1/auth/me/deactivate")
+          .post("/api/v1/auth/deactivate")
           .set("Cookie", "accessToken=invalid-token")
           .send(deactivatePayload);
 
@@ -1240,7 +1240,7 @@ describe("AuthController E2E", (): void => {
 
         const deactivatePayload = {};
         const response = await httpServer
-          .post("/api/v1/auth/me/deactivate")
+          .post("/api/v1/auth/deactivate")
           .set("Cookie", accessTokenCookie)
           .send(deactivatePayload);
 
@@ -1279,7 +1279,7 @@ describe("AuthController E2E", (): void => {
 
         const deactivatePayload = { confirmationWord: 123 };
         const response = await httpServer
-          .post("/api/v1/auth/me/deactivate")
+          .post("/api/v1/auth/deactivate")
           .set("Cookie", accessTokenCookie)
           .send(deactivatePayload);
 
