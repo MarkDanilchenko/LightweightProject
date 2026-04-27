@@ -576,6 +576,19 @@ export default class AuthService {
         let { username } = userClaims;
 
         return this.dataSource.transaction(async (manager: EntityManager): Promise<UserEntity> => {
+          if (username) {
+            const isUsernameTaken: UserEntity | null = await this.userService.findUser(
+              {
+                select: { id: true },
+                where: { username },
+              },
+              manager,
+            );
+            if (isUsernameTaken) {
+              username = undefined;
+            }
+          }
+
           const existingUser: UserEntity | null = await this.userService.findUser(
             {
               where: { email },
@@ -598,21 +611,8 @@ export default class AuthService {
             manager,
           );
 
-          if (username) {
-            const isUsernameTaken: UserEntity | null = await this.userService.findUser(
-              {
-                select: { id: true },
-                where: { username },
-              },
-              manager,
-            );
-            if (isUsernameTaken) {
-              username = undefined;
-            }
-          }
-
           if (!existingUser) {
-            const newUser = manager.create(UserEntity, {
+            const newUser: UserEntity = manager.create(UserEntity, {
               username,
               firstName,
               lastName,
@@ -631,6 +631,20 @@ export default class AuthService {
 
             return newUser;
           } else {
+            const updateValues: Partial<UserEntity> = {
+              username,
+              firstName,
+              lastName,
+              avatarUrl,
+            };
+
+            // TODO: when deactivatedById is added, change this if statement with proper error throwing;
+            if (existingUser.isDeactivated) {
+              updateValues.isDeactivated = false;
+            }
+
+            await this.userService.updateUser({ id: existingUser.id }, updateValues, manager);
+
             let authentication = existingUser.authentications.find((auth) => auth.provider === idP);
             if (!authentication) {
               authentication = manager.create(AuthenticationEntity, {
@@ -638,13 +652,6 @@ export default class AuthService {
                 provider: idP,
               });
             }
-
-            await this.userService.updateUser(
-              { id: existingUser.id },
-              { username, firstName, lastName, avatarUrl },
-              manager,
-            );
-
             // NOTE: Saving both already existing or new authentication instance is needed for updating the lastAuthenticatedAt;
             await manager.save(authentication);
 

@@ -5,6 +5,7 @@ import { ConfigService } from "@nestjs/config";
 import AuthService from "#server/auth/auth.service";
 import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
+import UserEntity from "#server/users/users.entity";
 
 @Injectable()
 export class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "googleOAuth2") {
@@ -49,7 +50,7 @@ export class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "googleOAut
     }
 
     try {
-      const user = await this.authService.idPAuthentication(AuthenticationProvider.GOOGLE, {
+      const user: UserEntity = await this.authService.idPAuthentication(AuthenticationProvider.GOOGLE, {
         firstName: given_name,
         lastName: family_name,
         email,
