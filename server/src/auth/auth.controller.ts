@@ -22,7 +22,6 @@ import {
   LocalSignUpDto,
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
-  DeactivateDto,
 } from "#server/auth/dto/auth.dto";
 import { clearCookie, setCookie } from "#server/utils/cookie";
 import LocalAuthGuard from "#server/auth/guards/local.guard";
@@ -261,43 +260,6 @@ export default class AuthController {
     const payload: TokenPayload = req.tokenPayload;
 
     return this.authService.retrieveProfile(payload.userId);
-  }
-
-  @Post("deactivate")
-  @ApiOperation({
-    summary: "Deactivate account",
-    description: "Deactivate current user's account until the next login.",
-  })
-  @ApiResponse({
-    status: 200,
-    description: "Account deactivated successfully.",
-  })
-  @ApiResponse({
-    status: 401,
-    description: "Authentication failed. Invalid credentials.",
-  })
-  @ApiResponse({
-    status: 404,
-    description: "User not found.",
-  })
-  @ApiCookieAuth("accessToken")
-  @ApiBody({ type: DeactivateDto })
-  @UsePipes(ZodValidationPipe)
-  @UseGuards(JwtGuard)
-  async deactivateUserProfile(
-    @Req() req: RequestWithTokenPayload,
-    @Body() deactivateDto: DeactivateDto,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<void> {
-    const payload: TokenPayload = req.tokenPayload;
-
-    await this.authService.deactivateUserProfile(payload, deactivateDto);
-
-    clearCookie(res, "accessToken");
-
-    res.status(200).send({
-      message: "Account deactivated successfully.",
-    });
   }
 
   @Get("google/signin")

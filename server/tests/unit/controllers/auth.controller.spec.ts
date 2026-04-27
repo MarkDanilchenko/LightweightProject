@@ -5,7 +5,6 @@ import { Response } from "express";
 import AuthController from "#server/auth/auth.controller";
 import AuthService from "#server/auth/auth.service";
 import {
-  DeactivateDto,
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
   LocalSignInDto,
@@ -31,7 +30,7 @@ describe("AuthController", (): void => {
   const user: UserEntity = buildUserFactory();
   let authController: AuthController;
   let authService: jest.Mocked<AuthService>;
-  let mockResponse: Partial<Response>;
+  let mockResponse: Response;
   let googleOAuth2Guard: jest.Mocked<GoogleOAuth2Guard>;
 
   beforeEach(async (): Promise<void> => {
@@ -44,7 +43,6 @@ describe("AuthController", (): void => {
       signOut: jest.fn(),
       refreshAccessToken: jest.fn(),
       retrieveProfile: jest.fn(),
-      deactivateUserProfile: jest.fn(),
     };
 
     const mockGoogleOAuth2Guard = jest.fn().mockImplementation(() => ({
@@ -73,7 +71,7 @@ describe("AuthController", (): void => {
       status: jest.fn().mockReturnThis(),
       send: jest.fn(),
       redirect: jest.fn(),
-    };
+    } as unknown as Response;
 
     const testingModule: TestingModule = await Test.createTestingModule({
       controllers: [AuthController],
@@ -326,20 +324,6 @@ describe("AuthController", (): void => {
       expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.GOOGLE);
       expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", tokenData.accessToken, true);
       expect(mockResponse.redirect).toHaveBeenCalledWith(302, "https://127.0.0.1:3001/home");
-    });
-  });
-
-  describe("deactivateUserProfile", (): void => {
-    it("should call authService.deactivateUserProfile, clear cookie, and return 200", async (): Promise<void> => {
-      const req = { tokenPayload: { userId: user.id, provider: "local", jwti: uuidv4() } } as RequestWithTokenPayload;
-      const deactivateDto: DeactivateDto = { confirmationWord: "deactivate" };
-
-      await authController.deactivateUserProfile(req, deactivateDto, mockResponse as Response);
-
-      expect(authService.deactivateUserProfile).toHaveBeenCalledWith(req.tokenPayload, deactivateDto);
-      expect(clearCookie).toHaveBeenCalledWith(mockResponse, "accessToken");
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(mockResponse.send).toHaveBeenCalledWith({ message: "Account deactivated successfully." });
     });
   });
 });

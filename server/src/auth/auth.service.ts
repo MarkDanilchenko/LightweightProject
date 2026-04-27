@@ -22,7 +22,6 @@ import TokensService from "#server/tokens/tokens.service";
 import { v4 as uuidv4 } from "uuid";
 import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import {
-  DeactivateDto,
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
   LocalSignUpDto,
@@ -452,66 +451,6 @@ export default class AuthService {
     }
 
     return user;
-  }
-
-  /**
-   * Deactivates user's profile.
-   *
-   * @param {TokenPayload} payload - The JWT token payload containing user authentication information.
-   * @param {DeactivateDto} deactivateDto - The DTO containing the confirmation word.
-   *
-   * @returns {Promise<void>} A promise that resolves when the profile is successfully deactivated.
-   */
-  async deactivateUserProfile(payload: TokenPayload, deactivateDto: DeactivateDto): Promise<void> {
-    const { confirmationWord } = deactivateDto;
-    if (confirmationWord !== "deactivate") {
-      throw new BadRequestException("Deactivation failed. Invalid confirmation word.");
-    }
-
-    const { userId, jwti, exp } = payload;
-    if (!jwti || !exp) {
-      throw new UnauthorizedException("Authentication failed. Token is invalid.");
-    }
-
-    const user: UserEntity | null = await this.userService.findUser({
-      relations: ["authentications"],
-      select: {
-        id: true,
-        isDeactivated: true,
-        email: true,
-        username: true,
-        authentications: {
-          id: true,
-          metadata: true,
-        },
-      },
-      where: { id: userId },
-    });
-    if (!user || !user.authentications.length) {
-      throw new UnauthorizedException("Authentication failed. User is not found.");
-    }
-
-    if (user.isDeactivated) {
-      throw new BadRequestException("User's profile is already deactivated.");
-    }
-
-    await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
-      await this.userService.updateUser({ id: user.id }, { isDeactivated: true }, manager);
-      await this.updateAuthentication(
-        { userId: user.id },
-        { refreshToken: null, lastAccessedAt: (): string => "lastAccessedAt" },
-        manager,
-      );
-      await this.tokensService.addToBlacklist(jwti, exp);
-
-      this.rmqMicroserviceClient.emit(
-        EventName.USER_DEACTIVATED,
-        this.eventsService.buildInstance(EventName.USER_DEACTIVATED, user.id, user.id, {
-          email: user.email,
-          username: user.username,
-        }),
-      );
-    });
   }
 
   /**
