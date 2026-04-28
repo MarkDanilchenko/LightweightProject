@@ -767,6 +767,14 @@ describe("AuthService", (): void => {
 
       expect(usersService.findUser).toHaveBeenCalledWith(
         {
+          select: { id: true },
+          where: { username: userClaims.username },
+        },
+        entityManager,
+      );
+
+      expect(usersService.findUser).toHaveBeenCalledWith(
+        {
           where: { email: userClaims.email },
           relations: ["authentications"],
           select: {
@@ -805,10 +813,18 @@ describe("AuthService", (): void => {
       });
       user.authentications = [authentication, googleAuth];
 
-      usersService.findUser.mockResolvedValueOnce(user).mockResolvedValueOnce(null);
+      usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(user);
       (entityManager.save as jest.Mock).mockResolvedValue(undefined);
 
       const result: UserEntity = await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
+
+      expect(usersService.findUser).toHaveBeenCalledWith(
+        {
+          select: { id: true },
+          where: { username: userClaims.username },
+        },
+        entityManager,
+      );
 
       expect(usersService.updateUser).toHaveBeenCalledWith(
         { id: user.id },
@@ -825,7 +841,7 @@ describe("AuthService", (): void => {
       expect(result).toEqual(user);
     });
 
-    it("should create GOOGLE authentication for existing user without it", async (): Promise<void> => {
+    it("should create GOOGLE authentication for existing user", async (): Promise<void> => {
       const userClaims: AuthenticationViaIdP["userClaims"] = {
         firstName: "John",
         lastName: "Doe",
@@ -844,6 +860,16 @@ describe("AuthService", (): void => {
 
       const result: UserEntity = await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
 
+      expect(usersService.updateUser).toHaveBeenCalledWith(
+        { id: user.id },
+        {
+          username: undefined,
+          firstName: userClaims.firstName,
+          lastName: userClaims.lastName,
+          avatarUrl: userClaims.avatarUrl,
+        },
+        entityManager,
+      );
       expect(entityManager.create).toHaveBeenCalledWith(AuthenticationEntity, {
         userId: user.id,
         provider: AuthenticationProvider.GOOGLE,
@@ -859,15 +885,22 @@ describe("AuthService", (): void => {
         lastName: "Doe",
         email: user.email,
         avatarUrl: user.avatarUrl!,
-        username: "takenusername",
+        username: "takenUsername",
       };
       user.authentications = [authentication];
 
-      usersService.findUser.mockResolvedValueOnce(user).mockResolvedValueOnce(true as unknown as UserEntity);
+      usersService.findUser.mockResolvedValueOnce(user).mockResolvedValueOnce(user);
       (entityManager.save as jest.Mock).mockResolvedValue(undefined);
 
       await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
 
+      expect(usersService.findUser).toHaveBeenCalledWith(
+        {
+          select: { id: true },
+          where: { username: userClaims.username },
+        },
+        entityManager,
+      );
       expect(usersService.updateUser).toHaveBeenCalledWith(
         { id: user.id },
         {
@@ -878,6 +911,43 @@ describe("AuthService", (): void => {
         },
         entityManager,
       );
+    });
+
+    it("should reactivate deactivated user with IdP login", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "John",
+        lastName: "Doe",
+        email: user.email,
+        avatarUrl: user.avatarUrl!,
+        username: "newUsername",
+      };
+      user.isDeactivated = true;
+      user.authentications = [authentication];
+
+      usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(user);
+      (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+
+      await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
+
+      expect(usersService.findUser).toHaveBeenCalledWith(
+        {
+          select: { id: true },
+          where: { username: userClaims.username },
+        },
+        entityManager,
+      );
+      expect(usersService.updateUser).toHaveBeenCalledWith(
+        { id: user.id },
+        {
+          username: userClaims.username,
+          firstName: userClaims.firstName,
+          lastName: userClaims.lastName,
+          avatarUrl: userClaims.avatarUrl,
+          isDeactivated: false,
+        },
+        entityManager,
+      );
+      expect(user.reload).toHaveBeenCalled();
     });
 
     it("should throw BadRequestException for invalid provider", async (): Promise<void> => {
