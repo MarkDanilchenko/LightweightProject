@@ -22,6 +22,8 @@ import {
   LocalSignUpDto,
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
+  LocalReactivationRequestDto,
+  LocalReactivationConfirmDto,
 } from "#server/auth/dto/auth.dto";
 import { clearCookie, setCookie } from "#server/utils/cookie";
 import LocalAuthGuard from "#server/auth/guards/local.guard";
@@ -136,9 +138,41 @@ export default class AuthController {
   }
 
   @Post("local/reactivation/request")
+  @ApiOperation({
+    summary: "Request reactivation",
+    description: "Request reactivation for a user account that has been deactivated (local authentication flow).",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Reactivation request sent successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
+  })
+  @ApiBody({ type: LocalReactivationRequestDto })
+  @UsePipes(ZodValidationPipe)
   async localReactivationRequest(): Promise<void> {}
 
   @Get("local/reactivation/confirm")
+  @ApiOperation({
+    summary: "Confirm reactivation",
+    description: "Confirm reactivation for a user account that has been deactivated (local authentication flow).",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Reactivation confirmed successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Invalid or expired token.",
+  })
+  @ApiQuery({ type: LocalReactivationConfirmDto })
+  @UsePipes(ZodValidationPipe)
   async localReactivationConfirm(): Promise<void> {}
 
   // TODO: change URI to "local/password-reset/request"
@@ -150,7 +184,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 200,
-    description: "Email with temporary generated token was sent successfully.",
+    description: "Password reset link sent successfully.",
   })
   @ApiResponse({
     status: 400,
@@ -185,7 +219,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Invalid token.",
+    description: "Invalid or expired token.",
   })
   @ApiBody({ type: LocalPasswordResetDto })
   @UsePipes(ZodValidationPipe)

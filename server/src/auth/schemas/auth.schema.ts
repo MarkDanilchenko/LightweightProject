@@ -113,11 +113,27 @@ const deactivateSchema = z
     example: { confirmationWord: "deactivate" },
   });
 
-const reactivateSchema = localSignInSchema.openapi({
-  title: "Reactivate schema",
-  description: "Reactivation credentials.",
-  example: { login: "johndoe or johndoe@me.com", password: "12345678Aa_" },
-});
+const localReactivateRequestSchema = z
+  .object({
+    email: localSignUpSchema.shape.email,
+  })
+  .openapi({
+    title: "Local reactivate request schema",
+    description: "Local reactivate request with provided email.",
+    example: { email: "johndoe@me.com" },
+  });
+
+const localReactivateConfirmSchema = z
+  .object({
+    token: z
+      .string()
+      .openapi({ title: "Token", description: "Token with short ttl (15 minutes).", example: "Token in jwt format" }),
+  })
+  .openapi({
+    title: "Local reactivate confirm schema",
+    description: "Local reactivate confirm with provided token.",
+    example: { token: "Token in jwt format" },
+  });
 
 export {
   localSignInSchema,
@@ -125,6 +141,7 @@ export {
   localVerificationEmailSchema,
   localForgotPasswordSchema,
   localResetPasswordSchema,
-  reactivateSchema,
+  localReactivateRequestSchema,
+  localReactivateConfirmSchema,
   deactivateSchema,
 };
