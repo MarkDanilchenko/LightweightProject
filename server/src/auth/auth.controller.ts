@@ -65,6 +65,7 @@ export default class AuthController {
     await this.authService.localSignUp(localSignUpDto);
   }
 
+  // TODO: change URI to "local/email-verification/confirm"
   @Post("local/verification/email")
   @ApiOperation({
     summary: "Verify email for local authentication",
@@ -133,6 +134,13 @@ export default class AuthController {
     res.status(200).send();
   }
 
+  @Post("local/reactivation/request")
+  async localReactivationRequest(): Promise<void> {}
+
+  @Get("local/reactivation/confirm")
+  async localReactivationConfirm(): Promise<void> {}
+
+  // TODO: change URI to "local/password-reset/request"
   @Post("local/password/forgot")
   @ApiOperation({
     summary: "Forgot password",
@@ -158,6 +166,7 @@ export default class AuthController {
     res.status(200).send();
   }
 
+  // TODO: change URI to "local/password-reset/confirm"
   @Post("local/password/reset")
   @ApiOperation({
     summary: "Reset password",
