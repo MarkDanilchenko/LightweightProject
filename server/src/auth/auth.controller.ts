@@ -66,6 +66,7 @@ export default class AuthController {
   }
 
   // TODO: change URI to "local/email-verification/confirm"
+  // TODO: change to @GET()
   @Post("local/verification/email")
   @ApiOperation({
     summary: "Verify email for local authentication",
@@ -141,6 +142,7 @@ export default class AuthController {
   async localReactivationConfirm(): Promise<void> {}
 
   // TODO: change URI to "local/password-reset/request"
+  // TODO: also rename DTOs
   @Post("local/password/forgot")
   @ApiOperation({
     summary: "Forgot password",
@@ -167,6 +169,7 @@ export default class AuthController {
   }
 
   // TODO: change URI to "local/password-reset/confirm"
+  // TODO: also rename DTOs
   @Post("local/password/reset")
   @ApiOperation({
     summary: "Reset password",
