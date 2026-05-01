@@ -98,11 +98,14 @@ describe("EventsFactory", (): void => {
   describe("AuthLocalPasswordResetedEvent", (): void => {
     it("should create an instance with correct properties", (): void => {
       const EventClass = eventsRegistry[EventName.AUTH_LOCAL_PASSWORD_RESETED];
-      const event = new EventClass(EventName.AUTH_LOCAL_PASSWORD_RESETED, user.id, authentication.id);
+      const event = new EventClass(EventName.AUTH_LOCAL_PASSWORD_RESETED, user.id, authentication.id, {
+        email: user.email,
+      });
 
       expect(event.name).toBe(EventName.AUTH_LOCAL_PASSWORD_RESETED);
       expect(event.userId).toBe(user.id);
       expect(event.modelId).toBe(authentication.id);
+      expect(event.metadata).toEqual({ email: user.email });
     });
   });
 

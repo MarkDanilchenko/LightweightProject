@@ -56,16 +56,19 @@ export default class RmqEmailService {
   }
 
   /**
-   * Send a welcome verification email to the users.
+   * Send a welcome verification email to the users (local idp).
    *
    * @param {AuthLocalCreatedEvent} payload - The events payload containing the user's metadata.
    *
    * @returns {Promise<void>} A promise, that resolves, when the email is successfully sent.
    */
-  async sendWelcomeVerificationEmail(payload: AuthLocalCreatedEvent): Promise<void> {
+  async sendEmailVerification(payload: AuthLocalCreatedEvent): Promise<void> {
     // First, verify, that the appropriate template exists;
-    const emailVerificationTemplatePath: string = path.resolve(process.cwd(), "templates/localEmailVerification.ejs");
-    await fs.promises.access(emailVerificationTemplatePath, fs.constants.R_OK);
+    const localEmailVerificationTemplatePath: string = path.resolve(
+      process.cwd(),
+      "templates/localEmailVerification.ejs",
+    );
+    await fs.promises.access(localEmailVerificationTemplatePath, fs.constants.R_OK);
 
     const { userId, metadata, modelId } = payload;
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
@@ -81,10 +84,14 @@ export default class RmqEmailService {
       provider: AuthenticationProvider.LOCAL,
     });
     const callbackUrl: string = `${baseUrl}/api/v1/auth/local/verification/email?token=${token}`;
-    const html: string = await ejs.renderFile(emailVerificationTemplatePath, {
-      username: metadata.username,
-      callbackUrl,
-    });
+    const html: string = await ejs.renderFile(
+      localEmailVerificationTemplatePath,
+      {
+        username: metadata.username,
+        callbackUrl,
+      },
+      { root: path.resolve(process.cwd(), "templates") },
+    );
     const mailOptions: MailOptions = {
       from,
       to: metadata.email,
@@ -135,17 +142,17 @@ export default class RmqEmailService {
   }
 
   /**
-   * Sends an email with a password reset link to the user.
+   * Sends an email with a password reset link to the user (local idp).
    * The email contains a link with a jwt token, which is valid for 15 minutes.
    *
    * @param {AuthLocalPasswordResetEvent} payload - The event containing the user's information.
    *
    * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
    */
-  async sendPasswordResetEmail(payload: AuthLocalPasswordResetEvent): Promise<void> {
+  async sendPasswordReset(payload: AuthLocalPasswordResetEvent): Promise<void> {
     // First, verify, that the appropriate template exists;
-    const passwordResetTemplatePath: string = path.resolve(process.cwd(), "templates/localPasswordReset.ejs");
-    await fs.promises.access(passwordResetTemplatePath, fs.constants.R_OK);
+    const localPasswordResetTemplatePath: string = path.resolve(process.cwd(), "templates/localPasswordReset.ejs");
+    await fs.promises.access(localPasswordResetTemplatePath, fs.constants.R_OK);
 
     const { userId, modelId, username, email } = payload;
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
@@ -165,10 +172,11 @@ export default class RmqEmailService {
     );
     // TODO: callbackUrl should be implemented on the client (frontend-app);
     const callbackUrl: string = `${baseUrl}/local/password/reset?token=${token}`;
-    const html: string = await ejs.renderFile(passwordResetTemplatePath, {
-      username,
-      callbackUrl,
-    });
+    const html: string = await ejs.renderFile(
+      localPasswordResetTemplatePath,
+      { username, callbackUrl },
+      { root: path.resolve(process.cwd(), "templates") },
+    );
     const mailOptions: MailOptions = {
       from,
       to: email,
@@ -210,13 +218,13 @@ export default class RmqEmailService {
    *
    * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
    */
-  async sendDeactivatedEmail(payload: UserDeactivatedEvent): Promise<void> {
+  async sendUserDeactivatedNotification(payload: UserDeactivatedEvent): Promise<void> {
     // First, verify, that the appropriate template exists;
-    const deactivationTemplatePath: string = path.resolve(
+    const userDeactivatedNotificationTemplatePath: string = path.resolve(
       process.cwd(),
       "templates/userDeactivatedNotificationEmail.ejs",
     );
-    await fs.promises.access(deactivationTemplatePath, fs.constants.R_OK);
+    await fs.promises.access(userDeactivatedNotificationTemplatePath, fs.constants.R_OK);
 
     const { userId, modelId, metadata } = payload;
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
@@ -228,9 +236,11 @@ export default class RmqEmailService {
       throw new Error("Deactivation email: User not found");
     }
 
-    const html: string = await ejs.renderFile(deactivationTemplatePath, {
-      username: metadata.username,
-    });
+    const html: string = await ejs.renderFile(
+      userDeactivatedNotificationTemplatePath,
+      { username: metadata.username },
+      { root: path.resolve(process.cwd(), "templates") },
+    );
     const mailOptions: MailOptions = {
       from,
       to: metadata.email,

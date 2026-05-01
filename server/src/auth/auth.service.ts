@@ -521,6 +521,7 @@ export default class AuthService {
       relations: ["authentications"],
       select: {
         id: true,
+        email: true,
         authentications: {
           id: true,
           metadata: true,
@@ -560,7 +561,9 @@ export default class AuthService {
 
       this.eventEmitter.emit(
         EventName.AUTH_LOCAL_PASSWORD_RESETED,
-        this.eventsService.buildInstance(EventName.AUTH_LOCAL_PASSWORD_RESETED, userId, user.authentications[0].id),
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_PASSWORD_RESETED, userId, user.authentications[0].id, {
+          email: user.email,
+        }),
         manager,
       );
     });

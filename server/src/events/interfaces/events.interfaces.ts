@@ -43,7 +43,9 @@ interface AuthLocalPasswordResetSentEvent extends BaseEvent {
   metadata: EventMetadata;
 }
 
-interface AuthLocalPasswordResetedEvent extends BaseEvent {}
+interface AuthLocalPasswordResetedEvent extends BaseEvent {
+  metadata: EventMetadata;
+}
 
 interface UserDeactivatedEvent extends BaseEvent {
   metadata: EventMetadata & { username?: string | null };

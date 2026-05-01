@@ -43,7 +43,7 @@ export default class RmqEmailConsumer {
     const originalMsg = context.getMessage() as Message;
 
     try {
-      await this.rmqEmailService.sendWelcomeVerificationEmail(payload);
+      await this.rmqEmailService.sendEmailVerification(payload);
 
       channel.ack(originalMsg);
     } catch (error) {
@@ -72,7 +72,7 @@ export default class RmqEmailConsumer {
     const originalMsg = context.getMessage() as Message;
 
     try {
-      await this.rmqEmailService.sendPasswordResetEmail(payload);
+      await this.rmqEmailService.sendPasswordReset(payload);
 
       channel.ack(originalMsg);
     } catch (error) {
@@ -98,7 +98,7 @@ export default class RmqEmailConsumer {
     const originalMsg = context.getMessage() as Message;
 
     try {
-      await this.rmqEmailService.sendDeactivatedEmail(payload);
+      await this.rmqEmailService.sendUserDeactivatedNotification(payload);
 
       channel.ack(originalMsg);
     } catch (error) {

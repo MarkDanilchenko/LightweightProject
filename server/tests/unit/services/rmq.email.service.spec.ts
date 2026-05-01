@@ -136,7 +136,7 @@ describe("RmqEmailService", (): void => {
     expect(rmqEmailService).toBeDefined();
   });
 
-  describe("sendWelcomeVerificationEmail", (): void => {
+  describe("sendEmailVerification", (): void => {
     const user: UserEntity = buildUserFactory();
     const authentication: AuthenticationEntity = buildAuthenticationFactory({ userId: user.id });
     const payload: AuthLocalCreatedEvent = {
@@ -166,7 +166,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should send a welcome verification email successfully", async (): Promise<void> => {
-      await rmqEmailService.sendWelcomeVerificationEmail(payload);
+      await rmqEmailService.sendEmailVerification(payload);
 
       expect(fs.promises.access).toHaveBeenCalled();
       expect(authService.findAuthenticationByPk).toHaveBeenCalledWith(payload.modelId);
@@ -182,13 +182,13 @@ describe("RmqEmailService", (): void => {
     it("should throw an error if template file does not exist", async (): Promise<void> => {
       jest.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
 
-      await expect(rmqEmailService.sendWelcomeVerificationEmail(payload)).rejects.toThrow("File not found");
+      await expect(rmqEmailService.sendEmailVerification(payload)).rejects.toThrow("File not found");
     });
 
     it("should throw an error if authentication not found", async (): Promise<void> => {
       authService.findAuthenticationByPk.mockResolvedValue(null);
 
-      await expect(rmqEmailService.sendWelcomeVerificationEmail(payload)).rejects.toThrow(
+      await expect(rmqEmailService.sendEmailVerification(payload)).rejects.toThrow(
         `Email verification: Authentication not found`,
       );
     });
@@ -196,14 +196,14 @@ describe("RmqEmailService", (): void => {
     it("should rollback transaction on error", async (): Promise<void> => {
       jest.spyOn(transporter, "sendMail").mockRejectedValue(new Error("Send mail failed"));
 
-      await expect(rmqEmailService.sendWelcomeVerificationEmail(payload)).rejects.toThrow("Send mail failed");
+      await expect(rmqEmailService.sendEmailVerification(payload)).rejects.toThrow("Send mail failed");
 
       expect(dataSource.createQueryRunner().rollbackTransaction).toHaveBeenCalled();
       expect(dataSource.createQueryRunner().commitTransaction).not.toHaveBeenCalled();
     });
   });
 
-  describe("sendPasswordResetEmail", (): void => {
+  describe("sendPasswordReset", (): void => {
     const user: UserEntity = buildUserFactory();
     const authentication: AuthenticationEntity = buildAuthenticationFactory({ userId: user.id });
     const payload: AuthLocalPasswordResetEvent = {
@@ -228,7 +228,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should send a password reset email successfully", async (): Promise<void> => {
-      await rmqEmailService.sendPasswordResetEmail(payload);
+      await rmqEmailService.sendPasswordReset(payload);
 
       expect(fs.promises.access).toHaveBeenCalled();
       expect(authService.findAuthenticationByPk).toHaveBeenCalledWith(payload.modelId);
@@ -247,26 +247,26 @@ describe("RmqEmailService", (): void => {
     it("should throw an error if template file does not exist", async (): Promise<void> => {
       jest.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
 
-      await expect(rmqEmailService.sendPasswordResetEmail(payload)).rejects.toThrow("File not found");
+      await expect(rmqEmailService.sendPasswordReset(payload)).rejects.toThrow("File not found");
     });
 
     it("should throw an error if authentication not found", async (): Promise<void> => {
       authService.findAuthenticationByPk.mockResolvedValue(null);
 
-      await expect(rmqEmailService.sendPasswordResetEmail(payload)).rejects.toThrow("Authentication not found");
+      await expect(rmqEmailService.sendPasswordReset(payload)).rejects.toThrow("Authentication not found");
     });
 
     it("should rollback transaction on error", async (): Promise<void> => {
       jest.spyOn(transporter, "sendMail").mockRejectedValue(new Error("Send mail failed"));
 
-      await expect(rmqEmailService.sendPasswordResetEmail(payload)).rejects.toThrow("Send mail failed");
+      await expect(rmqEmailService.sendPasswordReset(payload)).rejects.toThrow("Send mail failed");
 
       expect(dataSource.createQueryRunner().rollbackTransaction).toHaveBeenCalled();
       expect(dataSource.createQueryRunner().commitTransaction).not.toHaveBeenCalled();
     });
   });
 
-  describe("sendDeactivatedEmail", (): void => {
+  describe("sendUserDeactivatedNotification", (): void => {
     const user: UserEntity = buildUserFactory();
     const payload: UserDeactivatedEvent = {
       name: EventName.USER_DEACTIVATED,
@@ -291,7 +291,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should send a deactivation email successfully", async (): Promise<void> => {
-      await rmqEmailService.sendDeactivatedEmail(payload);
+      await rmqEmailService.sendUserDeactivatedNotification(payload);
 
       expect(fs.promises.access).toHaveBeenCalled();
       expect(usersService.findUser).toHaveBeenCalledWith({
@@ -307,19 +307,21 @@ describe("RmqEmailService", (): void => {
     it("should throw an error if template file does not exist", async (): Promise<void> => {
       jest.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
 
-      await expect(rmqEmailService.sendDeactivatedEmail(payload)).rejects.toThrow("File not found");
+      await expect(rmqEmailService.sendUserDeactivatedNotification(payload)).rejects.toThrow("File not found");
     });
 
     it("should throw an error if user not found", async (): Promise<void> => {
       usersService.findUser.mockResolvedValue(null);
 
-      await expect(rmqEmailService.sendDeactivatedEmail(payload)).rejects.toThrow("Deactivation email: User not found");
+      await expect(rmqEmailService.sendUserDeactivatedNotification(payload)).rejects.toThrow(
+        "Deactivation email: User not found",
+      );
     });
 
     it("should rollback transaction on error", async (): Promise<void> => {
       jest.spyOn(transporter, "sendMail").mockRejectedValue(new Error("Send mail failed"));
 
-      await expect(rmqEmailService.sendDeactivatedEmail(payload)).rejects.toThrow("Send mail failed");
+      await expect(rmqEmailService.sendUserDeactivatedNotification(payload)).rejects.toThrow("Send mail failed");
 
       expect(dataSource.createQueryRunner().rollbackTransaction).toHaveBeenCalled();
       expect(dataSource.createQueryRunner().commitTransaction).not.toHaveBeenCalled();

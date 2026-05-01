@@ -109,8 +109,17 @@ class AuthLocalPasswordResetSentEventClass extends BaseEventClass implements Aut
 
 // Auth Local Password Reseted Event;
 class AuthLocalPasswordResetedEventClass extends BaseEventClass implements AuthLocalPasswordResetedEvent {
-  constructor(name: BaseEvent["name"], userId: BaseEvent["userId"], modelId: BaseEvent["modelId"]) {
+  public readonly metadata: AuthLocalPasswordResetedEvent["metadata"];
+
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: AuthLocalPasswordResetedEvent["metadata"],
+  ) {
     super(name, userId, modelId);
+
+    this.metadata = metadata;
   }
 }
 

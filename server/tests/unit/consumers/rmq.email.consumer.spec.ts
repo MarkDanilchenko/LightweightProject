@@ -69,9 +69,9 @@ describe("RmqEmailConsumer", (): void => {
     authentication = buildAuthenticationFactory({ userId: user.id });
 
     const mockRmqEmailService = {
-      sendWelcomeVerificationEmail: jest.fn(),
-      sendPasswordResetEmail: jest.fn(),
-      sendDeactivatedEmail: jest.fn(),
+      sendEmailVerification: jest.fn(),
+      sendPasswordReset: jest.fn(),
+      sendUserDeactivatedNotification: jest.fn(),
     };
 
     const mockRmqRetryService = {
@@ -120,18 +120,18 @@ describe("RmqEmailConsumer", (): void => {
     it("should send a welcome verification email and ack the message", async (): Promise<void> => {
       await rmqEmailConsumer.handleAuthLocalCreated(payload, mockRmqContext);
 
-      expect(rmqEmailService.sendWelcomeVerificationEmail).toHaveBeenCalledWith(payload);
+      expect(rmqEmailService.sendEmailVerification).toHaveBeenCalledWith(payload);
       expect(rmqRetryService.processFailedMessage).not.toHaveBeenCalled();
       expect(mockChannel.ack).toHaveBeenCalled();
       expect(mockChannel.nack).not.toHaveBeenCalled();
     });
 
     it("should nack the message if sending email fails", async (): Promise<void> => {
-      rmqEmailService.sendWelcomeVerificationEmail.mockRejectedValueOnce(new Error("Failed to send email"));
+      rmqEmailService.sendEmailVerification.mockRejectedValueOnce(new Error("Failed to send email"));
 
       await rmqEmailConsumer.handleAuthLocalCreated(payload, mockRmqContext);
 
-      expect(rmqEmailService.sendWelcomeVerificationEmail).toHaveBeenCalledWith(payload);
+      expect(rmqEmailService.sendEmailVerification).toHaveBeenCalledWith(payload);
       expect(rmqRetryService.processFailedMessage).toHaveBeenCalledWith(
         mockChannel,
         mockRmqContext.getMessage(),
@@ -156,18 +156,18 @@ describe("RmqEmailConsumer", (): void => {
     it("should send a password reset email and ack the message", async (): Promise<void> => {
       await rmqEmailConsumer.handleAuthLocalPasswordReset(payload, mockRmqContext);
 
-      expect(rmqEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(payload);
+      expect(rmqEmailService.sendPasswordReset).toHaveBeenCalledWith(payload);
       expect(rmqRetryService.processFailedMessage).not.toHaveBeenCalled();
       expect(mockChannel.ack).toHaveBeenCalled();
       expect(mockChannel.nack).not.toHaveBeenCalled();
     });
 
     it("should nack the message if sending email fails", async (): Promise<void> => {
-      rmqEmailService.sendPasswordResetEmail.mockRejectedValueOnce(new Error("Failed to send email"));
+      rmqEmailService.sendPasswordReset.mockRejectedValueOnce(new Error("Failed to send email"));
 
       await rmqEmailConsumer.handleAuthLocalPasswordReset(payload, mockRmqContext);
 
-      expect(rmqEmailService.sendPasswordResetEmail).toHaveBeenCalledWith(payload);
+      expect(rmqEmailService.sendPasswordReset).toHaveBeenCalledWith(payload);
       expect(rmqRetryService.processFailedMessage).toHaveBeenCalledWith(
         mockChannel,
         mockRmqContext.getMessage(),
@@ -194,18 +194,18 @@ describe("RmqEmailConsumer", (): void => {
     it("should send a deactivation email and ack the message", async (): Promise<void> => {
       await rmqEmailConsumer.handleUserDeactivated(payload, mockRmqContext);
 
-      expect(rmqEmailService.sendDeactivatedEmail).toHaveBeenCalledWith(payload);
+      expect(rmqEmailService.sendUserDeactivatedNotification).toHaveBeenCalledWith(payload);
       expect(rmqRetryService.processFailedMessage).not.toHaveBeenCalled();
       expect(mockChannel.ack).toHaveBeenCalled();
       expect(mockChannel.nack).not.toHaveBeenCalled();
     });
 
     it("should nack the message if sending email fails", async (): Promise<void> => {
-      rmqEmailService.sendDeactivatedEmail.mockRejectedValueOnce(new Error("Failed to send email"));
+      rmqEmailService.sendUserDeactivatedNotification.mockRejectedValueOnce(new Error("Failed to send email"));
 
       await rmqEmailConsumer.handleUserDeactivated(payload, mockRmqContext);
 
-      expect(rmqEmailService.sendDeactivatedEmail).toHaveBeenCalledWith(payload);
+      expect(rmqEmailService.sendUserDeactivatedNotification).toHaveBeenCalledWith(payload);
       expect(rmqRetryService.processFailedMessage).toHaveBeenCalledWith(
         mockChannel,
         mockRmqContext.getMessage(),

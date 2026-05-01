@@ -92,6 +92,7 @@ describe("EventsConsumer", (): void => {
         name: EventName.AUTH_LOCAL_PASSWORD_RESETED,
         userId: user.id,
         modelId: authentication.id,
+        metadata: { email: user.email },
       };
 
       await eventsConsumer.handleAuthLocalEvents(payload);
