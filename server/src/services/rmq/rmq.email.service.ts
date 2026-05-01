@@ -63,14 +63,13 @@ export default class RmqEmailService {
    * @returns {Promise<void>} A promise, that resolves, when the email is successfully sent.
    */
   async sendEmailVerification(payload: AuthLocalCreatedEvent): Promise<void> {
-    // First, verify, that the appropriate template exists;
     const localEmailVerificationTemplatePath: string = path.resolve(
       process.cwd(),
       "templates/localEmailVerification.ejs",
     );
     await fs.promises.access(localEmailVerificationTemplatePath, fs.constants.R_OK);
 
-    const { userId, metadata, modelId } = payload;
+    const { userId, modelId, metadata } = payload;
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
     const { baseUrl } = this.configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration")!;
 
@@ -86,10 +85,7 @@ export default class RmqEmailService {
     const callbackUrl: string = `${baseUrl}/api/v1/auth/local/verification/email?token=${token}`;
     const html: string = await ejs.renderFile(
       localEmailVerificationTemplatePath,
-      {
-        username: metadata.username,
-        callbackUrl,
-      },
+      { username: metadata.username, callbackUrl },
       { root: path.resolve(process.cwd(), "templates") },
     );
     const mailOptions: MailOptions = {
@@ -150,14 +146,12 @@ export default class RmqEmailService {
    * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
    */
   async sendPasswordReset(payload: AuthLocalPasswordResetEvent): Promise<void> {
-    // First, verify, that the appropriate template exists;
     const localPasswordResetTemplatePath: string = path.resolve(process.cwd(), "templates/localPasswordReset.ejs");
     await fs.promises.access(localPasswordResetTemplatePath, fs.constants.R_OK);
 
     const { userId, modelId, metadata } = payload;
     const { username, email } = metadata;
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
-    // Callback should redirect user to the client password reset page, not directly to the server!;
     const { baseUrl } = this.configService.get<AppConfiguration["clientConfiguration"]>("clientConfiguration")!;
 
     const authentication: AuthenticationEntity | null = await this.authService.findAuthenticationByPk(modelId);
@@ -220,7 +214,6 @@ export default class RmqEmailService {
    * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
    */
   async sendUserDeactivatedNotification(payload: UserDeactivatedEvent): Promise<void> {
-    // First, verify, that the appropriate template exists;
     const userDeactivatedNotificationTemplatePath: string = path.resolve(
       process.cwd(),
       "templates/userDeactivatedNotificationEmail.ejs",
@@ -228,6 +221,7 @@ export default class RmqEmailService {
     await fs.promises.access(userDeactivatedNotificationTemplatePath, fs.constants.R_OK);
 
     const { userId, modelId, metadata } = payload;
+    const { username, email } = metadata;
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
 
     const user: UserEntity | null = await this.userService.findUser({
@@ -239,12 +233,12 @@ export default class RmqEmailService {
 
     const html: string = await ejs.renderFile(
       userDeactivatedNotificationTemplatePath,
-      { username: metadata.username },
+      { username },
       { root: path.resolve(process.cwd(), "templates") },
     );
     const mailOptions: MailOptions = {
       from,
-      to: metadata.email,
+      to: email,
       subject: "LightweightProject: deactivation notification",
       text: "Deactivation user's account has been processed.",
       html,
@@ -256,11 +250,12 @@ export default class RmqEmailService {
     const manager: EntityManager = queryRunner.manager;
 
     try {
-      delete metadata.username; // Remove username from event metadata for "user.deactivated";
-
+      // Remove username from event metadata for "user.deactivated";
       this.eventEmitter.emit(
         EventName.USER_DEACTIVATED,
-        this.eventsService.buildInstance(EventName.USER_DEACTIVATED, userId, modelId, metadata),
+        this.eventsService.buildInstance(EventName.USER_DEACTIVATED, userId, modelId, {
+          email,
+        }),
         manager,
       );
 

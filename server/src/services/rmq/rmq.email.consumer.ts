@@ -47,7 +47,7 @@ export default class RmqEmailConsumer {
 
       channel.ack(originalMsg);
     } catch (error) {
-      this.logger.error("RmqEmailConsumer ~ handleAuthCreatedLocal: " + (error as Error).message);
+      this.logger.error("handleAuthCreatedLocal: " + (error as Error).message);
 
       this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
     }
@@ -76,7 +76,7 @@ export default class RmqEmailConsumer {
 
       channel.ack(originalMsg);
     } catch (error) {
-      this.logger.error("RmqEmailConsumer ~ handleAuthLocalPasswordReset: " + (error as Error).message);
+      this.logger.error("handleAuthLocalPasswordReset: " + (error as Error).message);
 
       this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
     }
@@ -102,7 +102,7 @@ export default class RmqEmailConsumer {
 
       channel.ack(originalMsg);
     } catch (error) {
-      this.logger.error("RmqEmailConsumer ~ handleUserDeactivated: " + (error as Error).message);
+      this.logger.error("handleUserDeactivated: " + (error as Error).message);
 
       this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
     }
