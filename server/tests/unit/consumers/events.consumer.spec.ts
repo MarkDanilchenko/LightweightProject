@@ -2,12 +2,12 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import EventsConsumer from "#server/events/events.consumer";
 import EventsService from "#server/events/events.service";
+import { EventName } from "#server/events/interfaces/events.interfaces";
 import {
   AuthLocalEmailVerificationSentEvent,
   AuthLocalEmailVerifiedEvent,
   AuthLocalPasswordResetedEvent,
   AuthLocalPasswordResetSentEvent,
-  EventName,
   UserDeactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
 import { buildUserFactory, buildAuthenticationFactory } from "../../factories";
@@ -44,7 +44,7 @@ describe("EventsConsumer", (): void => {
     expect(eventsConsumer).toBeDefined();
   });
 
-  describe("handleAuthLocalEvents", (): void => {
+  describe("handleEvent", (): void => {
     it("should handle AUTH_LOCAL_EMAIL_VERIFICATION_SENT event", async (): Promise<void> => {
       const payload: AuthLocalEmailVerificationSentEvent = {
         name: EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT,
@@ -53,7 +53,7 @@ describe("EventsConsumer", (): void => {
         metadata: { email: user.email },
       };
 
-      await eventsConsumer.handleAuthLocalEvents(payload);
+      await eventsConsumer.handleEvent(payload);
 
       expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
       expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
@@ -67,7 +67,7 @@ describe("EventsConsumer", (): void => {
         metadata: { email: user.email },
       };
 
-      await eventsConsumer.handleAuthLocalEvents(payload);
+      await eventsConsumer.handleEvent(payload);
 
       expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
       expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
@@ -81,7 +81,7 @@ describe("EventsConsumer", (): void => {
         metadata: { email: user.email },
       };
 
-      await eventsConsumer.handleAuthLocalEvents(payload);
+      await eventsConsumer.handleEvent(payload);
 
       expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
       expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
@@ -95,7 +95,24 @@ describe("EventsConsumer", (): void => {
         metadata: { email: user.email },
       };
 
-      await eventsConsumer.handleAuthLocalEvents(payload);
+      await eventsConsumer.handleEvent(payload);
+
+      expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
+      expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
+    });
+
+    it("should handle USER_DEACTIVATED event", async (): Promise<void> => {
+      const payload: UserDeactivatedEvent = {
+        name: EventName.USER_DEACTIVATED,
+        userId: user.id,
+        modelId: user.id,
+        metadata: {
+          username: user.username,
+          email: user.email,
+        },
+      };
+
+      await eventsConsumer.handleEvent(payload);
 
       expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
       expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
@@ -111,42 +128,38 @@ describe("EventsConsumer", (): void => {
         metadata: { email: user.email },
       };
 
-      await eventsConsumer.handleAuthLocalEvents(payload, mockManager);
+      await eventsConsumer.handleEvent(payload, mockManager);
 
       expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
       expect(eventsService.createEvent).toHaveBeenCalledWith(payload, mockManager);
     });
   });
 
-  describe("handleUserDeactivatedEvent", () => {
-    let payload: UserDeactivatedEvent;
-
-    beforeAll((): void => {
-      payload = {
-        name: EventName.USER_DEACTIVATED,
-        userId: user.id,
-        modelId: user.id,
-        metadata: {
-          username: user.username,
-          email: user.email,
-        },
-      };
-    });
-
-    it("should handle USER_DEACTIVATED event", async (): Promise<void> => {
-      await eventsConsumer.handleUserDeactivatedEvent(payload);
-
-      expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
-      expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
-    });
-
-    it("should pass EntityManager when provided", async (): Promise<void> => {
-      const mockManager = {} as EntityManager;
-
-      await eventsConsumer.handleUserDeactivatedEvent(payload, mockManager);
-
-      expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
-      expect(eventsService.createEvent).toHaveBeenCalledWith(payload, mockManager);
-    });
-  });
+  // describe("handleUserReactivatedEvent", () => {
+  //   let payload: UserReactivatedEvent;
+  //
+  //   beforeAll((): void => {
+  //     payload = {
+  //       name: EventName.USER_REACTIVATED,
+  //       userId: user.id,
+  //       modelId: user.id,
+  //     };
+  //   });
+  //
+  //   it("should handle USER_REACTIVATED event", async (): Promise<void> => {
+  //     await eventsConsumer.handleUserReactivatedEvent(payload);
+  //
+  //     expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
+  //     expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
+  //   });
+  //
+  //   it("should pass EntityManager when provided", async (): Promise<void> => {
+  //     const mockManager = {} as EntityManager;
+  //
+  //     await eventsConsumer.handleUserReactivatedEvent(payload, mockManager);
+  //
+  //     expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
+  //     expect(eventsService.createEvent).toHaveBeenCalledWith(payload, mockManager);
+  //   });
+  // });
 });

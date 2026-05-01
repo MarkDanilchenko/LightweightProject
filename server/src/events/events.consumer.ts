@@ -1,15 +1,9 @@
 import { Injectable } from "@nestjs/common";
 import { OnEvent } from "@nestjs/event-emitter";
-import {
-  AuthLocalEmailVerificationSentEvent,
-  AuthLocalEmailVerifiedEvent,
-  AuthLocalPasswordResetedEvent,
-  AuthLocalPasswordResetSentEvent,
-  EventName,
-  UserDeactivatedEvent,
-} from "#server/events/interfaces/events.interfaces";
+import { EventType } from "#server/events/types/events.types";
 import EventsService from "#server/events/events.service";
 import { EntityManager } from "typeorm";
+import { EventName } from "#server/events/interfaces/events.interfaces";
 
 @Injectable()
 export default class EventsConsumer {
@@ -20,16 +14,11 @@ export default class EventsConsumer {
   }
 
   /**
-   * Handles an event related to local authentication actions.
-   * This method is responsible for processing events from the message queue
-   * and delegating them to the appropriate email service methods to create a new event in database for the account history purpose.
+   * Handles all events from the event emitter.
+   * This method is responsible for processing events and creating
+   * corresponding event records in the database for account history tracking.
    *
-   * @param {
-   * | AuthLocalEmailVerificationSentEvent
-   * | AuthLocalEmailVerifiedEvent
-   * | AuthLocalPasswordResetSentEvent
-   * | AuthLocalPasswordResetedEvent
-   * } payload - The event containing the user's authentication information (email, username, etc).
+   * @param {EventType} payload - The event containing the user's information.
    * @param {EntityManager} [manager] - The entity manager to use. If not provided, a new transaction will be started.
    *
    * @returns {Promise<void>} A promise that resolves when the event has been successfully handled.
@@ -38,29 +27,8 @@ export default class EventsConsumer {
   @OnEvent(EventName.AUTH_LOCAL_EMAIL_VERIFIED)
   @OnEvent(EventName.AUTH_LOCAL_PASSWORD_RESET_SENT)
   @OnEvent(EventName.AUTH_LOCAL_PASSWORD_RESETED)
-  async handleAuthLocalEvents(
-    payload:
-      | AuthLocalEmailVerificationSentEvent
-      | AuthLocalEmailVerifiedEvent
-      | AuthLocalPasswordResetSentEvent
-      | AuthLocalPasswordResetedEvent,
-    manager?: EntityManager,
-  ): Promise<void> {
-    await this.eventsService.createEvent(payload, manager);
-  }
-
-  /**
-   * Handles the USER_DEACTIVATED event from the event emitter.
-   * This method is responsible for processing user deactivation events and creating
-   * a corresponding event record in the database for account history tracking.
-   *
-   * @param {UserDeactivatedEvent} payload - The event containing the user's deactivation information.
-   * @param {EntityManager} [manager] - The entity manager to use. If not provided, a new transaction will be started.
-   *
-   * @returns {Promise<void>} A promise that resolves when the event has been successfully handled.
-   */
   @OnEvent(EventName.USER_DEACTIVATED)
-  async handleUserDeactivatedEvent(payload: UserDeactivatedEvent, manager?: EntityManager): Promise<void> {
+  async handleEvent(payload: EventType, manager?: EntityManager): Promise<void> {
     await this.eventsService.createEvent(payload, manager);
   }
 }
