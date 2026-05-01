@@ -65,9 +65,7 @@
 
 <body>
 <div class="container">
-    <div class="header">
-        <h2>User deactivated notification</h2>
-    </div>
+    <%- include('partials/header.ejs', { title: 'User deactivated notification' }) %>
     <div class="content">
         <p>Hello <b><%= username %></b> !</p>
         <div>
@@ -78,12 +76,7 @@
         </div>
         <p><i>Need help? Contact our support team for assistance.</i></p>
     </div>
-    <div class="footer">
-        <p>
-            <%= new Date().getFullYear() %> LightweightProject.
-        </p>
-        <p>This is an automated message, please do not reply to this email.</p>
-    </div>
+    <%- include('partials/footer.ejs') %>
 </div>
 </body>
 

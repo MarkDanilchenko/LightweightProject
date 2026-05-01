@@ -81,9 +81,7 @@
 
 <body>
 <div class="container">
-    <div class="header">
-        <h2>Email Verification</h2>
-    </div>
+    <%- include('partials/header.ejs', { title: 'Email verification' }) %>
     <div class="content">
         <p>Hello <b><%= username %></b> !<br>
            Thank you, for sign up in LightweightProject.<br>
@@ -98,12 +96,7 @@
         <p>If you didn't sign up in the LightweightProject, please, ignore this email.<br>
             <i>Need help? Contact our support team for assistance.</i></p>
     </div>
-    <div class="footer">
-        <p>
-            <%= new Date().getFullYear() %> LightweightProject.
-        </p>
-        <p>This is an automated message, please do not reply to this email.</p>
-    </div>
+    <%- include('partials/footer.ejs') %>
 </div>
 </body>
 
