@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible"
+          content="ie=edge">
+    <meta name="description"
+          content="LightweightProject - Account Reactivation">
+    <meta name="keywords"
+          content="LightweightProject, account, reactivation, authentication" />
+    <meta name="author"
+          content="" />
+    <title>LightweightProject - Account Reactivation Request</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            margin-top: 20px;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 8px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .content {
+            padding: 20px 0;
+        }
+
+        .content div {
+            text-align: center;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 20px 0;
+            background-color: #4a90e2;
+            color: #ffffff !important;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .button:hover {
+            background-color: #3b7cc6;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .content p:last-child {
+            text-align: end;
+        }
+
+        .expiry-note {
+            text-align: center;
+            color: #e74c3c;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eaeaea;
+            font-size: 14px;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+    <div class="header">
+        <h2>Reactivate Your Account</h2>
+    </div>
+    <div class="content">
+        <p>Hello <b><%= username %></b> !<br>
+           We received a request to reactivate your LightweightProject account.<br>
+           Click the button below to complete the reactivation process:
+        </p>
+        <div>
+            <a href="<%= callbackUrl %>"
+               class="button"
+               title="LightweightProject - account reactivation link"
+               target="_blank">Reactivate Account</a>
+        </div>
+        <p class="expiry-note">This link will expire in 15 minutes for security reasons.</p>
+        <p>If you didn't request this account reactivation, you can safely ignore this email.<br>
+            <i>Need help? Contact our support team for assistance.</i>
+        </p>
+    </div>
+    <div class="footer">
+        <p>
+            <%= new Date().getFullYear() %> LightweightProject.
+        </p>
+        <p>This is an automated message, please do not reply to this email.</p>
+    </div>
+</div>
+</body>
+
+</html>

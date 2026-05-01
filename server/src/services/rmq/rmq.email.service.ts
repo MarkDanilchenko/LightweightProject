@@ -212,7 +212,10 @@ export default class RmqEmailService {
    */
   async sendDeactivatedEmail(payload: UserDeactivatedEvent): Promise<void> {
     // First, verify, that the appropriate template exists;
-    const deactivationTemplatePath: string = path.resolve(process.cwd(), "templates/userDeactivatedNotificationEmail.ejs");
+    const deactivationTemplatePath: string = path.resolve(
+      process.cwd(),
+      "templates/userDeactivatedNotificationEmail.ejs",
+    );
     await fs.promises.access(deactivationTemplatePath, fs.constants.R_OK);
 
     const { userId, modelId, metadata } = payload;
