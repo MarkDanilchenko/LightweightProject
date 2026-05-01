@@ -1,83 +1,18 @@
-<!doctype html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible"
-          content="ie=edge">
-    <meta name="description"
-          content="LightweightProject - User deactivated notification" />
-    <meta name="keywords"
-          content="LightweightProject, email, profile, user, deactivated, deactivation" />
-    <meta name="author"
-          content="" />
-    <title>LightweightProject - User deactivated notification</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            margin: 0;
-            margin-top: 20px;
-            padding: 0;
-            background-color: #f5f5f5;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            border-radius: 8px;
-            background-color: #ffffff;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .header {
-            text-align: center;
-            padding: 20px 0;
-            border-bottom: 1px solid #eaeaea;
-        }
-
-        .content {
-            padding: 20px 0;
-        }
-
-        .content div {
-            text-align: center;
-        }
-
-        .content p:last-child {
-            text-align: end;
-        }
-
-        .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #eaeaea;
-            font-size: 14px;
-            color: #666;
-            text-align: center;
-        }
-    </style>
-</head>
-
-<body>
-<div class="container">
-    <%- include('partials/header.ejs', { title: 'User deactivated notification' }) %>
-    <div class="content">
-        <p>Hello <b><%= username %></b> !</p>
+<%
+    const title = 'LightweightProject - User deactivated notification';
+    const description = 'LightweightProject - User deactivated notification';
+    const keywords = 'LightweightProject, email, profile, user, deactivated, deactivation';
+    const pageTitle = 'User deactivated notification';
+    const additionalStyles = '';
+    const body = `
+        <p class="greeting-note">Hello <b>${username}</b> !</p>
         <div>
             <p>Your profile has been successfully deactivated in LightweightProject.<br>
                If you have any questions or would like to reactivate your account, please sign in again.<br>
                If you didn't request this deactivation, please sign in again using your previous credentials and change
                password immediately.</p>
         </div>
-        <p><i>Need help? Contact our support team for assistance.</i></p>
-    </div>
-    <%- include('partials/footer.ejs') %>
-</div>
-</body>
-
-</html>
+        <p class="info-note"><i>Need help? Contact our support team for assistance.</i></p>
+    `;
+%>
+<%- include('layouts/email-layout.ejs', { title, description, keywords, pageTitle, additionalStyles, body }) %>
