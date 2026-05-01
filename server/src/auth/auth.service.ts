@@ -492,13 +492,10 @@ export default class AuthService {
 
     this.rmqMicroserviceClient.emit(
       EventName.AUTH_LOCAL_PASSWORD_RESET,
-      this.eventsService.buildInstance(
-        EventName.AUTH_LOCAL_PASSWORD_RESET,
-        user.id,
-        user.authentications[0].id,
-        user.username,
-        user.email,
-      ),
+      this.eventsService.buildInstance(EventName.AUTH_LOCAL_PASSWORD_RESET, user.id, user.authentications[0].id, {
+        email: user.email,
+        username: user.username,
+      }),
     );
   }
 

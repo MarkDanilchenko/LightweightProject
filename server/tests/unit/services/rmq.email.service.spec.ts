@@ -210,8 +210,10 @@ describe("RmqEmailService", (): void => {
       name: EventName.AUTH_LOCAL_PASSWORD_RESET,
       userId: user.id,
       modelId: authentication.id,
-      username: user.username,
-      email: user.email,
+      metadata: {
+        username: user.username,
+        email: user.email,
+      },
     };
 
     beforeEach((): void => {

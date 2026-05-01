@@ -154,7 +154,8 @@ export default class RmqEmailService {
     const localPasswordResetTemplatePath: string = path.resolve(process.cwd(), "templates/localPasswordReset.ejs");
     await fs.promises.access(localPasswordResetTemplatePath, fs.constants.R_OK);
 
-    const { userId, modelId, username, email } = payload;
+    const { userId, modelId, metadata } = payload;
+    const { username, email } = metadata;
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
     // Callback should redirect user to the client password reset page, not directly to the server!;
     const { baseUrl } = this.configService.get<AppConfiguration["clientConfiguration"]>("clientConfiguration")!;

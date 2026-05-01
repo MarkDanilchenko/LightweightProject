@@ -8,7 +8,7 @@ import {
   BaseEvent,
   EventName,
   UserDeactivatedEvent,
-  UserReactivatedEvent,
+  // UserReactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
 
 // Base Event;
@@ -16,135 +16,111 @@ class BaseEventClass implements BaseEvent {
   public readonly name: BaseEvent["name"];
   public readonly userId: BaseEvent["userId"];
   public readonly modelId: BaseEvent["modelId"];
+  public readonly metadata: BaseEvent["metadata"];
 
-  constructor(name: BaseEvent["name"], userId: BaseEvent["userId"], modelId: BaseEvent["modelId"]) {
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: BaseEvent["metadata"],
+  ) {
     this.name = name;
     this.userId = userId;
     this.modelId = modelId;
+    this.metadata = metadata;
   }
 }
 
 // Auth Local Email Verification Sent Event;
 class AuthLocalEmailVerificationSentEventClass extends BaseEventClass implements AuthLocalEmailVerificationSentEvent {
-  public readonly metadata: AuthLocalEmailVerificationSentEvent["metadata"];
-
   constructor(
     name: BaseEvent["name"],
     userId: BaseEvent["userId"],
     modelId: BaseEvent["modelId"],
     metadata: AuthLocalEmailVerificationSentEvent["metadata"],
   ) {
-    super(name, userId, modelId);
-
-    this.metadata = metadata;
+    super(name, userId, modelId, metadata);
   }
 }
 
 // Auth Local Email Verified Event;
 class AuthLocalEmailVerifiedEventClass extends BaseEventClass implements AuthLocalEmailVerifiedEvent {
-  public readonly metadata: AuthLocalEmailVerifiedEvent["metadata"];
-
   constructor(
     name: BaseEvent["name"],
     userId: BaseEvent["userId"],
     modelId: BaseEvent["modelId"],
     metadata: AuthLocalEmailVerifiedEvent["metadata"],
   ) {
-    super(name, userId, modelId);
-
-    this.metadata = metadata;
+    super(name, userId, modelId, metadata);
   }
 }
 
 // Auth Local Created Event;
 class AuthLocalCreatedEventClass extends BaseEventClass implements AuthLocalCreatedEvent {
-  public readonly metadata: AuthLocalCreatedEvent["metadata"];
-
   constructor(
     name: BaseEvent["name"],
     userId: BaseEvent["userId"],
     modelId: BaseEvent["modelId"],
     metadata: AuthLocalCreatedEvent["metadata"],
   ) {
-    super(name, userId, modelId);
-
-    this.metadata = metadata;
+    super(name, userId, modelId, metadata);
   }
 }
 
 // Auth Local Password Reset Event;
 class AuthLocalPasswordResetEventClass extends BaseEventClass implements AuthLocalPasswordResetEvent {
-  public readonly username: AuthLocalPasswordResetEvent["username"];
-  public readonly email: AuthLocalPasswordResetEvent["email"];
-
   constructor(
     name: BaseEvent["name"],
     userId: BaseEvent["userId"],
     modelId: BaseEvent["modelId"],
-    username: AuthLocalPasswordResetEvent["username"],
-    email: AuthLocalPasswordResetEvent["email"],
+    metadata: AuthLocalPasswordResetEvent["metadata"],
   ) {
-    super(name, userId, modelId);
-
-    this.username = username;
-    this.email = email;
+    super(name, userId, modelId, metadata);
   }
 }
 
 // Auth Local Password Reset Sent Event;
 class AuthLocalPasswordResetSentEventClass extends BaseEventClass implements AuthLocalPasswordResetSentEvent {
-  public readonly metadata: AuthLocalPasswordResetSentEvent["metadata"];
-
   constructor(
     name: BaseEvent["name"],
     userId: BaseEvent["userId"],
     modelId: BaseEvent["modelId"],
     metadata: AuthLocalPasswordResetSentEvent["metadata"],
   ) {
-    super(name, userId, modelId);
-
-    this.metadata = metadata;
+    super(name, userId, modelId, metadata);
   }
 }
 
 // Auth Local Password Reseted Event;
 class AuthLocalPasswordResetedEventClass extends BaseEventClass implements AuthLocalPasswordResetedEvent {
-  public readonly metadata: AuthLocalPasswordResetedEvent["metadata"];
-
   constructor(
     name: BaseEvent["name"],
     userId: BaseEvent["userId"],
     modelId: BaseEvent["modelId"],
     metadata: AuthLocalPasswordResetedEvent["metadata"],
   ) {
-    super(name, userId, modelId);
-
-    this.metadata = metadata;
+    super(name, userId, modelId, metadata);
   }
 }
 
 // User Deactivated Event;
 class UserDeactivateEventClass extends BaseEventClass implements UserDeactivatedEvent {
-  public readonly metadata: UserDeactivatedEvent["metadata"];
-
   constructor(
     name: BaseEvent["name"],
     userId: BaseEvent["userId"],
     modelId: BaseEvent["modelId"],
     metadata: UserDeactivatedEvent["metadata"],
   ) {
-    super(name, userId, modelId);
-
-    this.metadata = metadata;
+    super(name, userId, modelId, metadata);
   }
 }
 
 // User Reactivated Event;
-class UserReactivateEventClass extends BaseEventClass implements UserReactivatedEvent {
-  constructor(name: BaseEvent["name"], userId: BaseEvent["userId"], modelId: BaseEvent["modelId"]) {
-    super(name, userId, modelId);
-  }
-}
+// class UserReactivateEventClass extends BaseEventClass implements UserReactivatedEvent {
+//   constructor(name: BaseEvent["name"], userId: BaseEvent["userId"], modelId: BaseEvent["modelId"]) {
+//     super(name, userId, modelId);
+//   }
+// }
 
 const eventsRegistry = {
   [EventName.AUTH_LOCAL_CREATED]: AuthLocalCreatedEventClass,
@@ -154,7 +130,7 @@ const eventsRegistry = {
   [EventName.AUTH_LOCAL_PASSWORD_RESET_SENT]: AuthLocalPasswordResetSentEventClass,
   [EventName.AUTH_LOCAL_PASSWORD_RESETED]: AuthLocalPasswordResetedEventClass,
   [EventName.USER_DEACTIVATED]: UserDeactivateEventClass,
-  [EventName.USER_REACTIVATED]: UserReactivateEventClass,
+  // [EventName.USER_REACTIVATED]: UserReactivateEventClass,
 };
 
 export { eventsRegistry };

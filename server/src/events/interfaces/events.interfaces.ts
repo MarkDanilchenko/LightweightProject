@@ -8,7 +8,7 @@ enum EventName {
   AUTH_LOCAL_PASSWORD_RESET_SENT = "auth.local.password-reset.sent",
   AUTH_LOCAL_PASSWORD_RESETED = "auth.local.password.reseted",
   USER_DEACTIVATED = "user.deactivated",
-  USER_REACTIVATED = "user.reactivated",
+  // USER_REACTIVATED = "user.reactivated",
 }
 
 interface EventMetadata {
@@ -19,39 +19,30 @@ interface BaseEvent {
   name: EventName;
   userId: string;
   modelId: string;
-}
-
-interface AuthLocalEmailVerificationSentEvent extends BaseEvent {
   metadata: EventMetadata;
 }
 
-interface AuthLocalEmailVerifiedEvent extends BaseEvent {
-  metadata: EventMetadata;
-}
+interface AuthLocalEmailVerificationSentEvent extends BaseEvent {}
+
+interface AuthLocalEmailVerifiedEvent extends BaseEvent {}
+
+interface AuthLocalPasswordResetSentEvent extends BaseEvent {}
+
+interface AuthLocalPasswordResetedEvent extends BaseEvent {}
 
 interface AuthLocalCreatedEvent extends BaseEvent {
-  metadata: NonNullable<NonNullable<AuthenticationInstanceMetadata["local"]>["temporaryInfo"]> & EventMetadata;
+  metadata: EventMetadata & NonNullable<NonNullable<AuthenticationInstanceMetadata["local"]>["temporaryInfo"]>;
 }
 
-// TODO: pass all two fields into one event metadata like in the UserDeactivatedEvent below;
 interface AuthLocalPasswordResetEvent extends BaseEvent {
-  username?: string | null;
-  email: string;
-}
-
-interface AuthLocalPasswordResetSentEvent extends BaseEvent {
-  metadata: EventMetadata;
-}
-
-interface AuthLocalPasswordResetedEvent extends BaseEvent {
-  metadata: EventMetadata;
+  metadata: EventMetadata & { username?: string | null };
 }
 
 interface UserDeactivatedEvent extends BaseEvent {
   metadata: EventMetadata & { username?: string | null };
 }
 
-interface UserReactivatedEvent extends BaseEvent {}
+// interface UserReactivatedEvent extends BaseEvent {}
 
 export {
   EventMetadata,
@@ -64,5 +55,5 @@ export {
   AuthLocalPasswordResetSentEvent,
   AuthLocalPasswordResetedEvent,
   UserDeactivatedEvent,
-  UserReactivatedEvent,
+  // UserReactivatedEvent,
 };
