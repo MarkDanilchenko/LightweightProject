@@ -693,7 +693,7 @@ export default class AuthService {
                 firstName: true,
                 lastName: true,
                 avatarUrl: true,
-                isDeactivated: true, // TODO: check test both unit and e2e for the check of this filed presence;
+                isDeactivated: true,
                 authentications: {
                   id: true,
                   provider: true,

@@ -784,6 +784,7 @@ describe("AuthService", (): void => {
             firstName: true,
             lastName: true,
             avatarUrl: true,
+            isDeactivated: true,
             authentications: {
               id: true,
               provider: true,
