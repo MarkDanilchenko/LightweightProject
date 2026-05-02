@@ -7,6 +7,8 @@ import AuthService from "#server/auth/auth.service";
 import {
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
+  LocalReactivationConfirmDto,
+  LocalReactivationRequestDto,
   LocalSignInDto,
   LocalSignUpDto,
   LocalVerificationEmailDto,
@@ -39,6 +41,8 @@ describe("AuthController", (): void => {
       localVerificationEmail: jest.fn(),
       localPasswordForgot: jest.fn(),
       localPasswordReset: jest.fn(),
+      localReactivationRequest: jest.fn(),
+      localReactivationConfirm: jest.fn(),
       signIn: jest.fn(),
       signOut: jest.fn(),
       refreshAccessToken: jest.fn(),
@@ -215,6 +219,34 @@ describe("AuthController", (): void => {
       await authController.localPasswordReset(dto, mockResponse as Response);
 
       expect(authService.localPasswordReset).toHaveBeenCalledWith(dto);
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.send).toHaveBeenCalled();
+    });
+  });
+
+  describe("localReactivationRequest", (): void => {
+    it("should call authService.localReactivationRequest and return 200", async (): Promise<void> => {
+      const dto: LocalReactivationRequestDto = {
+        email: user.email,
+      };
+
+      await authController.localReactivationRequest(dto, mockResponse as Response);
+
+      expect(authService.localReactivationRequest).toHaveBeenCalledWith(dto);
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.send).toHaveBeenCalled();
+    });
+  });
+
+  describe("localReactivationConfirm", (): void => {
+    it("should call authService.localReactivationConfirm and return 200", async (): Promise<void> => {
+      const dto: LocalReactivationConfirmDto = {
+        token: randomValidJwt({ userId: user.id, provider: AuthenticationProvider.LOCAL }, { expiresIn: "15m" }),
+      };
+
+      await authController.localReactivationConfirm(dto, mockResponse as Response);
+
+      expect(authService.localReactivationConfirm).toHaveBeenCalledWith(dto);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
     });

@@ -27,7 +27,12 @@ import { faker } from "@faker-js/faker";
 import { EventName } from "#server/events/interfaces/events.interfaces";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
-import { LocalPasswordResetDto, LocalVerificationEmailDto } from "#server/auth/dto/auth.dto";
+import {
+  LocalPasswordResetDto,
+  LocalReactivationConfirmDto,
+  LocalReactivationRequestDto,
+  LocalVerificationEmailDto,
+} from "#server/auth/dto/auth.dto";
 
 jest.mock("#server/utils/hasher", () => ({
   hash: jest.fn().mockImplementation((password: string): Promise<string> => Promise.resolve("hashed-password")),
@@ -673,10 +678,6 @@ describe("AuthService", (): void => {
       };
     });
 
-    afterEach((): void => {
-      jest.clearAllMocks();
-    });
-
     it("should throw BadRequestException when token is invalid after decode", async (): Promise<void> => {
       tokensService.decode.mockReturnValue(
         expect.objectContaining({ userId: undefined, provider: undefined }) as TokenPayload,
@@ -739,6 +740,175 @@ describe("AuthService", (): void => {
         EventName.AUTH_LOCAL_PASSWORD_RESETED,
         expect.any(Object),
         entityManager,
+      );
+    });
+  });
+
+  describe("localReactivationRequest", (): void => {
+    let dto: LocalReactivationRequestDto;
+
+    beforeEach((): void => {
+      dto = { email: user.email };
+    });
+
+    it("should silently return when user was not found", async (): Promise<void> => {
+      usersService.findUser.mockResolvedValue(null);
+
+      await expect(authService.localReactivationRequest(dto)).resolves.toBeUndefined();
+      expect(rmqMicroserviceClient.emit).not.toHaveBeenCalled();
+    });
+
+    it("should throw BadRequestException when email is not verified", async (): Promise<void> => {
+      authentication.metadata.local!.isEmailVerified = false;
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(authService.localReactivationRequest(dto)).rejects.toThrow(
+        new BadRequestException(`Email "${user.email}" is not verified yet.`),
+      );
+      expect(rmqMicroserviceClient.emit).not.toHaveBeenCalled();
+    });
+
+    it("should throw BadRequestException when user is not deactivated", async (): Promise<void> => {
+      user.isDeactivated = false;
+      authentication.metadata.local!.isEmailVerified = true;
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(authService.localReactivationRequest(dto)).rejects.toThrow(
+        new BadRequestException(`User "${user.username}"(${user.email}) is not deactivated.`),
+      );
+      expect(rmqMicroserviceClient.emit).not.toHaveBeenCalled();
+    });
+
+    it("should emit reactivation request event when user found, email verified and deactivated", async (): Promise<void> => {
+      user.isDeactivated = true;
+      authentication.metadata.local!.isEmailVerified = true;
+      usersService.findUser.mockResolvedValue(user);
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValue(
+        expect.any(Object),
+      );
+
+      await authService.localReactivationRequest(dto);
+
+      expect(usersService.findUser).toHaveBeenCalledWith({
+        relations: ["authentications"],
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          isDeactivated: true,
+          authentications: {
+            id: true,
+            metadata: true,
+          },
+        },
+        where: {
+          email: user.email,
+          authentications: {
+            provider: AuthenticationProvider.LOCAL,
+          },
+        },
+      });
+      expect(rmqMicroserviceClient.emit).toHaveBeenCalledWith(
+        EventName.AUTH_LOCAL_REACTIVATION_REQUEST,
+        expect.any(Object),
+      );
+    });
+  });
+
+  describe("localReactivationConfirm", (): void => {
+    let dto: LocalReactivationConfirmDto;
+    let token: string;
+
+    beforeEach((): void => {
+      token = randomValidJwt({ userId: user.id, provider: AuthenticationProvider.LOCAL }, { expiresIn: "15m" });
+      dto = { token };
+      tokensService.verify.mockResolvedValue({
+        userId: user.id,
+        provider: AuthenticationProvider.LOCAL,
+      } as TokenPayload);
+    });
+
+    it("should throw BadRequestException when token is invalid (missing userId)", async (): Promise<void> => {
+      tokensService.verify.mockResolvedValue({ provider: AuthenticationProvider.LOCAL } as TokenPayload);
+
+      await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(
+        new BadRequestException("Token is invalid."),
+      );
+    });
+
+    it("should throw BadRequestException when token is invalid (missing provider)", async (): Promise<void> => {
+      tokensService.verify.mockResolvedValue({ userId: user.id } as TokenPayload);
+
+      await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(
+        new BadRequestException("Token is invalid."),
+      );
+    });
+
+    it("should throw BadRequestException when user not found", async (): Promise<void> => {
+      usersService.findUser.mockResolvedValue(null);
+
+      await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(
+        new BadRequestException("Token is invalid."),
+      );
+    });
+
+    it("should throw BadRequestException when email is not verified", async (): Promise<void> => {
+      authentication.metadata.local!.isEmailVerified = false;
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(
+        new BadRequestException("Email is not verified yet."),
+      );
+    });
+
+    it("should throw BadRequestException when user is not deactivated", async (): Promise<void> => {
+      user.isDeactivated = false;
+      authentication.metadata.local!.isEmailVerified = true;
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(
+        new BadRequestException(`User "${user.username}"(${user.email}) is not deactivated.`),
+      );
+    });
+
+    it("should reactivate user and emit confirmed event", async (): Promise<void> => {
+      user.isDeactivated = true;
+      authentication.metadata.local!.isEmailVerified = true;
+      usersService.findUser.mockResolvedValue(user);
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValue(
+        expect.any(Object),
+      );
+
+      await authService.localReactivationConfirm(dto);
+
+      expect(tokensService.verify).toHaveBeenCalledWith(token);
+      expect(usersService.findUser).toHaveBeenCalledWith({
+        relations: ["authentications"],
+        select: {
+          id: true,
+          isDeactivated: true,
+          authentications: {
+            id: true,
+            metadata: true,
+          },
+        },
+        where: {
+          id: user.id,
+          authentications: {
+            provider: AuthenticationProvider.LOCAL,
+          },
+        },
+      });
+      expect(dataSource.transaction).toHaveBeenCalled();
+      expect(eventEmitter2.emit).toHaveBeenCalledWith(
+        EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED,
+        expect.any(Object),
+        expect.any(Object),
+      );
+      expect(usersService.updateUser).toHaveBeenCalledWith(
+        { id: user.id },
+        { isDeactivated: false },
+        expect.any(Object),
       );
     });
   });

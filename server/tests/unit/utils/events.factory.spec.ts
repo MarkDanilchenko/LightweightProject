@@ -123,4 +123,59 @@ describe("EventsFactory", (): void => {
       expect(event.metadata).toEqual(metadata);
     });
   });
+
+  describe("AuthLocalReactivationRequestEvent", (): void => {
+    it("should create an instance with correct properties", (): void => {
+      const metadata = {
+        username: user.username,
+        email: user.email,
+      };
+
+      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_REACTIVATION_REQUEST];
+      const event = new EventClass(EventName.AUTH_LOCAL_REACTIVATION_REQUEST, user.id, user.id, metadata);
+
+      expect(event.name).toBe(EventName.AUTH_LOCAL_REACTIVATION_REQUEST);
+      expect(event.userId).toBe(user.id);
+      expect(event.modelId).toBe(user.id);
+      expect(event.metadata).toEqual(metadata);
+    });
+  });
+
+  describe("AuthLocalReactivationRequestSentEvent", (): void => {
+    it("should create an instance with correct properties", (): void => {
+      const metadata = { email: user.email };
+
+      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT];
+      const event = new EventClass(
+        EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT,
+        user.id,
+        user.id,
+        metadata,
+      );
+
+      expect(event.name).toBe(EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT);
+      expect(event.userId).toBe(user.id);
+      expect(event.modelId).toBe(user.id);
+      expect(event.metadata).toEqual(metadata);
+    });
+  });
+
+  describe("AuthLocalReactivationConfirmedEvent", (): void => {
+    it("should create an instance with correct properties", (): void => {
+      const metadata = { email: user.email };
+
+      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED];
+      const event = new EventClass(
+        EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED,
+        user.id,
+        user.id,
+        metadata,
+      );
+
+      expect(event.name).toBe(EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED);
+      expect(event.userId).toBe(user.id);
+      expect(event.modelId).toBe(user.id);
+      expect(event.metadata).toEqual(metadata);
+    });
+  });
 });

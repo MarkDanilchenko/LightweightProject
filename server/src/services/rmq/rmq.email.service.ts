@@ -207,6 +207,14 @@ export default class RmqEmailService {
     }
   }
 
+  /**
+   * Sends a reactivation request email to the user.
+   * The email contains a link with a jwt token, which is valid for 15 minutes.
+   *
+   * @param {AuthLocalReactivationRequestEvent} payload - The event containing the user's information.
+   *
+   * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
+   */
   async sendReactivationRequestEmail(payload: AuthLocalReactivationRequestEvent): Promise<void> {
     const reactivationRequestTemplatePath: string = path.resolve(
       process.cwd(),
