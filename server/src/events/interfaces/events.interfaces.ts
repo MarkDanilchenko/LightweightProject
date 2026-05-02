@@ -7,6 +7,9 @@ enum EventName {
   AUTH_LOCAL_PASSWORD_RESET = "auth.local.password-reset",
   AUTH_LOCAL_PASSWORD_RESET_SENT = "auth.local.password-reset.sent",
   AUTH_LOCAL_PASSWORD_RESETED = "auth.local.password.reseted",
+  AUTH_LOCAL_REACTIVATION_REQUEST = "auth.local.reactivation.request",
+  AUTH_LOCAL_REACTIVATION_REQUEST_SENT = "auth.local.reactivation.request.sent",
+  AUTH_LOCAL_REACTIVATION_CONFIRMED = "auth.local.reactivation.confirmed",
   USER_DEACTIVATED = "user.deactivated",
   // USER_REACTIVATED = "user.reactivated",
 }
@@ -38,6 +41,16 @@ interface AuthLocalPasswordResetEvent extends BaseEvent {
   metadata: EventMetadata & { username?: string | null };
 }
 
+interface AuthLocalReactivationRequestEvent extends BaseEvent {
+  metadata: EventMetadata & { username?: string | null };
+}
+
+interface AuthLocalReactivationRequestSentEvent extends BaseEvent {
+  metadata: EventMetadata & { username?: string | null };
+}
+
+interface AuthLocalReactivationConfirmedEvent extends BaseEvent {}
+
 interface UserDeactivatedEvent extends BaseEvent {
   metadata: EventMetadata & { username?: string | null };
 }
@@ -54,6 +67,9 @@ export {
   AuthLocalPasswordResetEvent,
   AuthLocalPasswordResetSentEvent,
   AuthLocalPasswordResetedEvent,
+  AuthLocalReactivationRequestEvent,
+  AuthLocalReactivationRequestSentEvent,
+  AuthLocalReactivationConfirmedEvent,
   UserDeactivatedEvent,
   // UserReactivatedEvent,
 };

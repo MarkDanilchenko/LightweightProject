@@ -75,7 +75,7 @@ export default class UsersService {
    */
   async updateUser(
     whereCondition: FindOptionsWhere<UserEntity>,
-    values: Record<string, unknown>,
+    values: Partial<UserEntity>,
     manager?: EntityManager,
   ): Promise<UpdateResult> {
     const callback = async (manager: EntityManager): Promise<UpdateResult> => {

@@ -152,7 +152,15 @@ export default class AuthController {
   })
   @ApiBody({ type: LocalReactivationRequestDto })
   @UsePipes(ZodValidationPipe)
-  async localReactivationRequest(): Promise<void> {}
+  async localReactivationRequest(
+    @Body() localReactivationRequestDto: LocalReactivationRequestDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    // TODO: user can use this route many times at once, it is not good, so should thin about some kind of debounce;
+    await this.authService.localReactivationRequest(localReactivationRequestDto);
+
+    res.status(200).send();
+  }
 
   @Get("local/reactivation/confirm")
   @ApiOperation({
@@ -173,7 +181,14 @@ export default class AuthController {
   })
   @ApiQuery({ type: LocalReactivationConfirmDto })
   @UsePipes(ZodValidationPipe)
-  async localReactivationConfirm(): Promise<void> {}
+  async localReactivationConfirm(
+    @Query() localReactivationConfirmDto: LocalReactivationConfirmDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    await this.authService.localReactivationConfirm(localReactivationConfirmDto);
+
+    res.status(200).send();
+  }
 
   // TODO: change URI to "local/password-reset/request"
   // TODO: also rename DTOs

@@ -5,6 +5,9 @@ import {
   AuthLocalPasswordResetedEvent,
   AuthLocalPasswordResetEvent,
   AuthLocalPasswordResetSentEvent,
+  AuthLocalReactivationRequestEvent,
+  AuthLocalReactivationRequestSentEvent,
+  AuthLocalReactivationConfirmedEvent,
   BaseEvent,
   EventName,
   UserDeactivatedEvent,
@@ -103,6 +106,43 @@ class AuthLocalPasswordResetedEventClass extends BaseEventClass implements AuthL
   }
 }
 
+// Auth Local Reactivation Request Event;
+class AuthLocalReactivationRequestEventClass extends BaseEventClass implements AuthLocalReactivationRequestEvent {
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: AuthLocalReactivationRequestEvent["metadata"],
+  ) {
+    super(name, userId, modelId, metadata);
+  }
+}
+
+class AuthLocalReactivationRequestSentEventClass
+  extends BaseEventClass
+  implements AuthLocalReactivationRequestSentEvent
+{
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: AuthLocalReactivationRequestSentEvent["metadata"],
+  ) {
+    super(name, userId, modelId, metadata);
+  }
+}
+
+class AuthLocalReactivationConfirmedEventClass extends BaseEventClass implements AuthLocalReactivationConfirmedEvent {
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: AuthLocalReactivationConfirmedEvent["metadata"],
+  ) {
+    super(name, userId, modelId, metadata);
+  }
+}
+
 // User Deactivated Event;
 class UserDeactivateEventClass extends BaseEventClass implements UserDeactivatedEvent {
   constructor(
@@ -129,6 +169,9 @@ const eventsRegistry = {
   [EventName.AUTH_LOCAL_PASSWORD_RESET]: AuthLocalPasswordResetEventClass,
   [EventName.AUTH_LOCAL_PASSWORD_RESET_SENT]: AuthLocalPasswordResetSentEventClass,
   [EventName.AUTH_LOCAL_PASSWORD_RESETED]: AuthLocalPasswordResetedEventClass,
+  [EventName.AUTH_LOCAL_REACTIVATION_REQUEST]: AuthLocalReactivationRequestEventClass,
+  [EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT]: AuthLocalReactivationRequestSentEventClass,
+  [EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED]: AuthLocalReactivationConfirmedEventClass,
   [EventName.USER_DEACTIVATED]: UserDeactivateEventClass,
   // [EventName.USER_REACTIVATED]: UserReactivateEventClass,
 };

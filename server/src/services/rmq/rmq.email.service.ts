@@ -5,6 +5,7 @@ import { Injectable } from "@nestjs/common";
 import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
+  AuthLocalReactivationRequestEvent,
   EventName,
   UserDeactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
@@ -190,6 +191,68 @@ export default class RmqEmailService {
       this.eventEmitter.emit(
         EventName.AUTH_LOCAL_PASSWORD_RESET_SENT,
         this.eventsService.buildInstance(EventName.AUTH_LOCAL_PASSWORD_RESET_SENT, userId, modelId, { email }),
+        manager,
+      );
+
+      // Send an email after any successful database operations;
+      await this.transporter.sendMail(mailOptions);
+
+      await queryRunner.commitTransaction();
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async sendReactivationRequestEmail(payload: AuthLocalReactivationRequestEvent): Promise<void> {
+    const reactivationRequestTemplatePath: string = path.resolve(
+      process.cwd(),
+      "templates/localReactivationRequest.ejs",
+    );
+    await fs.promises.access(reactivationRequestTemplatePath, fs.constants.R_OK);
+
+    const { userId, modelId, metadata } = payload;
+    const { username, email } = metadata;
+    const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
+    const { baseUrl } = this.configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration")!;
+
+    const user: UserEntity | null = await this.userService.findUser({
+      where: [{ id: userId }, { id: modelId }],
+    });
+    if (!user) {
+      throw new Error("Reactivation request email: User not found");
+    }
+
+    const token: string = await this.tokensService.generate(
+      { userId, provider: AuthenticationProvider.LOCAL },
+      { expiresIn: "15m" },
+    );
+    const callbackUrl: string = `${baseUrl}/api/v1/auth/local/reactivation/confirm?token=${token}`;
+    const html: string = await ejs.renderFile(reactivationRequestTemplatePath, {
+      username,
+      callbackUrl,
+    });
+    const mailOptions: MailOptions = {
+      from,
+      to: email,
+      subject: "LightweightProject: reactivation request",
+      text: "Please, click on the link below and follow the instructions to reactivate your account.",
+      html,
+    };
+
+    // Start transaction with creating event and sending email;
+    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    const manager: EntityManager = queryRunner.manager;
+
+    try {
+      this.eventEmitter.emit(
+        EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT,
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT, userId, modelId, { email }),
         manager,
       );
 

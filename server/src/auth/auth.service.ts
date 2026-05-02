@@ -24,6 +24,8 @@ import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import {
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
+  LocalReactivationConfirmDto,
+  LocalReactivationRequestDto,
   LocalSignUpDto,
   LocalVerificationEmailDto,
 } from "#server/auth/dto/auth.dto";
@@ -566,6 +568,97 @@ export default class AuthService {
     });
   }
 
+  async localReactivationRequest(localReactivationRequestDto: LocalReactivationRequestDto): Promise<void> {
+    const { email } = localReactivationRequestDto;
+
+    const user: UserEntity | null = await this.userService.findUser({
+      relations: ["authentications"],
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        isDeactivated: true,
+        authentications: {
+          id: true,
+          metadata: true,
+        },
+      },
+      where: {
+        email,
+        authentications: {
+          provider: AuthenticationProvider.LOCAL,
+        },
+      },
+    });
+
+    if (!user) {
+      // Do not explicitly throw an error in this place;
+      // For security reasons, it is better not to say, that the user has not been found, to avoid going through email addresses.
+      // Return http status code 200 in controller instead;
+      return;
+    } else if (!user.authentications[0].metadata?.local?.isEmailVerified) {
+      throw new BadRequestException(`Email "${email}" is not verified yet.`);
+    } else if (!user.isDeactivated) {
+      throw new BadRequestException(`User "${user.username}"(${user.email}) is not deactivated.`);
+    }
+
+    this.rmqMicroserviceClient.emit(
+      EventName.AUTH_LOCAL_REACTIVATION_REQUEST,
+      this.eventsService.buildInstance(EventName.AUTH_LOCAL_REACTIVATION_REQUEST, user.id, user.id, {
+        username: user.username,
+        email: user.email,
+      }),
+    );
+  }
+
+  async localReactivationConfirm(localReactivationConfirmDto: LocalReactivationConfirmDto): Promise<void> {
+    const { token } = localReactivationConfirmDto;
+
+    const { userId, provider } = await this.tokensService.verify(token);
+    if (!userId || !provider) {
+      throw new BadRequestException("Token is invalid.");
+    }
+
+    const user: UserEntity | null = await this.userService.findUser({
+      relations: ["authentications"],
+      select: {
+        id: true,
+        isDeactivated: true,
+        authentications: {
+          id: true,
+          metadata: true,
+        },
+      },
+      where: {
+        id: userId,
+        authentications: {
+          provider,
+        },
+      },
+    });
+    if (!user) {
+      throw new BadRequestException("Token is invalid.");
+    } else if (!user.authentications[0].metadata?.local?.isEmailVerified) {
+      throw new BadRequestException("Email is not verified yet.");
+    } else if (!user.isDeactivated) {
+      throw new BadRequestException(`User "${user.username}"(${user.email}) is not deactivated.`);
+    }
+
+    await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
+      this.eventEmitter.emit(
+        EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED,
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED, userId, userId, {
+          email: user.email,
+        }),
+        manager,
+      );
+
+      await this.userService.updateUser({ id: userId }, { isDeactivated: false }, manager);
+
+      // TODO: add UserReactivatedEvent if user.isDeactivated was changed;
+    });
+  }
+
   async idPAuthentication(
     idP: AuthenticationProvider,
     userClaims: AuthenticationViaIdP["userClaims"],
@@ -600,6 +693,7 @@ export default class AuthService {
                 firstName: true,
                 lastName: true,
                 avatarUrl: true,
+                isDeactivated: true, // TODO: check test both unit and e2e for the check of this filed presence;
                 authentications: {
                   id: true,
                   provider: true,
@@ -638,10 +732,12 @@ export default class AuthService {
               avatarUrl,
             };
 
-            // TODO: when deactivatedById is added, change this if statement with proper error throwing;
+            // TODO: when deactivatedById is added, change this if() { ... } statement with proper error throwing;
             if (existingUser.isDeactivated) {
               updateValues.isDeactivated = false;
             }
+
+            // TODO: add UserReactivatedEvent if updateValues.isDeactivated was changed;
 
             await this.userService.updateUser({ id: existingUser.id }, updateValues, manager);
 

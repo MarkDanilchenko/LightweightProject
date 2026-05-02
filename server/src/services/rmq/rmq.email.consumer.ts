@@ -4,6 +4,7 @@ import { Ctx, MessagePattern, Payload, RmqContext } from "@nestjs/microservices"
 import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
+  AuthLocalReactivationRequestEvent,
   EventName,
   UserDeactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
@@ -77,6 +78,35 @@ export default class RmqEmailConsumer {
       channel.ack(originalMsg);
     } catch (error) {
       this.logger.error("handleAuthLocalPasswordReset: " + (error as Error).message);
+
+      this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
+    }
+  }
+
+  /**
+   * Handles the AUTH_LOCAL_REACTIVATION_REQUEST event from the message queue.
+   * This method processes reactivation request events by sending a reactivation request email
+   * to the user who has requested to reactivate their account.
+   *
+   * @param {AuthLocalReactivationRequestEvent} payload - The event payload containing user details and reactivation metadata
+   * @param {RmqContext} context - The RabbitMQ context for message acknowledgment
+   *
+   * @returns {Promise<void>} A promise that resolves when the email is processed
+   */
+  @MessagePattern(EventName.AUTH_LOCAL_REACTIVATION_REQUEST)
+  async handleAuthLocalReactivationRequest(
+    @Payload() payload: AuthLocalReactivationRequestEvent,
+    @Ctx() context: RmqContext,
+  ): Promise<void> {
+    const channel: Channel = context.getChannelRef();
+    const originalMsg = context.getMessage() as Message;
+
+    try {
+      await this.rmqEmailService.sendReactivationRequestEmail(payload);
+
+      channel.ack(originalMsg);
+    } catch (error) {
+      this.logger.error("handleAuthLocalReactivationRequest: " + (error as Error).message);
 
       this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
     }

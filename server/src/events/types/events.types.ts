@@ -5,6 +5,9 @@ import {
   AuthLocalPasswordResetEvent,
   AuthLocalPasswordResetSentEvent,
   AuthLocalPasswordResetedEvent,
+  AuthLocalReactivationRequestEvent,
+  AuthLocalReactivationRequestSentEvent,
+  AuthLocalReactivationConfirmedEvent,
   UserDeactivatedEvent,
   // UserReactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
@@ -16,6 +19,9 @@ type EventType =
   | AuthLocalPasswordResetEvent
   | AuthLocalPasswordResetSentEvent
   | AuthLocalPasswordResetedEvent
+  | AuthLocalReactivationRequestEvent
+  | AuthLocalReactivationRequestSentEvent
+  | AuthLocalReactivationConfirmedEvent
   | UserDeactivatedEvent;
 // | UserReactivatedEvent;
 
