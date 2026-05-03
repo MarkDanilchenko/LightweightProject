@@ -102,7 +102,7 @@ export default class RmqEmailConsumer {
     const originalMsg = context.getMessage() as Message;
 
     try {
-      await this.rmqEmailService.sendReactivationRequestEmail(payload);
+      await this.rmqEmailService.sendReactivationRequest(payload);
 
       channel.ack(originalMsg);
     } catch (error) {

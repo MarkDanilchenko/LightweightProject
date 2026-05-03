@@ -27,6 +27,7 @@ export default class EventsConsumer {
   @OnEvent(EventName.AUTH_LOCAL_EMAIL_VERIFIED)
   @OnEvent(EventName.AUTH_LOCAL_PASSWORD_RESET_SENT)
   @OnEvent(EventName.AUTH_LOCAL_PASSWORD_RESETED)
+  @OnEvent(EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT)
   @OnEvent(EventName.USER_DEACTIVATED)
   @OnEvent(EventName.USER_REACTIVATED)
   async handleEvent(payload: EventType, manager?: EntityManager): Promise<void> {

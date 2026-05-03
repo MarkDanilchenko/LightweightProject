@@ -10,6 +10,7 @@ import {
   UserDeactivatedEvent,
   EventName,
   UserReactivatedEvent,
+  AuthLocalReactivationRequestSentEvent,
 } from "#server/events/interfaces/events.interfaces";
 import { buildUserFactory, buildAuthenticationFactory } from "../../factories";
 import UserEntity from "#server/users/users.entity";
@@ -80,6 +81,20 @@ describe("EventsConsumer", (): void => {
         userId: user.id,
         modelId: authentication.id,
         metadata: { email: user.email },
+      };
+
+      await eventsConsumer.handleEvent(payload);
+
+      expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
+      expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
+    });
+
+    it("should handle AUTH_LOCAL_REACTIVATION_REQUEST_SENT event", async (): Promise<void> => {
+      const payload: AuthLocalReactivationRequestSentEvent = {
+        name: EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT,
+        userId: user.id,
+        modelId: authentication.id,
+        metadata: { email: user.email, username: user.username },
       };
 
       await eventsConsumer.handleEvent(payload);

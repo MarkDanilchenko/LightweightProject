@@ -215,7 +215,7 @@ export default class RmqEmailService {
    *
    * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
    */
-  async sendReactivationRequestEmail(payload: AuthLocalReactivationRequestEvent): Promise<void> {
+  async sendReactivationRequest(payload: AuthLocalReactivationRequestEvent): Promise<void> {
     const reactivationRequestTemplatePath: string = path.resolve(
       process.cwd(),
       "templates/localReactivationRequest.ejs",
