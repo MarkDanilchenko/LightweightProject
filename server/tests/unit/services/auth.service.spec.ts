@@ -774,7 +774,7 @@ describe("AuthService", (): void => {
       usersService.findUser.mockResolvedValue(user);
 
       await expect(authService.localReactivationRequest(dto)).rejects.toThrow(
-        new BadRequestException(`User "${user.username}"(${user.email}) is not deactivated.`),
+        new BadRequestException(`User is not deactivated.`),
       );
       expect(rmqMicroserviceClient.emit).not.toHaveBeenCalled();
     });
@@ -831,25 +831,19 @@ describe("AuthService", (): void => {
     it("should throw BadRequestException when token is invalid (missing userId)", async (): Promise<void> => {
       tokensService.verify.mockResolvedValue({ provider: AuthenticationProvider.LOCAL } as TokenPayload);
 
-      await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(
-        new BadRequestException("Token is invalid."),
-      );
+      await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(new BadRequestException("Invalid token"));
     });
 
     it("should throw BadRequestException when token is invalid (missing provider)", async (): Promise<void> => {
       tokensService.verify.mockResolvedValue({ userId: user.id } as TokenPayload);
 
-      await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(
-        new BadRequestException("Token is invalid."),
-      );
+      await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(new BadRequestException("Invalid token"));
     });
 
     it("should throw BadRequestException when user not found", async (): Promise<void> => {
       usersService.findUser.mockResolvedValue(null);
 
-      await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(
-        new BadRequestException("Token is invalid."),
-      );
+      await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(new NotFoundException("User not found"));
     });
 
     it("should throw BadRequestException when email is not verified", async (): Promise<void> => {
@@ -869,6 +863,18 @@ describe("AuthService", (): void => {
       await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(
         new BadRequestException(`User "${user.username}"(${user.email}) is not deactivated.`),
       );
+    });
+
+    it("should throw BadRequestException when provider in token does not match local authentication provider", async (): Promise<void> => {
+      user.isDeactivated = true;
+      authentication.metadata.local!.isEmailVerified = true;
+      tokensService.verify.mockResolvedValue({
+        userId: user.id,
+        provider: AuthenticationProvider.GOOGLE,
+      });
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(new BadRequestException(`Invalid token`));
     });
 
     it("should reactivate user and emit confirmed event", async (): Promise<void> => {
@@ -902,6 +908,11 @@ describe("AuthService", (): void => {
       expect(dataSource.transaction).toHaveBeenCalled();
       expect(eventEmitter2.emit).toHaveBeenCalledWith(
         EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED,
+        expect.any(Object),
+        expect.any(Object),
+      );
+      expect(eventEmitter2.emit).toHaveBeenCalledWith(
+        EventName.USER_REACTIVATED,
         expect.any(Object),
         expect.any(Object),
       );
@@ -1106,6 +1117,11 @@ describe("AuthService", (): void => {
           where: { username: userClaims.username },
         },
         entityManager,
+      );
+      expect(eventEmitter2.emit).toHaveBeenCalledWith(
+        EventName.USER_REACTIVATED,
+        expect.any(Object),
+        expect.any(Object),
       );
       expect(usersService.updateUser).toHaveBeenCalledWith(
         { id: user.id },

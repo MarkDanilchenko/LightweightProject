@@ -2,13 +2,14 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import EventsConsumer from "#server/events/events.consumer";
 import EventsService from "#server/events/events.service";
-import { EventName } from "#server/events/interfaces/events.interfaces";
 import {
   AuthLocalEmailVerificationSentEvent,
   AuthLocalEmailVerifiedEvent,
   AuthLocalPasswordResetedEvent,
   AuthLocalPasswordResetSentEvent,
   UserDeactivatedEvent,
+  EventName,
+  UserReactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
 import { buildUserFactory, buildAuthenticationFactory } from "../../factories";
 import UserEntity from "#server/users/users.entity";
@@ -118,6 +119,22 @@ describe("EventsConsumer", (): void => {
       expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
     });
 
+    it("should handle USER_REACTIVATED event", async (): Promise<void> => {
+      const payload: UserReactivatedEvent = {
+        name: EventName.USER_REACTIVATED,
+        userId: user.id,
+        modelId: user.id,
+        metadata: {
+          email: user.email,
+        },
+      };
+
+      await eventsConsumer.handleEvent(payload);
+
+      expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
+      expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
+    });
+
     it("should pass EntityManager when provided", async (): Promise<void> => {
       const mockManager = {} as EntityManager;
 
@@ -134,32 +151,4 @@ describe("EventsConsumer", (): void => {
       expect(eventsService.createEvent).toHaveBeenCalledWith(payload, mockManager);
     });
   });
-
-  // describe("handleUserReactivatedEvent", () => {
-  //   let payload: UserReactivatedEvent;
-  //
-  //   beforeAll((): void => {
-  //     payload = {
-  //       name: EventName.USER_REACTIVATED,
-  //       userId: user.id,
-  //       modelId: user.id,
-  //     };
-  //   });
-  //
-  //   it("should handle USER_REACTIVATED event", async (): Promise<void> => {
-  //     await eventsConsumer.handleUserReactivatedEvent(payload);
-  //
-  //     expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
-  //     expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
-  //   });
-  //
-  //   it("should pass EntityManager when provided", async (): Promise<void> => {
-  //     const mockManager = {} as EntityManager;
-  //
-  //     await eventsConsumer.handleUserReactivatedEvent(payload, mockManager);
-  //
-  //     expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
-  //     expect(eventsService.createEvent).toHaveBeenCalledWith(payload, mockManager);
-  //   });
-  // });
 });

@@ -11,10 +11,9 @@ import {
   BaseEvent,
   EventName,
   UserDeactivatedEvent,
-  // UserReactivatedEvent,
+  UserReactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
 
-// Base Event;
 class BaseEventClass implements BaseEvent {
   public readonly name: BaseEvent["name"];
   public readonly userId: BaseEvent["userId"];
@@ -34,7 +33,6 @@ class BaseEventClass implements BaseEvent {
   }
 }
 
-// Auth Local Email Verification Sent Event;
 class AuthLocalEmailVerificationSentEventClass extends BaseEventClass implements AuthLocalEmailVerificationSentEvent {
   constructor(
     name: BaseEvent["name"],
@@ -46,7 +44,6 @@ class AuthLocalEmailVerificationSentEventClass extends BaseEventClass implements
   }
 }
 
-// Auth Local Email Verified Event;
 class AuthLocalEmailVerifiedEventClass extends BaseEventClass implements AuthLocalEmailVerifiedEvent {
   constructor(
     name: BaseEvent["name"],
@@ -58,7 +55,6 @@ class AuthLocalEmailVerifiedEventClass extends BaseEventClass implements AuthLoc
   }
 }
 
-// Auth Local Created Event;
 class AuthLocalCreatedEventClass extends BaseEventClass implements AuthLocalCreatedEvent {
   constructor(
     name: BaseEvent["name"],
@@ -70,7 +66,6 @@ class AuthLocalCreatedEventClass extends BaseEventClass implements AuthLocalCrea
   }
 }
 
-// Auth Local Password Reset Event;
 class AuthLocalPasswordResetEventClass extends BaseEventClass implements AuthLocalPasswordResetEvent {
   constructor(
     name: BaseEvent["name"],
@@ -82,7 +77,6 @@ class AuthLocalPasswordResetEventClass extends BaseEventClass implements AuthLoc
   }
 }
 
-// Auth Local Password Reset Sent Event;
 class AuthLocalPasswordResetSentEventClass extends BaseEventClass implements AuthLocalPasswordResetSentEvent {
   constructor(
     name: BaseEvent["name"],
@@ -94,7 +88,6 @@ class AuthLocalPasswordResetSentEventClass extends BaseEventClass implements Aut
   }
 }
 
-// Auth Local Password Reseted Event;
 class AuthLocalPasswordResetedEventClass extends BaseEventClass implements AuthLocalPasswordResetedEvent {
   constructor(
     name: BaseEvent["name"],
@@ -106,7 +99,6 @@ class AuthLocalPasswordResetedEventClass extends BaseEventClass implements AuthL
   }
 }
 
-// Auth Local Reactivation Request Event;
 class AuthLocalReactivationRequestEventClass extends BaseEventClass implements AuthLocalReactivationRequestEvent {
   constructor(
     name: BaseEvent["name"],
@@ -143,8 +135,7 @@ class AuthLocalReactivationConfirmedEventClass extends BaseEventClass implements
   }
 }
 
-// User Deactivated Event;
-class UserDeactivateEventClass extends BaseEventClass implements UserDeactivatedEvent {
+class UserDeactivatedEventClass extends BaseEventClass implements UserDeactivatedEvent {
   constructor(
     name: BaseEvent["name"],
     userId: BaseEvent["userId"],
@@ -155,12 +146,16 @@ class UserDeactivateEventClass extends BaseEventClass implements UserDeactivated
   }
 }
 
-// User Reactivated Event;
-// class UserReactivateEventClass extends BaseEventClass implements UserReactivatedEvent {
-//   constructor(name: BaseEvent["name"], userId: BaseEvent["userId"], modelId: BaseEvent["modelId"]) {
-//     super(name, userId, modelId);
-//   }
-// }
+class UserReactivatedEventClass extends BaseEventClass implements UserReactivatedEvent {
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: UserReactivatedEvent["metadata"],
+  ) {
+    super(name, userId, modelId, metadata);
+  }
+}
 
 const eventsRegistry = {
   [EventName.AUTH_LOCAL_CREATED]: AuthLocalCreatedEventClass,
@@ -172,8 +167,8 @@ const eventsRegistry = {
   [EventName.AUTH_LOCAL_REACTIVATION_REQUEST]: AuthLocalReactivationRequestEventClass,
   [EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT]: AuthLocalReactivationRequestSentEventClass,
   [EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED]: AuthLocalReactivationConfirmedEventClass,
-  [EventName.USER_DEACTIVATED]: UserDeactivateEventClass,
-  // [EventName.USER_REACTIVATED]: UserReactivateEventClass,
+  [EventName.USER_DEACTIVATED]: UserDeactivatedEventClass,
+  [EventName.USER_REACTIVATED]: UserReactivatedEventClass,
 };
 
 export { eventsRegistry };

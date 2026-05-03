@@ -9,7 +9,7 @@ import {
   AuthLocalReactivationRequestSentEvent,
   AuthLocalReactivationConfirmedEvent,
   UserDeactivatedEvent,
-  // UserReactivatedEvent,
+  UserReactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
 
 type EventType =
@@ -22,7 +22,7 @@ type EventType =
   | AuthLocalReactivationRequestEvent
   | AuthLocalReactivationRequestSentEvent
   | AuthLocalReactivationConfirmedEvent
-  | UserDeactivatedEvent;
-// | UserReactivatedEvent;
+  | UserDeactivatedEvent
+  | UserReactivatedEvent;
 
 export { EventType };

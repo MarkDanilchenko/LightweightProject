@@ -107,7 +107,7 @@ describe("EventsFactory", (): void => {
     });
   });
 
-  describe("UserDeactivateEventClass", (): void => {
+  describe("UserDeactivatedEvent", (): void => {
     it("should create an instance with correct properties", (): void => {
       const metadata = {
         username: user.username,
@@ -118,6 +118,20 @@ describe("EventsFactory", (): void => {
       const event = new EventClass(EventName.USER_DEACTIVATED, user.id, user.id, metadata);
 
       expect(event.name).toBe(EventName.USER_DEACTIVATED);
+      expect(event.userId).toBe(user.id);
+      expect(event.modelId).toBe(user.id);
+      expect(event.metadata).toEqual(metadata);
+    });
+  });
+
+  describe("UserReactivatedEvent", (): void => {
+    it("should create an instance with correct properties", (): void => {
+      const metadata = { email: user.email };
+
+      const EventClass = eventsRegistry[EventName.USER_REACTIVATED];
+      const event = new EventClass(EventName.USER_REACTIVATED, user.id, user.id, metadata);
+
+      expect(event.name).toBe(EventName.USER_REACTIVATED);
       expect(event.userId).toBe(user.id);
       expect(event.modelId).toBe(user.id);
       expect(event.metadata).toEqual(metadata);
@@ -146,12 +160,7 @@ describe("EventsFactory", (): void => {
       const metadata = { email: user.email };
 
       const EventClass = eventsRegistry[EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT];
-      const event = new EventClass(
-        EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT,
-        user.id,
-        user.id,
-        metadata,
-      );
+      const event = new EventClass(EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT, user.id, user.id, metadata);
 
       expect(event.name).toBe(EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT);
       expect(event.userId).toBe(user.id);
@@ -165,12 +174,7 @@ describe("EventsFactory", (): void => {
       const metadata = { email: user.email };
 
       const EventClass = eventsRegistry[EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED];
-      const event = new EventClass(
-        EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED,
-        user.id,
-        user.id,
-        metadata,
-      );
+      const event = new EventClass(EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED, user.id, user.id, metadata);
 
       expect(event.name).toBe(EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED);
       expect(event.userId).toBe(user.id);

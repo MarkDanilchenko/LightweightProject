@@ -568,6 +568,13 @@ export default class AuthService {
     });
   }
 
+  /**
+   * Sends a reactivation request email to a deactivated user.
+   *
+   * @param {LocalReactivationRequestDto} localReactivationRequestDto - The data transfer object containing the user's email.
+   *
+   * @returns {Promise<void>} A promise that resolves when the reactivation request has been successfully processed.
+   */
   async localReactivationRequest(localReactivationRequestDto: LocalReactivationRequestDto): Promise<void> {
     const { email } = localReactivationRequestDto;
 
@@ -599,7 +606,7 @@ export default class AuthService {
     } else if (!user.authentications[0].metadata?.local?.isEmailVerified) {
       throw new BadRequestException(`Email "${email}" is not verified yet.`);
     } else if (!user.isDeactivated) {
-      throw new BadRequestException(`User "${user.username}"(${user.email}) is not deactivated.`);
+      throw new BadRequestException(`User is not deactivated.`);
     }
 
     this.rmqMicroserviceClient.emit(
@@ -611,12 +618,19 @@ export default class AuthService {
     );
   }
 
+  /**
+   * Confirms and processes a user account reactivation request.
+   *
+   * @param {LocalReactivationConfirmDto} localReactivationConfirmDto - The data transfer object containing the reactivation token.
+   *
+   * @returns {Promise<void>} A promise that resolves when the reactivation has been successfully processed.
+   */
   async localReactivationConfirm(localReactivationConfirmDto: LocalReactivationConfirmDto): Promise<void> {
     const { token } = localReactivationConfirmDto;
 
     const { userId, provider } = await this.tokensService.verify(token);
-    if (!userId || !provider) {
-      throw new BadRequestException("Token is invalid.");
+    if (!userId || !provider || provider !== AuthenticationProvider.LOCAL) {
+      throw new BadRequestException("Invalid token");
     }
 
     const user: UserEntity | null = await this.userService.findUser({
@@ -636,12 +650,13 @@ export default class AuthService {
         },
       },
     });
+
     if (!user) {
-      throw new BadRequestException("Token is invalid.");
+      throw new NotFoundException("User not found");
     } else if (!user.authentications[0].metadata?.local?.isEmailVerified) {
       throw new BadRequestException("Email is not verified yet.");
     } else if (!user.isDeactivated) {
-      throw new BadRequestException(`User "${user.username}"(${user.email}) is not deactivated.`);
+      throw new BadRequestException(`User is not deactivated.`);
     }
 
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
@@ -655,10 +670,24 @@ export default class AuthService {
 
       await this.userService.updateUser({ id: userId }, { isDeactivated: false }, manager);
 
-      // TODO: add UserReactivatedEvent if user.isDeactivated was changed;
+      this.eventEmitter.emit(
+        EventName.USER_REACTIVATED,
+        this.eventsService.buildInstance(EventName.USER_REACTIVATED, userId, userId, {
+          email: user.email,
+        }),
+        manager,
+      );
     });
   }
 
+  /**
+   * Authenticates a user via an Identity Provider (IdP).
+   *
+   * @param {AuthenticationProvider} idP - The identity provider to authenticate with.
+   * @param {AuthenticationViaIdP["userClaims"]} userClaims - The user claims from the identity provider.
+   *
+   * @returns {Promise<UserEntity>} A promise that resolves with the authenticated user entity.
+   */
   async idPAuthentication(
     idP: AuthenticationProvider,
     userClaims: AuthenticationViaIdP["userClaims"],
@@ -735,9 +764,15 @@ export default class AuthService {
             // TODO: when deactivatedById is added, change this if() { ... } statement with proper error throwing;
             if (existingUser.isDeactivated) {
               updateValues.isDeactivated = false;
-            }
 
-            // TODO: add UserReactivatedEvent if updateValues.isDeactivated was changed;
+              this.eventEmitter.emit(
+                EventName.USER_REACTIVATED,
+                this.eventsService.buildInstance(EventName.USER_REACTIVATED, existingUser.id, existingUser.id, {
+                  email: existingUser.email,
+                }),
+                manager,
+              );
+            }
 
             await this.userService.updateUser({ id: existingUser.id }, updateValues, manager);
 
