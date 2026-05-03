@@ -713,8 +713,6 @@ export default class AuthService {
 
           const existingUser: UserEntity | null = await this.userService.findUser(
             {
-              where: { email },
-              relations: ["authentications"],
               select: {
                 id: true,
                 email: true,
@@ -730,6 +728,8 @@ export default class AuthService {
                   metadata: true,
                 },
               },
+              where: { email },
+              relations: ["authentications"],
             },
             manager,
           );

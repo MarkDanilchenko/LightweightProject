@@ -861,7 +861,7 @@ describe("AuthService", (): void => {
       usersService.findUser.mockResolvedValue(user);
 
       await expect(authService.localReactivationConfirm(dto)).rejects.toThrow(
-        new BadRequestException(`User "${user.username}"(${user.email}) is not deactivated.`),
+        new BadRequestException("User is not deactivated."),
       );
     });
 
@@ -1108,6 +1108,9 @@ describe("AuthService", (): void => {
 
       usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(user);
       (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValue(
+        expect.any(Object),
+      );
 
       await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
 

@@ -1197,7 +1197,7 @@ describe("AuthController E2E", (): void => {
         const response = await httpServer.post("/api/v1/auth/local/reactivation/request").send(payload);
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.message).toContain(`User "${user.username}" (${user.email}) is not deactivated.`);
+        expect(response.body.message).toContain("User is not deactivated.");
       });
 
       it("should return 200 for security reasons for user with not local authentication", async (): Promise<void> => {
