@@ -84,10 +84,6 @@ interface AuthenticationViaIdP {
     email: string;
     avatarUrl?: string;
   };
-  //   authorizationParams: {
-  //     access_type: string;
-  //     prompt: string;
-  //   };
 }
 
 export {

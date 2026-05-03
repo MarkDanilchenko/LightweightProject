@@ -146,7 +146,7 @@ describe("RmqRetryService", (): void => {
       // Cast to any to bypass type checking, because these methods are private;
       (rmqRetryService as any).sendToRetryQueue(channel, originalMsg, retriesCount, error);
 
-      const expectedExpiration = (mainQueueOptions.baseDelayMs + Math.pow(2, retriesCount)).toString();
+      const expectedExpiration = (mainQueueOptions.baseDelayMs + Math.pow(2, retriesCount) * 1000).toString();
 
       expect(channel.sendToQueue).toHaveBeenCalledTimes(1);
       expect(channel.sendToQueue).toHaveBeenCalledWith(

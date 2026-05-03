@@ -50,20 +50,20 @@ jest.mock("#server/configs/app.configuration", () => {
 describe("AuthController E2E", (): void => {
   let app: INestApplication;
   let dataSource: DataSource;
-  let configService: ConfigService;
   let factories: DbFactories;
   let httpServer: TestAgent;
   let tokensService: TokensService;
+  let configService: ConfigService;
   let serverBaseUrl: string;
   let clientBaseUrl: string;
 
   beforeAll(async (): Promise<void> => {
     app = await bootstrapMainTestApp();
     dataSource = app.get(DataSource);
-    configService = app.get(ConfigService);
     factories = new DbFactories(dataSource);
     httpServer = request(app.getHttpServer());
     tokensService = app.get(TokensService);
+    configService = app.get(ConfigService);
     serverBaseUrl =
       configService.get<AppConfiguration["serverConfiguration"]["baseUrl"]>("serverConfiguration.baseUrl")!;
     clientBaseUrl =
@@ -626,6 +626,36 @@ describe("AuthController E2E", (): void => {
         expect(response.body.message).toContain("Authentication failed");
       });
 
+      it("should return 401 for deactivated user profile", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory({ isDeactivated: true });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+          },
+        );
+
+        const payload = { login: user.email, password };
+
+        const response = await httpServer.post("/api/v1/auth/local/signin").send(payload);
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Authentication failed. User profile is deactivated.");
+      });
+
       it("should return 400 for invalid request body", async (): Promise<void> => {
         const payload = {
           login: "test@example.com",
@@ -1064,6 +1094,285 @@ describe("AuthController E2E", (): void => {
 
         expect(response.statusCode).toBe(401);
         expect(response.body.message).toContain("Unauthorized");
+      });
+    });
+  });
+
+  describe("POST /api/v1/auth/local/reactivation/request", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200 and send reactivation email for deactivated user with local authentication", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory({ isDeactivated: true });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+          },
+        );
+
+        const payload = { email: user.email };
+
+        const response = await httpServer.post("/api/v1/auth/local/reactivation/request").send(payload);
+
+        expect(response.statusCode).toBe(200);
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 400 for invalid email format", async (): Promise<void> => {
+        const payload = { email: "invalid-email-format" };
+
+        const response = await httpServer.post("/api/v1/auth/local/reactivation/request").send(payload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toEqual(expect.arrayContaining(["email: Invalid email"]));
+      });
+
+      it("should return 400 for user with not verified email", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory({ isDeactivated: true });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: false,
+              },
+            },
+          },
+        );
+
+        const payload = { email: user.email };
+
+        const response = await httpServer.post("/api/v1/auth/local/reactivation/request").send(payload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toContain(`Email "${user.email}" is not verified yet.`);
+      });
+
+      it("should return 400 for user with not deactivated profile", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory({ isDeactivated: false });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+          },
+        );
+
+        const payload = { email: user.email };
+
+        const response = await httpServer.post("/api/v1/auth/local/reactivation/request").send(payload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toContain("User is not deactivated.");
+      });
+
+      it("should return 200 for security reasons for user with not local authentication", async (): Promise<void> => {
+        const user: UserEntity = await factories.buildUserFactory({ isDeactivated: true });
+        await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.GOOGLE,
+          metadata: {
+            google: {},
+          },
+        });
+
+        const payload = { email: user.email };
+
+        const response = await httpServer.post("/api/v1/auth/local/reactivation/request").send(payload);
+
+        expect(response.statusCode).toBe(200);
+      });
+
+      it("should return 200 for security reasons when user does not exist", async (): Promise<void> => {
+        const payload = { email: faker.internet.email() };
+
+        const response = await httpServer.post("/api/v1/auth/local/reactivation/request").send(payload);
+
+        expect(response.statusCode).toBe(200);
+      });
+    });
+  });
+
+  describe("GET /api/v1/auth/local/reactivation/confirm", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200, reactivate user and set cookies with access token", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory({ isDeactivated: true });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+          },
+        );
+
+        const token: string = await tokensService.generate(
+          { userId: user.id, provider: AuthenticationProvider.LOCAL },
+          { expiresIn: "15m" },
+        );
+
+        const response = await httpServer.get("/api/v1/auth/local/reactivation/confirm").query({ token }).send();
+
+        const updatedUser: UserEntity | null = await dataSource
+          .getRepository(UserEntity)
+          .findOne({ where: { id: user.id } });
+        const updatedAuthentication: AuthenticationEntity | null = await dataSource
+          .getRepository(AuthenticationEntity)
+          .findOne({ where: { id: authentication.id } });
+
+        expect(response.statusCode).toBe(200);
+        expect(updatedUser).not.toBeNull();
+        expect(updatedUser?.isDeactivated).toBeFalsy();
+        expect(updatedAuthentication).not.toBeNull();
+        expect(updatedAuthentication?.refreshToken).not.toBeNull();
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 400 when token is missing", async (): Promise<void> => {
+        const response = await httpServer.get("/api/v1/auth/local/reactivation/confirm").send();
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toEqual(expect.arrayContaining(["token: Required"]));
+      });
+
+      it("should return 401 when token is invalid", async (): Promise<void> => {
+        const response = await httpServer
+          .get("/api/v1/auth/local/reactivation/confirm")
+          .query({ token: "invalid-token" })
+          .send();
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Invalid token");
+      });
+
+      it("should return 401 when token is expired", async (): Promise<void> => {
+        const user: UserEntity = await factories.buildUserFactory({ isDeactivated: true });
+
+        const expiredToken: string = await tokensService.generate(
+          { userId: user.id, provider: AuthenticationProvider.LOCAL },
+          { expiresIn: "-1h" },
+        );
+
+        const response = await httpServer
+          .get("/api/v1/auth/local/reactivation/confirm")
+          .query({ token: expiredToken })
+          .send();
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Token expired");
+      });
+
+      it("should return 404 when user has no local authentication", async (): Promise<void> => {
+        const user: UserEntity = await factories.buildUserFactory({ isDeactivated: true });
+        const token: string = await tokensService.generate({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+
+        const response = await httpServer.get("/api/v1/auth/local/reactivation/confirm").query({ token });
+
+        expect(response.statusCode).toBe(404);
+        expect(response.body).toEqual({
+          message: "User not found",
+          error: "Not Found",
+          statusCode: 404,
+        });
+      });
+
+      it("should return 400 when user is not deactivated", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory({ isDeactivated: false });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+          },
+        );
+
+        const token: string = await tokensService.generate(
+          { userId: user.id, provider: AuthenticationProvider.LOCAL },
+          { expiresIn: "15m" },
+        );
+
+        const response = await httpServer.get("/api/v1/auth/local/reactivation/confirm").query({ token });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toEqual("User is not deactivated.");
+      });
+
+      it("should return 400 when provider in token does not match local authentication provider", async (): Promise<void> => {
+        const user: UserEntity = await factories.buildUserFactory({ isDeactivated: true });
+        const token: string = await tokensService.generate({
+          userId: user.id,
+          provider: AuthenticationProvider.GOOGLE,
+        });
+
+        const response = await httpServer.get("/api/v1/auth/local/reactivation/confirm").query({ token });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body).toEqual({
+          message: "Invalid token",
+          error: "Bad Request",
+          statusCode: 400,
+        });
       });
     });
   });

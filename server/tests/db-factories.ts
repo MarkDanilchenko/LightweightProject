@@ -38,6 +38,7 @@ class DbFactories {
       lastName: faker.person.lastName(),
       username: faker.string.alphanumeric(10),
       avatarUrl: faker.image.avatar(),
+      isDeactivated: faker.datatype.boolean(0.0),
     };
 
     const user: UserEntity = this.userRepository.create({ ...defaultInfo, ...overrides });

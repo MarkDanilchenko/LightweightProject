@@ -79,7 +79,7 @@ export default class RmqRetryService {
    */
   private sendToRetryQueue(channel: Channel, originalMsg: Message, retriesCount: number, consumerError: Error): void {
     const nextRetriesCount = retriesCount + 1;
-    const nextDelayMs = this.baseDelayMs + Math.pow(2, retriesCount);
+    const nextDelayMs = this.baseDelayMs + Math.pow(2, retriesCount) * 1000;
 
     const messageProperties = {
       ...originalMsg.properties,
@@ -96,7 +96,7 @@ export default class RmqRetryService {
     this.logger.warn(
       `Message was sent to retry queue: ${this.retryQueue}` +
         `delay: ${nextDelayMs};` +
-        ` attempt: ${retriesCount};` +
+        ` attempt: ${nextRetriesCount};` +
         ` reason: ${consumerError.message};`,
     );
   }

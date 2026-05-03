@@ -5,11 +5,12 @@ import {
   AuthLocalPasswordResetEvent,
   AuthLocalPasswordResetSentEvent,
   AuthLocalPasswordResetedEvent,
+  AuthLocalReactivationRequestEvent,
+  AuthLocalReactivationRequestSentEvent,
+  AuthLocalReactivationConfirmedEvent,
+  UserDeactivatedEvent,
+  UserReactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
-
-type MetadataEmail = {
-  email: string;
-};
 
 type EventType =
   | AuthLocalEmailVerificationSentEvent
@@ -17,6 +18,11 @@ type EventType =
   | AuthLocalCreatedEvent
   | AuthLocalPasswordResetEvent
   | AuthLocalPasswordResetSentEvent
-  | AuthLocalPasswordResetedEvent;
+  | AuthLocalPasswordResetedEvent
+  | AuthLocalReactivationRequestEvent
+  | AuthLocalReactivationRequestSentEvent
+  | AuthLocalReactivationConfirmedEvent
+  | UserDeactivatedEvent
+  | UserReactivatedEvent;
 
-export { EventType, MetadataEmail };
+export { EventType };

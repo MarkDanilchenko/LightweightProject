@@ -8,6 +8,7 @@ import { RMQ_MICROSERVICE } from "#server/configs/constants";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 import RmqRetryService from "#server/services/rmq/rmq.retry.service";
+import UsersModule from "#server/users/users.module";
 
 @Global()
 @Module({
@@ -22,6 +23,7 @@ import RmqRetryService from "#server/services/rmq/rmq.retry.service";
       },
     ]),
     AuthModule,
+    UsersModule,
     EventsModule,
   ],
   controllers: [RmqEmailConsumer],

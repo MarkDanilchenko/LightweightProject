@@ -1,21 +1,43 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
+import { ClientProxy } from "@nestjs/microservices";
 import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
+import { BadRequestException, UnauthorizedException } from "@nestjs/common";
+import { faker } from "@faker-js/faker";
 import UsersService from "#server/users/users.service";
 import UserEntity from "#server/users/users.entity";
-import { buildUserFactory } from "../../factories";
+import AuthenticationEntity from "#server/auth/auth.entity";
+import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
+import TokensService from "#server/tokens/tokens.service";
+import EventsService from "#server/events/events.service";
+import { RMQ_MICROSERVICE } from "#server/configs/constants";
+import { DeactivateDto } from "#server/auth/dto/auth.dto";
+import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
+import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
+import { EventName } from "#server/events/interfaces/events.interfaces";
 
 describe("UsersService", (): void => {
-  const user: UserEntity = buildUserFactory();
-  const mockEntityManager: jest.Mocked<EntityManager> = {
+  const mockEntityManager = {
     update: jest.fn(),
   } as unknown as jest.Mocked<EntityManager>;
   let usersService: UsersService;
   let userRepository: jest.Mocked<Repository<UserEntity>>;
   let dataSource: jest.Mocked<DataSource>;
+  let tokensService: jest.Mocked<TokensService>;
+  let eventsService: jest.Mocked<EventsService>;
+  let rmqMicroserviceClient: jest.Mocked<ClientProxy>;
+  let authentication: AuthenticationEntity;
+  let user: UserEntity;
 
   beforeEach(async (): Promise<void> => {
+    user = buildUserFactory();
+    authentication = buildAuthenticationFactory({
+      userId: user.id,
+      provider: AuthenticationProvider.LOCAL,
+    });
+    user.authentications = [authentication];
+
     const mockUserRepository = {
       findOne: jest.fn(),
       findOneBy: jest.fn(),
@@ -26,17 +48,35 @@ describe("UsersService", (): void => {
       transaction: jest.fn().mockImplementation((callback) => callback(mockEntityManager)),
     } as unknown as jest.Mocked<DataSource>;
 
+    const mockTokensService = {
+      addToBlacklist: jest.fn(),
+    } as unknown as jest.Mocked<TokensService>;
+
+    const mockEventsService = {
+      buildInstance: jest.fn(),
+    } as unknown as jest.Mocked<EventsService>;
+
+    const mockRmqMicroserviceClient = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<ClientProxy>;
+
     const testingModule: TestingModule = await Test.createTestingModule({
       providers: [
         UsersService,
         { provide: getRepositoryToken(UserEntity), useValue: mockUserRepository },
         { provide: DataSource, useValue: mockDataSource },
+        { provide: TokensService, useValue: mockTokensService },
+        { provide: EventsService, useValue: mockEventsService },
+        { provide: RMQ_MICROSERVICE, useValue: mockRmqMicroserviceClient },
       ],
     }).compile();
 
     usersService = testingModule.get<UsersService>(UsersService);
     userRepository = testingModule.get<jest.Mocked<Repository<UserEntity>>>(getRepositoryToken(UserEntity));
     dataSource = testingModule.get<jest.Mocked<DataSource>>(DataSource);
+    tokensService = testingModule.get<jest.Mocked<TokensService>>(TokensService);
+    eventsService = testingModule.get<jest.Mocked<EventsService>>(EventsService);
+    rmqMicroserviceClient = testingModule.get<jest.Mocked<ClientProxy>>(RMQ_MICROSERVICE);
   });
 
   afterEach((): void => {
@@ -47,6 +87,9 @@ describe("UsersService", (): void => {
     expect(usersService).toBeDefined();
     expect(userRepository).toBeDefined();
     expect(dataSource).toBeDefined();
+    expect(tokensService).toBeDefined();
+    expect(eventsService).toBeDefined();
+    expect(rmqMicroserviceClient).toBeDefined();
   });
 
   describe("findUserByPk", (): void => {
@@ -125,13 +168,19 @@ describe("UsersService", (): void => {
   });
 
   describe("updateUser", (): void => {
-    const whereCondition: FindOptionsWhere<UserEntity> = { id: user.id };
-    const values: Record<string, any> = { firstName: "Abdullahi Campos" };
-    const updateResult: UpdateResult = {
-      affected: 1,
-      raw: {},
-      generatedMaps: [],
-    };
+    let whereCondition: FindOptionsWhere<UserEntity>;
+    let values: Record<string, any>;
+    let updateResult: UpdateResult;
+
+    beforeAll((): void => {
+      whereCondition = { id: user.id };
+      values = { firstName: "Abdullahi Campos" };
+      updateResult = {
+        affected: 1,
+        raw: {},
+        generatedMaps: [],
+      };
+    });
 
     it("should update a user with provided values", async (): Promise<void> => {
       mockEntityManager.update.mockResolvedValue(updateResult);
@@ -161,6 +210,113 @@ describe("UsersService", (): void => {
       dataSource.transaction.mockRejectedValueOnce(error);
 
       await expect(usersService.updateUser(whereCondition, values)).rejects.toThrow(error);
+    });
+  });
+
+  describe("deactivateUser", (): void => {
+    let payload: TokenPayload;
+    let deactivateDto: DeactivateDto;
+
+    beforeEach((): void => {
+      payload = {
+        userId: user.id,
+        provider: AuthenticationProvider.LOCAL,
+        jwti: faker.string.uuid(),
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      };
+      deactivateDto = { confirmationWord: "deactivate" };
+    });
+
+    it("should deactivate profile successfully", async (): Promise<void> => {
+      userRepository.findOne.mockResolvedValue(user);
+
+      await usersService.deactivateUser(payload, deactivateDto);
+
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        relations: ["authentications"],
+        select: {
+          id: true,
+          username: true,
+          isDeactivated: true,
+          email: true,
+          authentications: {
+            id: true,
+            metadata: true,
+          },
+        },
+        where: { id: user.id },
+      });
+      expect(mockEntityManager.update).toHaveBeenCalledWith(UserEntity, { id: user.id }, { isDeactivated: true });
+      expect(mockEntityManager.update).toHaveBeenCalledWith(
+        AuthenticationEntity,
+        { userId: user.id },
+        {
+          refreshToken: null,
+          lastAccessedAt: expect.any(Function),
+        },
+      );
+      expect(tokensService.addToBlacklist).toHaveBeenCalledWith(payload.jwti, payload.exp);
+      expect(rmqMicroserviceClient.emit).toHaveBeenCalled();
+      expect(eventsService.buildInstance).toHaveBeenCalledWith(EventName.USER_DEACTIVATED, user.id, user.id, {
+        email: user.email,
+        username: user.username,
+      });
+    });
+
+    it("should throw BadRequestException for invalid confirmation word", async (): Promise<void> => {
+      deactivateDto.confirmationWord = "invalid";
+
+      await expect(usersService.deactivateUser(payload, deactivateDto)).rejects.toThrow(
+        new BadRequestException("Deactivation failed. Invalid confirmation word."),
+      );
+
+      expect(userRepository.findOne).not.toHaveBeenCalled();
+    });
+
+    it("should throw UnauthorizedException for invalid token (missing jwti)", async (): Promise<void> => {
+      delete payload.jwti;
+
+      await expect(usersService.deactivateUser(payload, deactivateDto)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. Token is invalid."),
+      );
+
+      expect(userRepository.findOne).not.toHaveBeenCalled();
+    });
+
+    it("should throw UnauthorizedException for invalid token (missing exp)", async (): Promise<void> => {
+      delete payload.exp;
+
+      await expect(usersService.deactivateUser(payload, deactivateDto)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. Token is invalid."),
+      );
+
+      expect(userRepository.findOne).not.toHaveBeenCalled();
+    });
+
+    it("should throw UnauthorizedException if user not found", async (): Promise<void> => {
+      userRepository.findOne.mockResolvedValue(null);
+
+      await expect(usersService.deactivateUser(payload, deactivateDto)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. User is not found."),
+      );
+    });
+
+    it("should throw UnauthorizedException if user has no authentications", async (): Promise<void> => {
+      user.authentications = [];
+      userRepository.findOne.mockResolvedValue(user);
+
+      await expect(usersService.deactivateUser(payload, deactivateDto)).rejects.toThrow(
+        new UnauthorizedException("Authentication failed. User is not found."),
+      );
+    });
+
+    it("should throw BadRequestException if user is already deactivated", async (): Promise<void> => {
+      user.isDeactivated = true;
+      userRepository.findOne.mockResolvedValue(user);
+
+      await expect(usersService.deactivateUser(payload, deactivateDto)).rejects.toThrow(
+        new BadRequestException("User's profile is already deactivated."),
+      );
     });
   });
 });

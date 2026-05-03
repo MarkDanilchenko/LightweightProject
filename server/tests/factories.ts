@@ -26,6 +26,7 @@ function buildUserFactory(overrides: Partial<UserEntity> = {}): UserEntity {
   user.createdAt = faker.date.past();
   user.updatedAt = faker.date.recent();
   user.deletedAt = null;
+  user.isDeactivated = faker.datatype.boolean(0.0);
 
   Object.assign(user, overrides);
 
