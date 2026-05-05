@@ -137,6 +137,8 @@ export default class AuthController {
     res.status(200).send();
   }
 
+  // TODO: reactivation request should be implemented during local sign in workflow;
+  // this route should not exists;
   @Post("local/reactivation/request")
   @ApiOperation({
     summary: "Request reactivation",
@@ -156,7 +158,6 @@ export default class AuthController {
     @Body() localReactivationRequestDto: LocalReactivationRequestDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    // TODO: user can use this route many times at once, it is not good, so should thin about some kind of debounce;
     await this.authService.localReactivationRequest(localReactivationRequestDto);
 
     res.status(200).send();
@@ -187,6 +188,7 @@ export default class AuthController {
   ): Promise<void> {
     await this.authService.localReactivationConfirm(localReactivationConfirmDto);
 
+    // TODO: should redirect to the signin client page (frontend-app) after successful reactivation;
     res.status(200).send();
   }
 
