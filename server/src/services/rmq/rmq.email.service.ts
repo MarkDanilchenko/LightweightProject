@@ -166,7 +166,7 @@ export default class RmqEmailService {
       { userId, provider: AuthenticationProvider.LOCAL },
       { expiresIn: "15m", secret: currentPassword },
     );
-    // TODO: callbackUrl should be implemented on the client (frontend-app);
+    // TODO: callbackUrl should lead to the client's password reset form (frontend-app);
     const callbackUrl: string = `${baseUrl}/local/password/reset?token=${token}`;
     const html: string = await ejs.renderFile(
       localPasswordResetTemplatePath,

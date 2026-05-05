@@ -28,7 +28,6 @@ function getEnvPath(): string {
     }
 
     case "production": {
-      // TODO: Add production env;
       distEnvPath = "";
       fallbackEnvPath = "";
 
