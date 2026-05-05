@@ -1,0 +1,18 @@
+<%
+    const title = 'LightweightProject - User deactivated notification';
+    const description = 'LightweightProject - User deactivated notification';
+    const keywords = 'LightweightProject, email, profile, user, deactivated, deactivation';
+    const pageTitle = 'User deactivated notification';
+    const additionalStyles = '';
+    const body = `
+        <p class="greeting-note">Hello <b>${username}</b> !</p>
+        <div>
+            <p>Your profile has been successfully deactivated in LightweightProject.<br>
+               If you have any questions or would like to reactivate your account, please sign in again.<br>
+               If you didn't request this deactivation, please sign in again using your previous credentials and change
+               password immediately.</p>
+        </div>
+        <p class="info-note"><i>Need help? Contact our support team for assistance.</i></p>
+    `;
+%>
+<%- include('layouts/email-layout.ejs', { title, description, keywords, pageTitle, additionalStyles, body }) %>

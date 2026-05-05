@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="description" content="<%= description %>" />
+    <meta name="keywords" content="<%= keywords %>" />
+    <meta name="author" content="" />
+    <title><%= title %></title>
+    <%- include('../partials/styles.ejs') %>
+    <%- additionalStyles %>
+</head>
+<body>
+<div class="container">
+    <%- include('../partials/header.ejs', { title: pageTitle }) %>
+    <div class="content">
+        <%- body %>
+    </div>
+    <%- include('../partials/footer.ejs') %>
+</div>
+</body>
+</html>

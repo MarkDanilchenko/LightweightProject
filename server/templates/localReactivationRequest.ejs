@@ -1,0 +1,24 @@
+<%
+    const title = 'LightweightProject - Account Reactivation Request';
+    const description = 'LightweightProject - Account Reactivation';
+    const keywords = 'LightweightProject, account, reactivation, authentication';
+    const pageTitle = 'Account reactivation';
+    const additionalStyles = '';
+    const body = `
+        <p class="greeting-note">Hello <b>${username}</b> !<br>
+           We received a request to reactivate your LightweightProject account.<br>
+           Click the button below to complete the reactivation process:
+        </p>
+        <div class="button-container">
+            <a href="${callbackUrl}"
+               class="button"
+               title="LightweightProject - account reactivation link"
+               target="_blank">Reactivate Account</a>
+        </div>
+        <p class="expiry-note">This link will expire in 15 minutes for security reasons.</p>
+        <p class="info-note">If you didn't request this account reactivation, you can safely ignore this email.<br>
+            <i>Need help? Contact our support team for assistance.</i>
+        </p>
+    `;
+%>
+<%- include('layouts/email-layout.ejs', { title, description, keywords, pageTitle, additionalStyles, body }) %>

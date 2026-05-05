@@ -22,6 +22,8 @@ import {
   LocalSignUpDto,
   LocalPasswordForgotDto,
   LocalPasswordResetDto,
+  LocalReactivationRequestDto,
+  LocalReactivationConfirmDto,
 } from "#server/auth/dto/auth.dto";
 import { clearCookie, setCookie } from "#server/utils/cookie";
 import LocalAuthGuard from "#server/auth/guards/local.guard";
@@ -65,6 +67,8 @@ export default class AuthController {
     await this.authService.localSignUp(localSignUpDto);
   }
 
+  // TODO: change URI to "local/email-verification/confirm"
+  // TODO: change to @GET()
   @Post("local/verification/email")
   @ApiOperation({
     summary: "Verify email for local authentication",
@@ -116,7 +120,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Authentication failed. " + "Invalid credentials or " + "email is not verified.",
+    description: "Authentication failed. Invalid credentials or email is not verified.",
   })
   @ApiBody({ type: LocalSignInDto })
   @UsePipes(ZodValidationPipe)
@@ -133,6 +137,61 @@ export default class AuthController {
     res.status(200).send();
   }
 
+  @Post("local/reactivation/request")
+  @ApiOperation({
+    summary: "Request reactivation",
+    description: "Request reactivation for a user account that has been deactivated (local authentication flow).",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Reactivation request sent successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
+  })
+  @ApiBody({ type: LocalReactivationRequestDto })
+  @UsePipes(ZodValidationPipe)
+  async localReactivationRequest(
+    @Body() localReactivationRequestDto: LocalReactivationRequestDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    // TODO: user can use this route many times at once, it is not good, so should thin about some kind of debounce;
+    await this.authService.localReactivationRequest(localReactivationRequestDto);
+
+    res.status(200).send();
+  }
+
+  @Get("local/reactivation/confirm")
+  @ApiOperation({
+    summary: "Confirm reactivation",
+    description: "Confirm reactivation for a user account that has been deactivated (local authentication flow).",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Reactivation confirmed successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Invalid or expired token.",
+  })
+  @ApiQuery({ type: LocalReactivationConfirmDto })
+  @UsePipes(ZodValidationPipe)
+  async localReactivationConfirm(
+    @Query() localReactivationConfirmDto: LocalReactivationConfirmDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    await this.authService.localReactivationConfirm(localReactivationConfirmDto);
+
+    res.status(200).send();
+  }
+
+  // TODO: change URI to "local/password-reset/request"
+  // TODO: also rename DTOs
   @Post("local/password/forgot")
   @ApiOperation({
     summary: "Forgot password",
@@ -140,7 +199,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 200,
-    description: "Email with temporary generated token was sent successfully.",
+    description: "Password reset link sent successfully.",
   })
   @ApiResponse({
     status: 400,
@@ -158,6 +217,8 @@ export default class AuthController {
     res.status(200).send();
   }
 
+  // TODO: change URI to "local/password-reset/confirm"
+  // TODO: also rename DTOs
   @Post("local/password/reset")
   @ApiOperation({
     summary: "Reset password",
@@ -173,7 +234,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Invalid token.",
+    description: "Invalid or expired token.",
   })
   @ApiBody({ type: LocalPasswordResetDto })
   @UsePipes(ZodValidationPipe)

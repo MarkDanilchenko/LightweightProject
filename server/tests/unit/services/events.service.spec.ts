@@ -75,6 +75,7 @@ describe("EventsService", (): void => {
         EventName.AUTH_LOCAL_PASSWORD_RESETED,
         user.id,
         randomUuid,
+        { email: testEmail },
       );
 
       expect(event).toBeDefined();
