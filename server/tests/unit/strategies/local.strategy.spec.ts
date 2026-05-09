@@ -67,6 +67,8 @@ describe("LocalAuthStrategy", (): void => {
         select: {
           id: true,
           isDeactivated: true,
+          username: true,
+          email: true,
           authentications: {
             id: true,
             provider: true,
@@ -87,7 +89,7 @@ describe("LocalAuthStrategy", (): void => {
 
       await localAuthStrategy.validate(mockReq, user.email, password, mockDone);
 
-      expect(mockDone).toHaveBeenCalledWith(new UnauthorizedException("Authentication failed. User not found."), false);
+      expect(mockDone).toHaveBeenCalledWith(new UnauthorizedException("User or authentication not found."), false);
     });
 
     it("should handle unverified email", async (): Promise<void> => {
@@ -98,10 +100,7 @@ describe("LocalAuthStrategy", (): void => {
 
       await localAuthStrategy.validate(mockReq, user.email, password, mockDone);
 
-      expect(mockDone).toHaveBeenCalledWith(
-        new UnauthorizedException("Authentication failed. Email is not verified."),
-        false,
-      );
+      expect(mockDone).toHaveBeenCalledWith(new UnauthorizedException("Email is not verified."), false);
     });
 
     it("should handle invalid password", async (): Promise<void> => {
@@ -112,10 +111,7 @@ describe("LocalAuthStrategy", (): void => {
 
       await localAuthStrategy.validate(mockReq, user.email, password, mockDone);
 
-      expect(mockDone).toHaveBeenCalledWith(
-        new UnauthorizedException("Authentication failed. Invalid credentials."),
-        false,
-      );
+      expect(mockDone).toHaveBeenCalledWith(new UnauthorizedException("Invalid credentials."), false);
     });
 
     it("should handle missing authentication data", async (): Promise<void> => {
@@ -124,7 +120,7 @@ describe("LocalAuthStrategy", (): void => {
 
       await localAuthStrategy.validate(mockReq, user.email, password, mockDone);
 
-      expect(mockDone).toHaveBeenCalledWith(new UnauthorizedException("Authentication failed. User not found."), false);
+      expect(mockDone).toHaveBeenCalledWith(new UnauthorizedException("User or authentication not found."), false);
     });
 
     it("should handle deactivated user profile", async (): Promise<void> => {
@@ -135,10 +131,7 @@ describe("LocalAuthStrategy", (): void => {
 
       await localAuthStrategy.validate(mockReq, user.email, password, mockDone);
 
-      expect(mockDone).toHaveBeenCalledWith(
-        new UnauthorizedException("Authentication failed. User profile is deactivated."),
-        false,
-      );
+      expect(mockDone).toHaveBeenCalledWith(new UnauthorizedException("Invalid credentials."), false);
     });
   });
 });

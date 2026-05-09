@@ -72,7 +72,7 @@ describe("RmqEmailConsumer", (): void => {
     const mockRmqEmailService = {
       sendEmailVerification: jest.fn(),
       sendPasswordReset: jest.fn(),
-      sendReactivationRequest: jest.fn(),
+      sendReactivation: jest.fn(),
       sendUserDeactivatedNotification: jest.fn(),
     };
 

@@ -37,10 +37,9 @@ describe("AuthController", (): void => {
   beforeEach(async (): Promise<void> => {
     const mockAuthService = {
       localSignUp: jest.fn(),
-      localVerificationEmail: jest.fn(),
-      localPasswordForgot: jest.fn(),
-      localPasswordReset: jest.fn(),
-      localReactivationRequest: jest.fn(),
+      localEmailVerification: jest.fn(),
+      localPasswordResetRequest: jest.fn(),
+      localPasswordResetConfirm: jest.fn(),
       localReactivationConfirm: jest.fn(),
       signIn: jest.fn(),
       signOut: jest.fn(),
@@ -136,40 +135,35 @@ describe("AuthController", (): void => {
   });
 
   describe("localEmailVerification", (): void => {
-    it("should set cookie and redirect on success", async (): Promise<void> => {
+    it("should set cookie and send 200 on success", async (): Promise<void> => {
       const dto: LocalEmailVerificationDto = {
         token: randomValidJwt({ userId: user.id, provider: AuthenticationProvider.LOCAL }),
       };
-      const tokenData = {
-        accessToken: randomValidJwt({
-          userId: user.id,
-          provider: AuthenticationProvider.LOCAL,
-          jwti: uuidv4(),
-        }),
-      };
+      const accessToken = randomValidJwt({
+        userId: user.id,
+        provider: AuthenticationProvider.LOCAL,
+        jwti: uuidv4(),
+      });
 
-      authService.localEmailVerification.mockResolvedValue(tokenData);
+      authService.localEmailVerification.mockResolvedValue(accessToken);
 
       await authController.localEmailVerification(dto, mockResponse as Response);
 
       expect(authService.localEmailVerification).toHaveBeenCalledWith(dto);
-      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", tokenData.accessToken, true);
-      expect(mockResponse.redirect).toHaveBeenCalledWith(302, "https://127.0.0.1:3001/home");
+      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken, true);
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.send).toHaveBeenCalled();
     });
 
-    it("should redirect with error on failure", async (): Promise<void> => {
+    it("should throw error on failure", async (): Promise<void> => {
       const dto: LocalEmailVerificationDto = { token: "invalid-jwt-token" };
-      const error = new Error("Invalid token");
+      const error = new UnauthorizedException("Invalid token");
 
       authService.localEmailVerification.mockRejectedValue(error);
 
-      await authController.localEmailVerification(dto, mockResponse as Response);
+      await expect(authController.localEmailVerification(dto, mockResponse as Response)).rejects.toThrow(error);
 
       expect(setCookie).not.toHaveBeenCalled();
-      expect(mockResponse.redirect).toHaveBeenCalledWith(
-        302,
-        `https://127.0.0.1:3001/signin?errorMsg=${error.message}`,
-      );
     });
   });
 
@@ -177,20 +171,18 @@ describe("AuthController", (): void => {
     it("should set cookie and send 200 on success", async (): Promise<void> => {
       const req = { user } as RequestWithUser;
       const dto: LocalSignInDto = { login: user.username as string, password: "Test1234!_" };
-      const tokenData = {
-        accessToken: randomValidJwt({
-          userId: user.id,
-          provider: AuthenticationProvider.LOCAL,
-          jwti: uuidv4(),
-        }),
-      };
+      const accessToken = randomValidJwt({
+        userId: user.id,
+        provider: AuthenticationProvider.LOCAL,
+        jwti: uuidv4(),
+      });
 
-      authService.signIn.mockResolvedValue(tokenData);
+      authService.signIn.mockResolvedValue(accessToken);
 
       await authController.localSignIn(req, dto, mockResponse as Response);
 
       expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.LOCAL);
-      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", tokenData.accessToken, true);
+      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken, true);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
     });
@@ -218,20 +210,6 @@ describe("AuthController", (): void => {
       await authController.localPasswordResetConfirm(dto, mockResponse as Response);
 
       expect(authService.localPasswordResetConfirm).toHaveBeenCalledWith(dto);
-      expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(mockResponse.send).toHaveBeenCalled();
-    });
-  });
-
-  describe("localReactivationRequest", (): void => {
-    it("should call authService.localReactivationRequest and return 200", async (): Promise<void> => {
-      const dto: LocalReactivationRequestDto = {
-        email: user.email,
-      };
-
-      await authController.localReactivationRequest(dto, mockResponse as Response);
-
-      expect(authService.localReactivationRequest).toHaveBeenCalledWith(dto);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
     });
@@ -340,21 +318,20 @@ describe("AuthController", (): void => {
   describe("googleRedirect", (): void => {
     it("should sign in with Google provider, set cookie and redirect to home on success", async (): Promise<void> => {
       const req = { user } as RequestWithUser;
-      const tokenData = {
-        accessToken: randomValidJwt({
-          userId: user.id,
-          provider: AuthenticationProvider.GOOGLE,
-          jwti: uuidv4(),
-        }),
-      };
+      const accessToken = randomValidJwt({
+        userId: user.id,
+        provider: AuthenticationProvider.GOOGLE,
+        jwti: uuidv4(),
+      });
 
-      authService.signIn.mockResolvedValue(tokenData);
+      authService.signIn.mockResolvedValue(accessToken);
 
       await authController.googleRedirect(req, mockResponse as Response);
 
       expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.GOOGLE);
-      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", tokenData.accessToken, true);
-      expect(mockResponse.redirect).toHaveBeenCalledWith(302, "https://127.0.0.1:3001/home");
+      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken, true);
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.send).toHaveBeenCalled();
     });
   });
 });

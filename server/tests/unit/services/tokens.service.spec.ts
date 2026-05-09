@@ -126,7 +126,7 @@ describe("TokensService", (): void => {
       jwtService.verifyAsync.mockRejectedValueOnce(new Error("Invalid token"));
 
       await expect(tokensService.verify("invalid-jwt-token")).rejects.toThrow(
-        new UnauthorizedException("Invalid token"),
+        new UnauthorizedException("Token verification failed"),
       );
     });
   });
