@@ -54,7 +54,7 @@ const localSignUpSchema = z
     },
   });
 
-const localVerificationEmailSchema = z
+const localEmailVerificationSchema = z
   .object({
     token: z.string().openapi({ title: "Token", description: "Token.", example: "Token in jwt format" }),
   })
@@ -77,7 +77,7 @@ const localSignInSchema = z
     example: { login: "johndoe or johndoe@me.com", password: "12345678Aa_" },
   });
 
-const localForgotPasswordSchema = z
+const localPasswordResetRequestSchema = z
   .object({
     email: localSignUpSchema.shape.email,
   })
@@ -87,7 +87,7 @@ const localForgotPasswordSchema = z
     example: { email: "johndoe@me.com" },
   });
 
-const localResetPasswordSchema = z
+const localPasswordResetConfirmSchema = z
   .object({
     token: z
       .string()
@@ -113,16 +113,6 @@ const deactivateSchema = z
     example: { confirmationWord: "deactivate" },
   });
 
-const localReactivateRequestSchema = z
-  .object({
-    email: localSignUpSchema.shape.email,
-  })
-  .openapi({
-    title: "Local reactivate request schema",
-    description: "Local reactivate request with provided email.",
-    example: { email: "johndoe@me.com" },
-  });
-
 const localReactivateConfirmSchema = z
   .object({
     token: z
@@ -138,10 +128,9 @@ const localReactivateConfirmSchema = z
 export {
   localSignInSchema,
   localSignUpSchema,
-  localVerificationEmailSchema,
-  localForgotPasswordSchema,
-  localResetPasswordSchema,
-  localReactivateRequestSchema,
+  localEmailVerificationSchema,
+  localPasswordResetRequestSchema,
+  localPasswordResetConfirmSchema,
   localReactivateConfirmSchema,
   deactivateSchema,
 };

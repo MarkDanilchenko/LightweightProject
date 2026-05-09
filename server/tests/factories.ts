@@ -114,10 +114,14 @@ function buildEventFactory(overrides: Partial<EventEntity> = {}): EventEntity {
   event.name = faker.helpers.arrayElement([
     EventName.AUTH_LOCAL_CREATED,
     EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT,
-    EventName.AUTH_LOCAL_EMAIL_VERIFIED,
+    EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED,
     EventName.AUTH_LOCAL_PASSWORD_RESET,
     EventName.AUTH_LOCAL_PASSWORD_RESET_SENT,
-    EventName.AUTH_LOCAL_PASSWORD_RESETED,
+    EventName.AUTH_LOCAL_PASSWORD_RESET_CONFIRMED,
+    EventName.AUTH_LOCAL_REACTIVATION,
+    EventName.AUTH_LOCAL_REACTIVATION_SENT,
+    EventName.USER_DEACTIVATED,
+    EventName.USER_REACTIVATED,
   ]);
   event.metadata = {};
   event.createdAt = faker.date.past();

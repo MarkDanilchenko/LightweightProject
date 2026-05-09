@@ -307,7 +307,7 @@ describe("AuthController E2E", (): void => {
           .findOne({ where: { id: authentication.id } });
         const event: EventEntity | null = await dataSource
           .getRepository(EventEntity)
-          .findOne({ where: { name: EventName.AUTH_LOCAL_EMAIL_VERIFIED, userId: user.id } });
+          .findOne({ where: { name: EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED, userId: user.id } });
 
         expect(response.statusCode).toBe(302);
         expect(response.header["location"]).toBe(`${clientBaseUrl}/home`);
@@ -322,7 +322,7 @@ describe("AuthController E2E", (): void => {
         expect(updatedAuthentication?.metadata?.local?.isEmailVerified).toBeTruthy();
         expect(updatedAuthentication?.refreshToken).not.toBeNull();
         expect(event).not.toBeNull();
-        expect(event?.name).toBe(EventName.AUTH_LOCAL_EMAIL_VERIFIED);
+        expect(event?.name).toBe(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED);
         expect(event?.userId).toBe(user.id);
         expect(event?.modelId).toBe(authentication.id);
       });
@@ -376,7 +376,7 @@ describe("AuthController E2E", (): void => {
           .findOne({ where: { id: googleAuthentication.id } });
         const event: EventEntity | null = await dataSource
           .getRepository(EventEntity)
-          .findOne({ where: { name: EventName.AUTH_LOCAL_EMAIL_VERIFIED, userId: user.id } });
+          .findOne({ where: { name: EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED, userId: user.id } });
 
         expect(response.statusCode).toBe(302);
         expect(response.header["location"]).toBe(`${clientBaseUrl}/home`);
@@ -392,7 +392,7 @@ describe("AuthController E2E", (): void => {
         expect(updatedLocalAuthentication?.refreshToken).not.toBeNull();
         expect(updatedGoogleAuthentication?.refreshToken).toBeNull();
         expect(event).not.toBeNull();
-        expect(event?.name).toBe(EventName.AUTH_LOCAL_EMAIL_VERIFIED);
+        expect(event?.name).toBe(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED);
         expect(event?.userId).toBe(user.id);
         expect(event?.modelId).toBe(localAuthentication.id);
       });

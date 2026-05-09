@@ -57,7 +57,15 @@ export default class TokensService {
         throw new UnauthorizedException("Token expired");
       }
 
-      throw new UnauthorizedException("Invalid token");
+      if ((error as Error).name === "JsonWebTokenError") {
+        throw new UnauthorizedException("Invalid token format");
+      }
+
+      if ((error as Error).name === "NotBeforeError") {
+        throw new UnauthorizedException("Token not active yet");
+      }
+
+      throw new UnauthorizedException("Token verification failed");
     }
   }
 

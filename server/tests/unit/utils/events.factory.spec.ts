@@ -48,14 +48,19 @@ describe("EventsFactory", (): void => {
     });
   });
 
-  describe("AuthLocalEmailVerifiedEvent", (): void => {
+  describe("AuthLocalEmailVerificationConfirmedEvent", (): void => {
     it("should create an instance with correct properties", (): void => {
       const metadata = { email: user.email };
 
-      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_EMAIL_VERIFIED];
-      const event = new EventClass(EventName.AUTH_LOCAL_EMAIL_VERIFIED, user.id, authentication.id, metadata);
+      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED];
+      const event = new EventClass(
+        EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED,
+        user.id,
+        authentication.id,
+        metadata,
+      );
 
-      expect(event.name).toBe(EventName.AUTH_LOCAL_EMAIL_VERIFIED);
+      expect(event.name).toBe(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED);
       expect(event.userId).toBe(user.id);
       expect(event.modelId).toBe(authentication.id);
       expect(event.metadata).toEqual(metadata);
@@ -93,14 +98,14 @@ describe("EventsFactory", (): void => {
     });
   });
 
-  describe("AuthLocalPasswordResetedEvent", (): void => {
+  describe("AuthLocalPasswordResetConfirmedEvent", (): void => {
     it("should create an instance with correct properties", (): void => {
-      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_PASSWORD_RESETED];
-      const event = new EventClass(EventName.AUTH_LOCAL_PASSWORD_RESETED, user.id, authentication.id, {
+      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_PASSWORD_RESET_CONFIRMED];
+      const event = new EventClass(EventName.AUTH_LOCAL_PASSWORD_RESET_CONFIRMED, user.id, authentication.id, {
         email: user.email,
       });
 
-      expect(event.name).toBe(EventName.AUTH_LOCAL_PASSWORD_RESETED);
+      expect(event.name).toBe(EventName.AUTH_LOCAL_PASSWORD_RESET_CONFIRMED);
       expect(event.userId).toBe(user.id);
       expect(event.modelId).toBe(authentication.id);
       expect(event.metadata).toEqual({ email: user.email });
@@ -138,45 +143,31 @@ describe("EventsFactory", (): void => {
     });
   });
 
-  describe("AuthLocalReactivationRequestEvent", (): void => {
+  describe("AuthLocalReactivationEvent", (): void => {
     it("should create an instance with correct properties", (): void => {
       const metadata = {
         username: user.username,
         email: user.email,
       };
 
-      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_REACTIVATION_REQUEST];
-      const event = new EventClass(EventName.AUTH_LOCAL_REACTIVATION_REQUEST, user.id, user.id, metadata);
+      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_REACTIVATION];
+      const event = new EventClass(EventName.AUTH_LOCAL_REACTIVATION, user.id, user.id, metadata);
 
-      expect(event.name).toBe(EventName.AUTH_LOCAL_REACTIVATION_REQUEST);
+      expect(event.name).toBe(EventName.AUTH_LOCAL_REACTIVATION);
       expect(event.userId).toBe(user.id);
       expect(event.modelId).toBe(user.id);
       expect(event.metadata).toEqual(metadata);
     });
   });
 
-  describe("AuthLocalReactivationRequestSentEvent", (): void => {
+  describe("AuthLocalReactivationSentEvent", (): void => {
     it("should create an instance with correct properties", (): void => {
       const metadata = { email: user.email };
 
-      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT];
-      const event = new EventClass(EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT, user.id, user.id, metadata);
+      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_REACTIVATION_SENT];
+      const event = new EventClass(EventName.AUTH_LOCAL_REACTIVATION_SENT, user.id, user.id, metadata);
 
-      expect(event.name).toBe(EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT);
-      expect(event.userId).toBe(user.id);
-      expect(event.modelId).toBe(user.id);
-      expect(event.metadata).toEqual(metadata);
-    });
-  });
-
-  describe("AuthLocalReactivationConfirmedEvent", (): void => {
-    it("should create an instance with correct properties", (): void => {
-      const metadata = { email: user.email };
-
-      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED];
-      const event = new EventClass(EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED, user.id, user.id, metadata);
-
-      expect(event.name).toBe(EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED);
+      expect(event.name).toBe(EventName.AUTH_LOCAL_REACTIVATION_SENT);
       expect(event.userId).toBe(user.id);
       expect(event.modelId).toBe(user.id);
       expect(event.metadata).toEqual(metadata);

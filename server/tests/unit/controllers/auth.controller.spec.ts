@@ -5,13 +5,12 @@ import { Response } from "express";
 import AuthController from "#server/auth/auth.controller";
 import AuthService from "#server/auth/auth.service";
 import {
-  LocalPasswordForgotDto,
-  LocalPasswordResetDto,
+  LocalPasswordResetRequestDto,
+  LocalPasswordResetConfirmDto,
   LocalReactivationConfirmDto,
-  LocalReactivationRequestDto,
   LocalSignInDto,
   LocalSignUpDto,
-  LocalVerificationEmailDto,
+  LocalEmailVerificationDto,
 } from "#server/auth/dto/auth.dto";
 import { buildUserFactory } from "../../factories";
 import UserEntity from "#server/users/users.entity";
@@ -136,9 +135,9 @@ describe("AuthController", (): void => {
     });
   });
 
-  describe("localVerificationEmail", (): void => {
+  describe("localEmailVerification", (): void => {
     it("should set cookie and redirect on success", async (): Promise<void> => {
-      const dto: LocalVerificationEmailDto = {
+      const dto: LocalEmailVerificationDto = {
         token: randomValidJwt({ userId: user.id, provider: AuthenticationProvider.LOCAL }),
       };
       const tokenData = {
@@ -149,22 +148,22 @@ describe("AuthController", (): void => {
         }),
       };
 
-      authService.localVerificationEmail.mockResolvedValue(tokenData);
+      authService.localEmailVerification.mockResolvedValue(tokenData);
 
-      await authController.localVerificationEmail(dto, mockResponse as Response);
+      await authController.localEmailVerification(dto, mockResponse as Response);
 
-      expect(authService.localVerificationEmail).toHaveBeenCalledWith(dto);
+      expect(authService.localEmailVerification).toHaveBeenCalledWith(dto);
       expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", tokenData.accessToken, true);
       expect(mockResponse.redirect).toHaveBeenCalledWith(302, "https://127.0.0.1:3001/home");
     });
 
     it("should redirect with error on failure", async (): Promise<void> => {
-      const dto: LocalVerificationEmailDto = { token: "invalid-jwt-token" };
+      const dto: LocalEmailVerificationDto = { token: "invalid-jwt-token" };
       const error = new Error("Invalid token");
 
-      authService.localVerificationEmail.mockRejectedValue(error);
+      authService.localEmailVerification.mockRejectedValue(error);
 
-      await authController.localVerificationEmail(dto, mockResponse as Response);
+      await authController.localEmailVerification(dto, mockResponse as Response);
 
       expect(setCookie).not.toHaveBeenCalled();
       expect(mockResponse.redirect).toHaveBeenCalledWith(
@@ -197,28 +196,28 @@ describe("AuthController", (): void => {
     });
   });
 
-  describe("localPasswordForgot", (): void => {
-    it("should call authService.localPasswordForgot and return 200", async (): Promise<void> => {
-      const dto: LocalPasswordForgotDto = { email: user.email };
+  describe("localPasswordResetRequest", (): void => {
+    it("should call authService.localPasswordResetRequest and return 200", async (): Promise<void> => {
+      const dto: LocalPasswordResetRequestDto = { email: user.email };
 
-      await authController.localPasswordForgot(dto, mockResponse as Response);
+      await authController.localPasswordResetRequest(dto, mockResponse as Response);
 
-      expect(authService.localPasswordForgot).toHaveBeenCalledWith(dto);
+      expect(authService.localPasswordResetRequest).toHaveBeenCalledWith(dto);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
     });
   });
 
-  describe("localPasswordReset", (): void => {
-    it("should call authService.localPasswordReset and return 200", async (): Promise<void> => {
-      const dto: LocalPasswordResetDto = {
+  describe("localPasswordResetConfirm", (): void => {
+    it("should call authService.localPasswordResetConfirm and return 200", async (): Promise<void> => {
+      const dto: LocalPasswordResetConfirmDto = {
         token: randomValidJwt({ userId: user.id, provider: AuthenticationProvider.LOCAL }, { expiresIn: "15m" }),
         password: "Test1234!_new",
       };
 
-      await authController.localPasswordReset(dto, mockResponse as Response);
+      await authController.localPasswordResetConfirm(dto, mockResponse as Response);
 
-      expect(authService.localPasswordReset).toHaveBeenCalledWith(dto);
+      expect(authService.localPasswordResetConfirm).toHaveBeenCalledWith(dto);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
     });

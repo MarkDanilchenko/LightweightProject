@@ -28,10 +28,9 @@ import { EventName } from "#server/events/interfaces/events.interfaces";
 import { BadRequestException, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import {
-  LocalPasswordResetDto,
+  LocalPasswordResetConfirmDto,
   LocalReactivationConfirmDto,
-  LocalReactivationRequestDto,
-  LocalVerificationEmailDto,
+  LocalEmailVerificationDto,
 } from "#server/auth/dto/auth.dto";
 
 jest.mock("#server/utils/hasher", () => ({
@@ -285,8 +284,8 @@ describe("AuthService", (): void => {
     });
   });
 
-  describe("localVerificationEmail", (): void => {
-    let dto: LocalVerificationEmailDto;
+  describe("localEmailVerification", (): void => {
+    let dto: LocalEmailVerificationDto;
     let payload: Partial<TokenPayload>;
 
     beforeEach((): void => {
@@ -319,7 +318,7 @@ describe("AuthService", (): void => {
         expect.any(Object),
       );
 
-      const result: { accessToken: string } = await authService.localVerificationEmail(dto);
+      const result: { accessToken: string } = await authService.localEmailVerification(dto);
 
       expect(tokensService.verify).toHaveBeenCalledWith(dto.token);
       expect(authenticationRepository.findOne).toHaveBeenCalled();
@@ -331,7 +330,7 @@ describe("AuthService", (): void => {
         entityManager,
       );
       expect(eventEmitter2.emit).toHaveBeenCalledWith(
-        EventName.AUTH_LOCAL_EMAIL_VERIFIED,
+        EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED,
         expect.any(Object),
         entityManager,
       );
@@ -341,7 +340,7 @@ describe("AuthService", (): void => {
     it("should throw UnauthorizedException when token is invalid", async (): Promise<void> => {
       tokensService.verify.mockResolvedValue({} as TokenPayload);
 
-      await expect(authService.localVerificationEmail(dto)).rejects.toThrow(
+      await expect(authService.localEmailVerification(dto)).rejects.toThrow(
         new UnauthorizedException("Invalid token."),
       );
     });
@@ -350,7 +349,7 @@ describe("AuthService", (): void => {
       tokensService.verify.mockResolvedValue(payload as TokenPayload);
       authenticationRepository.findOne.mockResolvedValue(null);
 
-      await expect(authService.localVerificationEmail(dto)).rejects.toThrow(
+      await expect(authService.localEmailVerification(dto)).rejects.toThrow(
         new NotFoundException("Authentication not found."),
       );
     });
@@ -361,7 +360,7 @@ describe("AuthService", (): void => {
       tokensService.verify.mockResolvedValue(payload as TokenPayload);
       authenticationRepository.findOne.mockResolvedValue(authentication);
 
-      await expect(authService.localVerificationEmail(dto)).rejects.toThrow(
+      await expect(authService.localEmailVerification(dto)).rejects.toThrow(
         new BadRequestException("Email has been already verified."),
       );
     });
@@ -633,11 +632,11 @@ describe("AuthService", (): void => {
     });
   });
 
-  describe("localPasswordForgot", (): void => {
+  describe("localPasswordResetRequest", (): void => {
     it("should silently return when user was not found", async (): Promise<void> => {
       usersService.findUser.mockResolvedValue(null);
 
-      await expect(authService.localPasswordForgot({ email: user.email })).resolves.toBeUndefined();
+      await expect(authService.localPasswordResetRequest({ email: user.email })).resolves.toBeUndefined();
       expect(rmqMicroserviceClient.emit).not.toHaveBeenCalled();
     });
 
@@ -646,7 +645,7 @@ describe("AuthService", (): void => {
 
       usersService.findUser.mockResolvedValue(user);
 
-      await expect(authService.localPasswordForgot({ email: user.email })).rejects.toThrow(
+      await expect(authService.localPasswordResetRequest({ email: user.email })).rejects.toThrow(
         new BadRequestException(`Email "${user.email}" is not verified yet.`),
       );
     });
@@ -657,15 +656,15 @@ describe("AuthService", (): void => {
         expect.any(Object),
       );
 
-      await authService.localPasswordForgot({ email: user.email });
+      await authService.localPasswordResetRequest({ email: user.email });
 
       expect(rmqMicroserviceClient.emit).toHaveBeenCalledWith(EventName.AUTH_LOCAL_PASSWORD_RESET, expect.any(Object));
     });
   });
 
-  describe("localPasswordReset", (): void => {
+  describe("localPasswordResetConfirm", (): void => {
     const newPassword = "FwwGjwC5qjO";
-    let dto: LocalPasswordResetDto;
+    let dto: LocalPasswordResetConfirmDto;
 
     beforeEach((): void => {
       dto = {
@@ -683,7 +682,7 @@ describe("AuthService", (): void => {
         expect.objectContaining({ userId: undefined, provider: undefined }) as TokenPayload,
       );
 
-      await expect(authService.localPasswordReset(dto)).rejects.toThrow(new BadRequestException("Token is invalid."));
+      await expect(authService.localPasswordResetConfirm(dto)).rejects.toThrow(new BadRequestException("Token is invalid."));
     });
 
     it("should throw BadRequestException when user not found", async (): Promise<void> => {
@@ -692,7 +691,7 @@ describe("AuthService", (): void => {
       tokensService.decode.mockReturnValue(decoded);
       usersService.findUser.mockResolvedValue(null);
 
-      await expect(authService.localPasswordReset(dto)).rejects.toThrow(new BadRequestException("Token is invalid."));
+      await expect(authService.localPasswordResetConfirm(dto)).rejects.toThrow(new BadRequestException("Token is invalid."));
     });
 
     it("should throw BadRequestException when email is not verified", async (): Promise<void> => {
@@ -702,7 +701,7 @@ describe("AuthService", (): void => {
       tokensService.decode.mockReturnValue(decoded);
       usersService.findUser.mockResolvedValue(user);
 
-      await expect(authService.localPasswordReset(dto)).rejects.toThrow(
+      await expect(authService.localPasswordResetConfirm(dto)).rejects.toThrow(
         new BadRequestException("Email is not verified yet."),
       );
     });
@@ -720,7 +719,7 @@ describe("AuthService", (): void => {
         expect.any(Object),
       );
 
-      await authService.localPasswordReset(dto);
+      await authService.localPasswordResetConfirm(dto);
 
       expect(tokensService.verify).toHaveBeenCalledWith(dto.token, { secret: authentication.metadata.local!.password });
       expect(dataSource.transaction).toHaveBeenCalled();
@@ -737,7 +736,7 @@ describe("AuthService", (): void => {
         },
       );
       expect(eventEmitter2.emit).toHaveBeenCalledWith(
-        EventName.AUTH_LOCAL_PASSWORD_RESETED,
+        EventName.AUTH_LOCAL_PASSWORD_RESET_CONFIRMED,
         expect.any(Object),
         entityManager,
       );
@@ -809,7 +808,7 @@ describe("AuthService", (): void => {
         },
       });
       expect(rmqMicroserviceClient.emit).toHaveBeenCalledWith(
-        EventName.AUTH_LOCAL_REACTIVATION_REQUEST,
+        EventName.AUTH_LOCAL_REACTIVATION,
         expect.any(Object),
       );
     });

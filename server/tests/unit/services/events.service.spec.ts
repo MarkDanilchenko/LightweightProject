@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { DataSource, EntityManager, Repository } from "typeorm";
@@ -6,8 +5,8 @@ import EventsService from "#server/events/events.service";
 import EventEntity from "#server/events/events.entity";
 import {
   AuthLocalEmailVerificationSentEvent,
-  AuthLocalEmailVerifiedEvent,
-  AuthLocalPasswordResetedEvent,
+  AuthLocalEmailVerificationConfirmedEvent,
+  AuthLocalPasswordResetConfirmedEvent,
   EventName,
 } from "#server/events/interfaces/events.interfaces";
 import { buildEventFactory, buildUserFactory } from "../../factories";
@@ -70,16 +69,16 @@ describe("EventsService", (): void => {
       expect(event.metadata).toEqual({ email: testEmail });
     });
 
-    it("should create an instance of AuthLocalPasswordResetedEvent", (): void => {
-      const event: AuthLocalPasswordResetedEvent = eventsService.buildInstance(
-        EventName.AUTH_LOCAL_PASSWORD_RESETED,
+    it("should create an instance of AuthLocalPasswordResetConfirmedEvent", (): void => {
+      const event: AuthLocalPasswordResetConfirmedEvent = eventsService.buildInstance(
+        EventName.AUTH_LOCAL_PASSWORD_RESET_CONFIRMED,
         user.id,
         randomUuid,
         { email: testEmail },
       );
 
       expect(event).toBeDefined();
-      expect(event.name).toBe(EventName.AUTH_LOCAL_PASSWORD_RESETED);
+      expect(event.name).toBe(EventName.AUTH_LOCAL_PASSWORD_RESET_CONFIRMED);
       expect(event.userId).toBe(user.id);
       expect(event.modelId).toBe(randomUuid);
     });
@@ -102,8 +101,8 @@ describe("EventsService", (): void => {
     });
 
     it("should create an event with a transaction manager", async (): Promise<void> => {
-      const payload: AuthLocalEmailVerifiedEvent = {
-        name: EventName.AUTH_LOCAL_EMAIL_VERIFIED,
+      const payload: AuthLocalEmailVerificationConfirmedEvent = {
+        name: EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED,
         userId: user.id,
         modelId: randomUuid,
         metadata: { email: testEmail },

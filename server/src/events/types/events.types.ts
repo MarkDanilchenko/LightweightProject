@@ -1,27 +1,25 @@
 import {
   AuthLocalEmailVerificationSentEvent,
-  AuthLocalEmailVerifiedEvent,
+  AuthLocalEmailVerificationConfirmedEvent,
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   AuthLocalPasswordResetSentEvent,
-  AuthLocalPasswordResetedEvent,
-  AuthLocalReactivationRequestEvent,
-  AuthLocalReactivationRequestSentEvent,
-  AuthLocalReactivationConfirmedEvent,
+  AuthLocalPasswordResetConfirmedEvent,
+  AuthLocalReactivationEvent,
+  AuthLocalReactivationSentEvent,
   UserDeactivatedEvent,
   UserReactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
 
 type EventType =
   | AuthLocalEmailVerificationSentEvent
-  | AuthLocalEmailVerifiedEvent
+  | AuthLocalEmailVerificationConfirmedEvent
   | AuthLocalCreatedEvent
   | AuthLocalPasswordResetEvent
   | AuthLocalPasswordResetSentEvent
-  | AuthLocalPasswordResetedEvent
-  | AuthLocalReactivationRequestEvent
-  | AuthLocalReactivationRequestSentEvent
-  | AuthLocalReactivationConfirmedEvent
+  | AuthLocalPasswordResetConfirmedEvent
+  | AuthLocalReactivationEvent
+  | AuthLocalReactivationSentEvent
   | UserDeactivatedEvent
   | UserReactivatedEvent;
 

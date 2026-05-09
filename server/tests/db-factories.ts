@@ -140,30 +140,37 @@ class DbFactories {
 
   async buildEventFactory(overrides: Partial<EventEntity> = {}): Promise<EventEntity> {
     let { name, userId } = overrides;
+    let user: UserEntity | null;
 
     if (!name || !Object.keys(EventName).includes(name)) {
       name = faker.helpers.arrayElement([
         EventName.AUTH_LOCAL_CREATED,
         EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT,
-        EventName.AUTH_LOCAL_EMAIL_VERIFIED,
+        EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED,
         EventName.AUTH_LOCAL_PASSWORD_RESET,
         EventName.AUTH_LOCAL_PASSWORD_RESET_SENT,
-        EventName.AUTH_LOCAL_PASSWORD_RESETED,
+        EventName.AUTH_LOCAL_PASSWORD_RESET_CONFIRMED,
+        EventName.AUTH_LOCAL_REACTIVATION,
+        EventName.AUTH_LOCAL_REACTIVATION_SENT,
+        EventName.USER_DEACTIVATED,
+        EventName.USER_REACTIVATED,
       ]);
     }
 
     if (userId) {
-      const user: UserEntity | null = await this.userRepository.findOne({ where: { id: userId } });
+      user = await this.userRepository.findOne({ where: { id: userId } });
       if (!user) {
         throw new Error("User not found");
       }
     } else {
-      const user: UserEntity = await this.buildUserFactory();
+      user = await this.buildUserFactory();
       userId = user.id;
     }
 
     const defaultInfo = {
-      metadata: {},
+      metadata: {
+        email: user.email,
+      },
       modelId: faker.string.uuid(),
     };
 

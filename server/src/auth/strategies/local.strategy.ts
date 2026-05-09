@@ -27,6 +27,8 @@ export default class LocalAuthStrategy extends PassportStrategy(Strategy, "local
       select: {
         id: true,
         isDeactivated: true,
+        username: true,
+        email: true,
         authentications: {
           id: true,
           provider: true,
@@ -45,21 +47,17 @@ export default class LocalAuthStrategy extends PassportStrategy(Strategy, "local
       ],
     });
     if (!user || !user.authentications?.length) {
-      return done(new UnauthorizedException("Authentication failed. User not found."), false);
-    }
-
-    if (user.isDeactivated) {
-      return done(new UnauthorizedException("Authentication failed. User profile is deactivated."), false);
+      return done(new UnauthorizedException("User or authentication not found."), false);
     }
 
     const authenticationMetadata: AuthenticationInstanceMetadata = user.authentications[0].metadata;
     if (!authenticationMetadata.local?.isEmailVerified) {
-      return done(new UnauthorizedException("Authentication failed. Email is not verified."), false);
+      return done(new UnauthorizedException("Email is not verified."), false);
     }
 
     const isPasswordVerified: boolean = await verifyHash(password, authenticationMetadata.local?.password);
     if (!isPasswordVerified) {
-      return done(new UnauthorizedException("Authentication failed. Invalid credentials."), false);
+      return done(new UnauthorizedException("Invalid credentials."), false);
     }
 
     done(null, user);

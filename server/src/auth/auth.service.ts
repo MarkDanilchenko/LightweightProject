@@ -22,12 +22,11 @@ import TokensService from "#server/tokens/tokens.service";
 import { v4 as uuidv4 } from "uuid";
 import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import {
-  LocalPasswordForgotDto,
-  LocalPasswordResetDto,
+  LocalPasswordResetRequestDto,
+  LocalPasswordResetConfirmDto,
   LocalReactivationConfirmDto,
-  LocalReactivationRequestDto,
   LocalSignUpDto,
-  LocalVerificationEmailDto,
+  LocalEmailVerificationDto,
 } from "#server/auth/dto/auth.dto";
 import { RMQ_MICROSERVICE } from "#server/configs/constants";
 import { ClientProxy } from "@nestjs/microservices";
@@ -228,15 +227,15 @@ export default class AuthService {
   /**
    * Verify user's email during local authentication workflow and return access token.
    *
-   * @param {LocalVerificationEmailDto} localVerificationEmailDto - Token in jwt format.
+   * @param {LocalEmailVerificationDto} localEmailVerificationDto - Token in jwt format.
    *
-   * @returns {Promise<{ accessToken: string }>} - Access token.
+   * @returns {Promise<string>} - Access token.
    */
-  async localVerificationEmail(localVerificationEmailDto: LocalVerificationEmailDto): Promise<{ accessToken: string }> {
-    const { token } = localVerificationEmailDto;
+  async localEmailVerification(localEmailVerificationDto: LocalEmailVerificationDto): Promise<string> {
+    const { token } = localEmailVerificationDto;
 
     const { userId, provider } = await this.tokensService.verify(token);
-    if (!userId || provider !== AuthenticationProvider.LOCAL || !provider) {
+    if (!userId || !provider || provider !== AuthenticationProvider.LOCAL) {
       throw new UnauthorizedException("Invalid token.");
     }
 
@@ -247,15 +246,16 @@ export default class AuthService {
         userId: true,
         provider: true,
         metadata: true,
-        user: { id: true, email: true },
+        user: {
+          id: true,
+          email: true,
+        },
       },
       where: { userId, provider },
     });
     if (!authentication) {
       throw new NotFoundException("Authentication not found.");
-    }
-
-    if (authentication.metadata.local?.isEmailVerified) {
+    } else if (authentication.metadata.local?.isEmailVerified) {
       throw new BadRequestException("Email has been already verified.");
     }
 
@@ -294,15 +294,15 @@ export default class AuthService {
       await this.userService.updateUser({ id: userId }, authentication.metadata.local?.temporaryInfo ?? {}, manager);
 
       this.eventEmitter.emit(
-        EventName.AUTH_LOCAL_EMAIL_VERIFIED,
-        this.eventsService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFIED, userId, authentication.id, {
+        EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED,
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED, userId, authentication.id, {
           email: authentication.user.email,
         }),
         manager,
       );
     });
 
-    return { accessToken };
+    return accessToken;
   }
 
   /**
@@ -311,9 +311,9 @@ export default class AuthService {
    * @param {UserEntity} user - User entity.
    * @param {AuthenticationProvider} provider - Authentication provider.
    *
-   * @returns {Promise<{ accessToken: string }>} - Access token.
+   * @returns {Promise<string>} - Access token.
    */
-  async signIn(user: UserEntity, provider: AuthenticationProvider): Promise<{ accessToken: string }> {
+  async signIn(user: UserEntity, provider: AuthenticationProvider): Promise<string> {
     if (!user.authentications || !user.authentications.length) {
       throw new UnauthorizedException("Authentication not found.");
     }
@@ -334,6 +334,18 @@ export default class AuthService {
     );
     if (!verifiedAuthentication) {
       throw new UnauthorizedException("Authentication not found.");
+    }
+
+    if (user.isDeactivated) {
+      this.rmqMicroserviceClient.emit(
+        EventName.AUTH_LOCAL_REACTIVATION,
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_REACTIVATION, user.id, user.id, {
+          username: user.username,
+          email: user.email,
+        }),
+      );
+
+      throw new UnauthorizedException("User is deactivated.");
     }
 
     const accessToken: string = await this.tokensService.generate(
@@ -360,7 +372,7 @@ export default class AuthService {
       );
     });
 
-    return { accessToken };
+    return accessToken;
   }
 
   /**
@@ -373,7 +385,7 @@ export default class AuthService {
   async signOut(payload: TokenPayload): Promise<void> {
     const { jwti, userId, provider, exp } = payload;
     if (!jwti || !exp) {
-      throw new UnauthorizedException("Authentication failed. Token is invalid.");
+      throw new UnauthorizedException("Invalid token.");
     }
 
     await this.tokensService.addToBlacklist(jwti, exp);
@@ -390,17 +402,17 @@ export default class AuthService {
   async refreshAccessToken(accessToken: string): Promise<{ accessToken: string }> {
     const payload: TokenPayload = await this.tokensService.verify(accessToken, { ignoreExpiration: true });
     if (!payload) {
-      throw new UnauthorizedException("Authentication failed.");
+      throw new UnauthorizedException("Invalid token.");
     }
 
     const { jwti, userId, provider } = payload;
     if (!jwti || !userId || !provider) {
-      throw new UnauthorizedException("Authentication failed. Token is invalid.");
+      throw new UnauthorizedException("Invalid token.");
     }
 
     const isBlacklisted: boolean = await this.tokensService.isBlacklisted(jwti);
     if (isBlacklisted) {
-      throw new UnauthorizedException("Authentication failed. Token is invalid.");
+      throw new UnauthorizedException("Invalid token.");
     }
 
     const authentication: AuthenticationEntity | null = await this.findAuthentication({
@@ -411,7 +423,7 @@ export default class AuthService {
       },
     });
     if (!authentication) {
-      throw new UnauthorizedException("Authentication failed. User is not signed in.");
+      throw new UnauthorizedException("User is not signed in.");
     }
 
     const { refreshToken } = authentication;
@@ -449,7 +461,7 @@ export default class AuthService {
       },
     });
     if (!user) {
-      throw new UnauthorizedException("Authentication failed. User is not found.");
+      throw new NotFoundException("User not found.");
     }
 
     return user;
@@ -458,12 +470,12 @@ export default class AuthService {
   /**
    * Sends an email with reset password instructions to the user.
    *
-   * @param {LocalPasswordForgotDto} localPasswordForgotDto - The data transfer object containing the user's email.
+   * @param {LocalPasswordResetRequestDto} localPasswordResetRequestDto - The data transfer object containing the user's email.
    *
    * @returns {Promise<void>} A promise that resolves when the email with reset password instructions has been successfully sent.
    */
-  async localPasswordForgot(localPasswordForgotDto: LocalPasswordForgotDto): Promise<void> {
-    const { email } = localPasswordForgotDto;
+  async localPasswordResetRequest(localPasswordResetRequestDto: LocalPasswordResetRequestDto): Promise<void> {
+    const { email } = localPasswordResetRequestDto;
 
     const user: UserEntity | null = await this.userService.findUser({
       relations: ["authentications"],
@@ -489,7 +501,7 @@ export default class AuthService {
       // Return http status code 200 in controller instead;
       return;
     } else if (!user.authentications[0].metadata?.local?.isEmailVerified) {
-      throw new BadRequestException(`Email "${email}" is not verified yet.`);
+      throw new UnauthorizedException(`Email "${email}" is not verified.`);
     }
 
     this.rmqMicroserviceClient.emit(
@@ -504,16 +516,16 @@ export default class AuthService {
   /**
    * Resets the password for a user with a given token.
    *
-   * @param {LocalPasswordResetDto} localPasswordResetDto - The data transfer object containing the token and the new password.
+   * @param {LocalPasswordResetConfirmDto} localPasswordResetConfirmDto - The data transfer object containing the token and the new password.
    *
    * @returns {Promise<void>} A promise that resolves when the password has been successfully reseted.
    */
-  async localPasswordReset(localPasswordResetDto: LocalPasswordResetDto): Promise<void> {
-    const { token, password } = localPasswordResetDto;
+  async localPasswordResetConfirm(localPasswordResetConfirmDto: LocalPasswordResetConfirmDto): Promise<void> {
+    const { token, password } = localPasswordResetConfirmDto;
 
     const { userId, provider } = this.tokensService.decode(token);
     if (!userId || !provider) {
-      throw new BadRequestException("Token is invalid.");
+      throw new UnauthorizedException("Token is invalid.");
     }
 
     const user: UserEntity | null = await this.userService.findUser({
@@ -534,9 +546,9 @@ export default class AuthService {
       },
     });
     if (!user) {
-      throw new BadRequestException("Token is invalid.");
+      throw new NotFoundException("User is not found.");
     } else if (!user.authentications[0].metadata?.local?.isEmailVerified) {
-      throw new BadRequestException("Email is not verified yet.");
+      throw new UnauthorizedException("Email is not verified.");
     }
 
     const currentPassword: string = user.authentications[0].metadata?.local?.password;
@@ -559,63 +571,18 @@ export default class AuthService {
       );
 
       this.eventEmitter.emit(
-        EventName.AUTH_LOCAL_PASSWORD_RESETED,
-        this.eventsService.buildInstance(EventName.AUTH_LOCAL_PASSWORD_RESETED, userId, user.authentications[0].id, {
-          email: user.email,
-        }),
+        EventName.AUTH_LOCAL_PASSWORD_RESET_CONFIRMED,
+        this.eventsService.buildInstance(
+          EventName.AUTH_LOCAL_PASSWORD_RESET_CONFIRMED,
+          userId,
+          user.authentications[0].id,
+          {
+            email: user.email,
+          },
+        ),
         manager,
       );
     });
-  }
-
-  /**
-   * Sends a reactivation request email to a deactivated user.
-   *
-   * @param {LocalReactivationRequestDto} localReactivationRequestDto - The data transfer object containing the user's email.
-   *
-   * @returns {Promise<void>} A promise that resolves when the reactivation request has been successfully processed.
-   */
-  async localReactivationRequest(localReactivationRequestDto: LocalReactivationRequestDto): Promise<void> {
-    const { email } = localReactivationRequestDto;
-
-    const user: UserEntity | null = await this.userService.findUser({
-      relations: ["authentications"],
-      select: {
-        id: true,
-        username: true,
-        email: true,
-        isDeactivated: true,
-        authentications: {
-          id: true,
-          metadata: true,
-        },
-      },
-      where: {
-        email,
-        authentications: {
-          provider: AuthenticationProvider.LOCAL,
-        },
-      },
-    });
-
-    if (!user) {
-      // Do not explicitly throw an error in this place;
-      // For security reasons, it is better not to say, that the user has not been found, to avoid going through email addresses.
-      // Return http status code 200 in controller instead;
-      return;
-    } else if (!user.authentications[0].metadata?.local?.isEmailVerified) {
-      throw new BadRequestException(`Email "${email}" is not verified yet.`);
-    } else if (!user.isDeactivated) {
-      throw new BadRequestException(`User is not deactivated.`);
-    }
-
-    this.rmqMicroserviceClient.emit(
-      EventName.AUTH_LOCAL_REACTIVATION_REQUEST,
-      this.eventsService.buildInstance(EventName.AUTH_LOCAL_REACTIVATION_REQUEST, user.id, user.id, {
-        username: user.username,
-        email: user.email,
-      }),
-    );
   }
 
   /**
@@ -623,14 +590,14 @@ export default class AuthService {
    *
    * @param {LocalReactivationConfirmDto} localReactivationConfirmDto - The data transfer object containing the reactivation token.
    *
-   * @returns {Promise<void>} A promise that resolves when the reactivation has been successfully processed.
+   * @returns {Promise<string>} - Access token.
    */
-  async localReactivationConfirm(localReactivationConfirmDto: LocalReactivationConfirmDto): Promise<void> {
+  async localReactivationConfirm(localReactivationConfirmDto: LocalReactivationConfirmDto): Promise<string> {
     const { token } = localReactivationConfirmDto;
 
     const { userId, provider } = await this.tokensService.verify(token);
     if (!userId || !provider || provider !== AuthenticationProvider.LOCAL) {
-      throw new BadRequestException("Invalid token");
+      throw new UnauthorizedException("Invalid token.");
     }
 
     const user: UserEntity | null = await this.userService.findUser({
@@ -654,17 +621,27 @@ export default class AuthService {
     if (!user) {
       throw new NotFoundException("User not found");
     } else if (!user.authentications[0].metadata?.local?.isEmailVerified) {
-      throw new BadRequestException("Email is not verified yet.");
+      throw new UnauthorizedException("Email is not verified.");
     } else if (!user.isDeactivated) {
       throw new BadRequestException(`User is not deactivated.`);
     }
 
+    const accessToken: string = await this.tokensService.generate(
+      { userId, provider, jwti: uuidv4() },
+      { expiresIn: this.tokensService.jwtAccessTokenExpiresIn },
+    );
+    const refreshToken: string = await this.tokensService.generate(
+      { userId, provider },
+      { expiresIn: this.tokensService.jwtRefreshTokenExpiresIn },
+    );
+
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
-      this.eventEmitter.emit(
-        EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED,
-        this.eventsService.buildInstance(EventName.AUTH_LOCAL_REACTIVATION_CONFIRMED, userId, userId, {
-          email: user.email,
-        }),
+      await this.updateAuthentication({ id: user.id, userId, provider }, { refreshToken }, manager);
+
+      // Set refreshToken to null for all other user's authentications;
+      await this.updateAuthentication(
+        { userId, provider: Not(AuthenticationProvider.LOCAL) },
+        { refreshToken: null, lastAccessedAt: () => "lastAccessedAt" },
         manager,
       );
 
@@ -678,6 +655,8 @@ export default class AuthService {
         manager,
       );
     });
+
+    return accessToken;
   }
 
   /**

@@ -5,7 +5,7 @@ import { Injectable } from "@nestjs/common";
 import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
-  AuthLocalReactivationRequestEvent,
+  AuthLocalReactivationEvent,
   EventName,
   UserDeactivatedEvent,
 } from "#server/events/interfaces/events.interfaces";
@@ -147,7 +147,10 @@ export default class RmqEmailService {
    * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
    */
   async sendPasswordReset(payload: AuthLocalPasswordResetEvent): Promise<void> {
-    const localPasswordResetTemplatePath: string = path.resolve(process.cwd(), "templates/localPasswordReset.ejs");
+    const localPasswordResetTemplatePath: string = path.resolve(
+      process.cwd(),
+      "templates/localPasswordResetConfirm.ejs",
+    );
     await fs.promises.access(localPasswordResetTemplatePath, fs.constants.R_OK);
 
     const { userId, modelId, metadata } = payload;
@@ -208,19 +211,16 @@ export default class RmqEmailService {
   }
 
   /**
-   * Sends a reactivation request email to the user.
+   * Sends a reactivation email to the user.
    * The email contains a link with a jwt token, which is valid for 15 minutes.
    *
-   * @param {AuthLocalReactivationRequestEvent} payload - The event containing the user's information.
+   * @param {AuthLocalReactivationEvent} payload - The event containing the user's information.
    *
    * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
    */
-  async sendReactivationRequest(payload: AuthLocalReactivationRequestEvent): Promise<void> {
-    const reactivationRequestTemplatePath: string = path.resolve(
-      process.cwd(),
-      "templates/localReactivationRequest.ejs",
-    );
-    await fs.promises.access(reactivationRequestTemplatePath, fs.constants.R_OK);
+  async sendReactivation(payload: AuthLocalReactivationEvent): Promise<void> {
+    const reactivationTemplatePath: string = path.resolve(process.cwd(), "templates/localReactivation.ejs");
+    await fs.promises.access(reactivationTemplatePath, fs.constants.R_OK);
 
     const { userId, modelId, metadata } = payload;
     const { username, email } = metadata;
@@ -239,14 +239,14 @@ export default class RmqEmailService {
       { expiresIn: "15m" },
     );
     const callbackUrl: string = `${baseUrl}/api/v1/auth/local/reactivation/confirm?token=${token}`;
-    const html: string = await ejs.renderFile(reactivationRequestTemplatePath, {
+    const html: string = await ejs.renderFile(reactivationTemplatePath, {
       username,
       callbackUrl,
     });
     const mailOptions: MailOptions = {
       from,
       to: email,
-      subject: "LightweightProject: reactivation request",
+      subject: "LightweightProject: reactivation account",
       text: "Please, click on the link below and follow the instructions to reactivate your account.",
       html,
     };
@@ -259,8 +259,8 @@ export default class RmqEmailService {
 
     try {
       this.eventEmitter.emit(
-        EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT,
-        this.eventsService.buildInstance(EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT, userId, modelId, { email }),
+        EventName.AUTH_LOCAL_REACTIVATION_SENT,
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_REACTIVATION_SENT, userId, modelId, { email }),
         manager,
       );
 
