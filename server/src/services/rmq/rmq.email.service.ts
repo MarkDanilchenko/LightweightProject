@@ -72,7 +72,7 @@ export default class RmqEmailService {
 
     const { userId, modelId, metadata } = payload;
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
-    const { baseUrl } = this.configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration")!;
+    const { baseUrl } = this.configService.get<AppConfiguration["clientConfiguration"]>("clientConfiguration")!;
 
     const authentication: AuthenticationEntity | null = await this.authService.findAuthenticationByPk(modelId);
     if (!authentication) {
@@ -83,7 +83,9 @@ export default class RmqEmailService {
       userId,
       provider: AuthenticationProvider.LOCAL,
     });
-    const callbackUrl: string = `${baseUrl}/api/v1/auth/local/verification/email?token=${token}`;
+    // TODO: note, that this callback url redirects to the client's page,
+    //  where /api/v1/auth/local/email-verification/confirm (GET) with proper token in query should be called;
+    const callbackUrl: string = `${baseUrl}/....?token=${token}`;
     const html: string = await ejs.renderFile(
       localEmailVerificationTemplatePath,
       { username: metadata.username, callbackUrl },
@@ -169,8 +171,9 @@ export default class RmqEmailService {
       { userId, provider: AuthenticationProvider.LOCAL },
       { expiresIn: "15m", secret: currentPassword },
     );
-    // TODO: callbackUrl should lead to the client's password reset form (frontend-app);
-    const callbackUrl: string = `${baseUrl}/local/password/reset?token=${token}`;
+    // TODO: note, that this callback url redirects to the client's page with password reset form,
+    //  where /api/v1/auth/local/password-reset/confirm (POST) with proper body should be called;
+    const callbackUrl: string = `${baseUrl}/....?token=${token}`;
     const html: string = await ejs.renderFile(
       localPasswordResetTemplatePath,
       { username, callbackUrl },
@@ -225,7 +228,7 @@ export default class RmqEmailService {
     const { userId, modelId, metadata } = payload;
     const { username, email } = metadata;
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
-    const { baseUrl } = this.configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration")!;
+    const { baseUrl } = this.configService.get<AppConfiguration["clientConfiguration"]>("clientConfiguration")!;
 
     const user: UserEntity | null = await this.userService.findUser({
       where: [{ id: userId }, { id: modelId }],
@@ -238,11 +241,14 @@ export default class RmqEmailService {
       { userId, provider: AuthenticationProvider.LOCAL },
       { expiresIn: "15m" },
     );
-    const callbackUrl: string = `${baseUrl}/api/v1/auth/local/reactivation/confirm?token=${token}`;
-    const html: string = await ejs.renderFile(reactivationTemplatePath, {
-      username,
-      callbackUrl,
-    });
+    // TODO: note, that this callback url redirects to the client's page,
+    //  where /api/v1/auth/local/reactivation/confirm (GET) with proper token in query should be called;
+    const callbackUrl: string = `${baseUrl}/....?token=${token}`;
+    const html: string = await ejs.renderFile(
+      reactivationTemplatePath,
+      { username, callbackUrl },
+      { root: path.resolve(process.cwd(), "templates") },
+    );
     const mailOptions: MailOptions = {
       from,
       to: email,

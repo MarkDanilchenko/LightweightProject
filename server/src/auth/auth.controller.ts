@@ -66,7 +66,7 @@ export default class AuthController {
   @Get("local/email-verification/confirm")
   @ApiOperation({
     summary: "Verify email for local authentication",
-    description: "Verify the User's email during local sign up workflow.",
+    description: "Verify the User's email during local sign up workflow and set accessToken in cookie.",
   })
   @ApiResponse({
     status: 200,
@@ -134,7 +134,9 @@ export default class AuthController {
   @Get("local/reactivation/confirm")
   @ApiOperation({
     summary: "Confirm reactivation",
-    description: "Confirm reactivation for a user account that has been deactivated (local authentication flow).",
+    description:
+      "Confirm reactivation for a user account that has been deactivated (local authentication flow) and " +
+      "set accessToken in cookie.",
   })
   @ApiResponse({
     status: 200,
