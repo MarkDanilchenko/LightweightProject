@@ -7,7 +7,6 @@ import { DeactivateDto } from "#server/auth/dto/auth.dto";
 import { clearCookie } from "#server/utils/cookie";
 import JwtGuard from "#server/auth/guards/jwt.guard";
 import { RequestWithTokenPayload } from "#server/common/types/common.types";
-import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 
 @ApiTags("users")
 @Controller("users")
@@ -28,6 +27,10 @@ export default class UsersController {
     description: "User profile deactivated successfully.",
   })
   @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
+  })
+  @ApiResponse({
     status: 401,
     description: "Authentication failed. Invalid credentials.",
   })
@@ -44,9 +47,7 @@ export default class UsersController {
     @Body() deactivateDto: DeactivateDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    const payload: TokenPayload = req.tokenPayload;
-
-    await this.usersService.deactivateUser(payload, deactivateDto);
+    await this.usersService.deactivateUser(req.tokenPayload, deactivateDto);
 
     clearCookie(res, "accessToken");
 

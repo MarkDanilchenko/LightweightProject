@@ -1,15 +1,14 @@
 import { AuthenticationInstanceMetadata } from "#server/auth/interfaces/auth.interfaces";
 
 enum EventName {
-  AUTH_LOCAL_EMAIL_VERIFICATION_SENT = "auth.local.email-verification.sent",
-  AUTH_LOCAL_EMAIL_VERIFIED = "auth.local.email.verified",
   AUTH_LOCAL_CREATED = "auth.local.created",
+  AUTH_LOCAL_EMAIL_VERIFICATION_SENT = "auth.local.email-verification.sent",
+  AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED = "auth.local.email-verification.confirmed",
   AUTH_LOCAL_PASSWORD_RESET = "auth.local.password-reset",
   AUTH_LOCAL_PASSWORD_RESET_SENT = "auth.local.password-reset.sent",
-  AUTH_LOCAL_PASSWORD_RESETED = "auth.local.password.reseted",
-  AUTH_LOCAL_REACTIVATION_REQUEST = "auth.local.reactivation.request",
-  AUTH_LOCAL_REACTIVATION_REQUEST_SENT = "auth.local.reactivation.request.sent",
-  AUTH_LOCAL_REACTIVATION_CONFIRMED = "auth.local.reactivation.confirmed",
+  AUTH_LOCAL_PASSWORD_RESET_CONFIRMED = "auth.local.password-reset.confirmed",
+  AUTH_LOCAL_REACTIVATION = "auth.local.reactivation",
+  AUTH_LOCAL_REACTIVATION_SENT = "auth.local.reactivation.sent",
   USER_DEACTIVATED = "user.deactivated",
   USER_REACTIVATED = "user.reactivated",
 }
@@ -27,29 +26,27 @@ interface BaseEvent {
 
 interface AuthLocalEmailVerificationSentEvent extends BaseEvent {}
 
-interface AuthLocalEmailVerifiedEvent extends BaseEvent {}
-
-interface AuthLocalPasswordResetSentEvent extends BaseEvent {}
-
-interface AuthLocalPasswordResetedEvent extends BaseEvent {}
-
-interface AuthLocalCreatedEvent extends BaseEvent {
-  metadata: EventMetadata & NonNullable<NonNullable<AuthenticationInstanceMetadata["local"]>["temporaryInfo"]>;
-}
+interface AuthLocalEmailVerificationConfirmedEvent extends BaseEvent {}
 
 interface AuthLocalPasswordResetEvent extends BaseEvent {
   metadata: EventMetadata & { username?: string | null };
 }
 
-interface AuthLocalReactivationRequestEvent extends BaseEvent {
+interface AuthLocalPasswordResetSentEvent extends BaseEvent {}
+
+interface AuthLocalPasswordResetConfirmedEvent extends BaseEvent {}
+
+interface AuthLocalCreatedEvent extends BaseEvent {
+  metadata: EventMetadata & NonNullable<NonNullable<AuthenticationInstanceMetadata["local"]>["temporaryInfo"]>;
+}
+
+interface AuthLocalReactivationEvent extends BaseEvent {
   metadata: EventMetadata & { username?: string | null };
 }
 
-interface AuthLocalReactivationRequestSentEvent extends BaseEvent {
+interface AuthLocalReactivationSentEvent extends BaseEvent {
   metadata: EventMetadata & { username?: string | null };
 }
-
-interface AuthLocalReactivationConfirmedEvent extends BaseEvent {}
 
 interface UserDeactivatedEvent extends BaseEvent {
   metadata: EventMetadata & { username?: string | null };
@@ -62,14 +59,13 @@ export {
   EventName,
   BaseEvent,
   AuthLocalEmailVerificationSentEvent,
-  AuthLocalEmailVerifiedEvent,
+  AuthLocalEmailVerificationConfirmedEvent,
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   AuthLocalPasswordResetSentEvent,
-  AuthLocalPasswordResetedEvent,
-  AuthLocalReactivationRequestEvent,
-  AuthLocalReactivationRequestSentEvent,
-  AuthLocalReactivationConfirmedEvent,
+  AuthLocalPasswordResetConfirmedEvent,
+  AuthLocalReactivationEvent,
+  AuthLocalReactivationSentEvent,
   UserDeactivatedEvent,
   UserReactivatedEvent,
 };

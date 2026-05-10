@@ -1,26 +1,23 @@
 import { createZodDto } from "@anatine/zod-nestjs";
 import {
-  localVerificationEmailSchema,
+  localEmailVerificationSchema,
   localSignInSchema,
   localSignUpSchema,
-  localForgotPasswordSchema,
-  localResetPasswordSchema,
+  localPasswordResetRequestSchema,
+  localPasswordResetConfirmSchema,
   deactivateSchema,
-  localReactivateRequestSchema,
   localReactivateConfirmSchema,
 } from "#server/auth/schemas/auth.schema";
 
 class LocalSignUpDto extends createZodDto(localSignUpSchema) {}
 
-class LocalVerificationEmailDto extends createZodDto(localVerificationEmailSchema) {}
+class LocalEmailVerificationDto extends createZodDto(localEmailVerificationSchema) {}
 
 class LocalSignInDto extends createZodDto(localSignInSchema) {}
 
-class LocalPasswordForgotDto extends createZodDto(localForgotPasswordSchema) {}
+class LocalPasswordResetRequestDto extends createZodDto(localPasswordResetRequestSchema) {}
 
-class LocalPasswordResetDto extends createZodDto(localResetPasswordSchema) {}
-
-class LocalReactivationRequestDto extends createZodDto(localReactivateRequestSchema) {}
+class LocalPasswordResetConfirmDto extends createZodDto(localPasswordResetConfirmSchema) {}
 
 class LocalReactivationConfirmDto extends createZodDto(localReactivateConfirmSchema) {}
 
@@ -29,10 +26,9 @@ class DeactivateDto extends createZodDto(deactivateSchema) {}
 export {
   LocalSignUpDto,
   LocalSignInDto,
-  LocalVerificationEmailDto,
-  LocalPasswordForgotDto,
-  LocalPasswordResetDto,
-  LocalReactivationRequestDto,
+  LocalEmailVerificationDto,
+  LocalPasswordResetRequestDto,
+  LocalPasswordResetConfirmDto,
   LocalReactivationConfirmDto,
   DeactivateDto,
 };

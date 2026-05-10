@@ -17,12 +17,11 @@ import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces"
 import { ZodValidationPipe } from "@anatine/zod-nestjs";
 import AuthService from "#server/auth/auth.service";
 import {
-  LocalVerificationEmailDto,
+  LocalEmailVerificationDto,
   LocalSignInDto,
   LocalSignUpDto,
-  LocalPasswordForgotDto,
-  LocalPasswordResetDto,
-  LocalReactivationRequestDto,
+  LocalPasswordResetRequestDto,
+  LocalPasswordResetConfirmDto,
   LocalReactivationConfirmDto,
 } from "#server/auth/dto/auth.dto";
 import { clearCookie, setCookie } from "#server/utils/cookie";
@@ -39,13 +38,10 @@ import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces"
 export default class AuthController {
   private readonly authService: AuthService;
   private readonly https: boolean;
-  private readonly clientBaseUrl: string;
 
   constructor(configService: ConfigService, authService: AuthService) {
     this.authService = authService;
     this.https = configService.get<AppConfiguration["serverConfiguration"]["https"]>("serverConfiguration.https")!;
-    this.clientBaseUrl =
-      configService.get<AppConfiguration["clientConfiguration"]["baseUrl"]>("clientConfiguration.baseUrl")!;
   }
 
   @Post("local/signup")
@@ -67,42 +63,40 @@ export default class AuthController {
     await this.authService.localSignUp(localSignUpDto);
   }
 
-  // TODO: change URI to "local/email-verification/confirm"
-  // TODO: change to @GET()
-  @Post("local/verification/email")
+  @Get("local/email-verification/confirm")
   @ApiOperation({
     summary: "Verify email for local authentication",
-    description: "Verify the User's email during local sign up workflow.",
+    description: "Verify the User's email during local sign up workflow and set accessToken in cookie.",
   })
   @ApiResponse({
-    status: 302,
+    status: 200,
     description:
-      "Redirect to the home client page (frontend-app) after successful email verification." +
-      "If varification was failed - redirect back to the sign in page.",
+      "Email verification was successful." +
+      "If varification was failed - redirect back to the client with error message.",
   })
   @ApiResponse({
     status: 400,
     description: "Invalid request.",
   })
-  @ApiQuery({ type: LocalVerificationEmailDto })
+  @ApiResponse({
+    status: 401,
+    description: "Invalid token.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "Authentication not found.",
+  })
+  @ApiQuery({ type: LocalEmailVerificationDto })
   @UsePipes(ZodValidationPipe)
-  async localVerificationEmail(
-    @Query() localVerificationEmailDto: LocalVerificationEmailDto,
+  async localEmailVerification(
+    @Query() localEmailVerificationDto: LocalEmailVerificationDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    try {
-      const { accessToken } = await this.authService.localVerificationEmail(localVerificationEmailDto);
+    const accessToken = await this.authService.localEmailVerification(localEmailVerificationDto);
 
-      setCookie(res, "accessToken", accessToken, this.https);
+    setCookie(res, "accessToken", accessToken, this.https);
 
-      // TODO: should redirect to the home client page (frontend-app) after successful email verification;
-      res.redirect(302, `${this.clientBaseUrl}/home`);
-    } catch (error: unknown) {
-      const errorMsg: string = error instanceof Error ? error.message : "An unknown error occurred.";
-
-      // TODO: should redirect to the sign in page (frontend-app) after failed email verification with error message in query;
-      res.redirect(302, `${this.clientBaseUrl}/signin?errorMsg=${errorMsg}`);
-    }
+    res.status(200).send();
   }
 
   @Post("local/signin")
@@ -120,7 +114,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Authentication failed. Invalid credentials or email is not verified.",
+    description: "Invalid credentials, authentication not found or email is not verified.",
   })
   @ApiBody({ type: LocalSignInDto })
   @UsePipes(ZodValidationPipe)
@@ -130,34 +124,9 @@ export default class AuthController {
     @Body() localSignInDto: LocalSignInDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    const { accessToken } = await this.authService.signIn(req.user, AuthenticationProvider.LOCAL);
+    const accessToken = await this.authService.signIn(req.user, AuthenticationProvider.LOCAL);
 
     setCookie(res, "accessToken", accessToken, this.https);
-
-    res.status(200).send();
-  }
-
-  @Post("local/reactivation/request")
-  @ApiOperation({
-    summary: "Request reactivation",
-    description: "Request reactivation for a user account that has been deactivated (local authentication flow).",
-  })
-  @ApiResponse({
-    status: 200,
-    description: "Reactivation request sent successfully.",
-  })
-  @ApiResponse({
-    status: 400,
-    description: "Invalid request.",
-  })
-  @ApiBody({ type: LocalReactivationRequestDto })
-  @UsePipes(ZodValidationPipe)
-  async localReactivationRequest(
-    @Body() localReactivationRequestDto: LocalReactivationRequestDto,
-    @Res({ passthrough: true }) res: Response,
-  ): Promise<void> {
-    // TODO: user can use this route many times at once, it is not good, so should thin about some kind of debounce;
-    await this.authService.localReactivationRequest(localReactivationRequestDto);
 
     res.status(200).send();
   }
@@ -165,7 +134,9 @@ export default class AuthController {
   @Get("local/reactivation/confirm")
   @ApiOperation({
     summary: "Confirm reactivation",
-    description: "Confirm reactivation for a user account that has been deactivated (local authentication flow).",
+    description:
+      "Confirm reactivation for a user account that has been deactivated (local authentication flow) and " +
+      "set accessToken in cookie.",
   })
   @ApiResponse({
     status: 200,
@@ -177,7 +148,11 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Invalid or expired token.",
+    description: "Invalid token or email is not verified.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "User not found.",
   })
   @ApiQuery({ type: LocalReactivationConfirmDto })
   @UsePipes(ZodValidationPipe)
@@ -185,16 +160,16 @@ export default class AuthController {
     @Query() localReactivationConfirmDto: LocalReactivationConfirmDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    await this.authService.localReactivationConfirm(localReactivationConfirmDto);
+    const accessToken = await this.authService.localReactivationConfirm(localReactivationConfirmDto);
+
+    setCookie(res, "accessToken", accessToken, this.https);
 
     res.status(200).send();
   }
 
-  // TODO: change URI to "local/password-reset/request"
-  // TODO: also rename DTOs
-  @Post("local/password/forgot")
+  @Post("local/password-reset/request")
   @ApiOperation({
-    summary: "Forgot password",
+    summary: "Reset password request",
     description: "Generating a temporary token and sending a link to the mail for the further password reset.",
   })
   @ApiResponse({
@@ -205,23 +180,25 @@ export default class AuthController {
     status: 400,
     description: "Invalid request.",
   })
-  @ApiBody({ type: LocalPasswordForgotDto })
+  @ApiResponse({
+    status: 401,
+    description: "Email is not verified.",
+  })
+  @ApiBody({ type: LocalPasswordResetRequestDto })
   @UsePipes(ZodValidationPipe)
-  async localPasswordForgot(
-    @Body() localPasswordForgotDto: LocalPasswordForgotDto,
+  async localPasswordResetRequest(
+    @Body() localPasswordResetRequestDto: LocalPasswordResetRequestDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     // TODO: user can use this route many times at once, it is not good, so should thin about some kind of debounce;
-    await this.authService.localPasswordForgot(localPasswordForgotDto);
+    await this.authService.localPasswordResetRequest(localPasswordResetRequestDto);
 
     res.status(200).send();
   }
 
-  // TODO: change URI to "local/password-reset/confirm"
-  // TODO: also rename DTOs
-  @Post("local/password/reset")
+  @Post("local/password-reset/confirm")
   @ApiOperation({
-    summary: "Reset password",
+    summary: "Reset password confirmation",
     description: "Resetting the password using the temporary token.",
   })
   @ApiResponse({
@@ -234,15 +211,19 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Invalid or expired token.",
+    description: "Invalid token or email is not verified.",
   })
-  @ApiBody({ type: LocalPasswordResetDto })
+  @ApiResponse({
+    status: 404,
+    description: "User not found.",
+  })
+  @ApiBody({ type: LocalPasswordResetConfirmDto })
   @UsePipes(ZodValidationPipe)
-  async localPasswordReset(
-    @Body() localPasswordResetDto: LocalPasswordResetDto,
+  async localPasswordResetConfirm(
+    @Body() localPasswordResetConfirmDto: LocalPasswordResetConfirmDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    await this.authService.localPasswordReset(localPasswordResetDto);
+    await this.authService.localPasswordResetConfirm(localPasswordResetConfirmDto);
 
     res.status(200).send();
   }
@@ -258,14 +239,12 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Authentication failed. Invalid credentials.",
+    description: "Invalid token.",
   })
   @ApiCookieAuth("accessToken")
   @UseGuards(JwtGuard)
   async signOut(@Req() req: RequestWithTokenPayload, @Res({ passthrough: true }) res: Response): Promise<void> {
-    const payload: TokenPayload = req.tokenPayload;
-
-    await this.authService.signOut(payload);
+    await this.authService.signOut(req.tokenPayload);
 
     clearCookie(res, "accessToken");
 
@@ -283,7 +262,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Authentication failed. Invalid credentials.",
+    description: "Invalid token.",
   })
   @ApiCookieAuth("accessToken")
   async refreshAccessToken(
@@ -292,7 +271,7 @@ export default class AuthController {
   ): Promise<void> {
     const accessToken: string = req.signedCookies.accessToken || req.headers["authorization"]?.split(" ")[1] || "";
     if (!accessToken) {
-      throw new UnauthorizedException("Authentication failed. Token is not provided.");
+      throw new UnauthorizedException("Token is not provided.");
     }
 
     const { accessToken: newAccessToken } = await this.authService.refreshAccessToken(accessToken);
@@ -313,7 +292,11 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Authentication failed. Invalid credentials.",
+    description: "Invalid token.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "User not found.",
   })
   @ApiCookieAuth("accessToken")
   @UseGuards(JwtGuard)
@@ -345,8 +328,8 @@ export default class AuthController {
       "User will be redirected the home page of the web application after successful authentication within idp service.",
   })
   @ApiResponse({
-    status: 302,
-    description: "Redirect the home page of the web application.",
+    status: 200,
+    description: "User is authenticated via Google successfully.",
   })
   @ApiResponse({
     status: 400,
@@ -354,7 +337,7 @@ export default class AuthController {
   })
   @ApiResponse({
     status: 401,
-    description: "Authentication failed.",
+    description: "Invalid token or authentication not found.",
   })
   @ApiResponse({
     status: 404,
@@ -363,11 +346,11 @@ export default class AuthController {
   @ApiOAuth2(["email", "profile"], "googleOAuth2")
   @UseGuards(GoogleOAuth2Guard)
   async googleRedirect(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
-    const { accessToken } = await this.authService.signIn(req.user, AuthenticationProvider.GOOGLE);
+    const accessToken = await this.authService.signIn(req.user, AuthenticationProvider.GOOGLE);
 
     setCookie(res, "accessToken", accessToken, this.https);
 
-    res.redirect(302, `${this.clientBaseUrl}/home`);
+    res.status(200).send();
   }
 
   //   @Get("keycloak/signin")

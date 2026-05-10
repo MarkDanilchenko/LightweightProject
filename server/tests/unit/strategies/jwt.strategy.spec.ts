@@ -70,7 +70,7 @@ describe("JwtStrategy", (): void => {
   describe("validate", (): void => {
     it("should throw UnauthorizedException when payload is missing", async (): Promise<void> => {
       await expect(jwtStrategy.validate(null as unknown as TokenPayload, mockDone)).rejects.toThrow(
-        new UnauthorizedException("Authentication failed."),
+        new UnauthorizedException("Token is invalid."),
       );
     });
 
@@ -78,7 +78,7 @@ describe("JwtStrategy", (): void => {
       delete payload.jwti;
 
       await expect(jwtStrategy.validate(payload, mockDone)).rejects.toThrow(
-        new UnauthorizedException("Authentication failed. Token is invalid."),
+        new UnauthorizedException("Token is invalid."),
       );
     });
 
@@ -89,7 +89,7 @@ describe("JwtStrategy", (): void => {
       tokensService.isBlacklisted.mockResolvedValue(true);
 
       await expect(jwtStrategy.validate(payload, mockDone)).rejects.toThrow(
-        new UnauthorizedException("Authentication failed. Token is invalid."),
+        new UnauthorizedException("Token is invalid."),
       );
 
       expect(tokensService.isBlacklisted).toHaveBeenCalledWith(blacklistedJwti);

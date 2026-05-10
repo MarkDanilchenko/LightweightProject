@@ -4,13 +4,13 @@ import EventsConsumer from "#server/events/events.consumer";
 import EventsService from "#server/events/events.service";
 import {
   AuthLocalEmailVerificationSentEvent,
-  AuthLocalEmailVerifiedEvent,
-  AuthLocalPasswordResetedEvent,
+  AuthLocalEmailVerificationConfirmedEvent,
+  AuthLocalPasswordResetConfirmedEvent,
   AuthLocalPasswordResetSentEvent,
   UserDeactivatedEvent,
   EventName,
   UserReactivatedEvent,
-  AuthLocalReactivationRequestSentEvent,
+  AuthLocalReactivationSentEvent,
 } from "#server/events/interfaces/events.interfaces";
 import { buildUserFactory, buildAuthenticationFactory } from "../../factories";
 import UserEntity from "#server/users/users.entity";
@@ -52,7 +52,9 @@ describe("EventsConsumer", (): void => {
         name: EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT,
         userId: user.id,
         modelId: authentication.id,
-        metadata: { email: user.email },
+        metadata: {
+          email: user.email,
+        },
       };
 
       await eventsConsumer.handleEvent(payload);
@@ -61,12 +63,14 @@ describe("EventsConsumer", (): void => {
       expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
     });
 
-    it("should handle AUTH_LOCAL_EMAIL_VERIFIED event", async (): Promise<void> => {
-      const payload: AuthLocalEmailVerifiedEvent = {
-        name: EventName.AUTH_LOCAL_EMAIL_VERIFIED,
+    it("should handle AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED event", async (): Promise<void> => {
+      const payload: AuthLocalEmailVerificationConfirmedEvent = {
+        name: EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED,
         userId: user.id,
         modelId: authentication.id,
-        metadata: { email: user.email },
+        metadata: {
+          email: user.email,
+        },
       };
 
       await eventsConsumer.handleEvent(payload);
@@ -80,7 +84,9 @@ describe("EventsConsumer", (): void => {
         name: EventName.AUTH_LOCAL_PASSWORD_RESET_SENT,
         userId: user.id,
         modelId: authentication.id,
-        metadata: { email: user.email },
+        metadata: {
+          email: user.email,
+        },
       };
 
       await eventsConsumer.handleEvent(payload);
@@ -89,12 +95,15 @@ describe("EventsConsumer", (): void => {
       expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
     });
 
-    it("should handle AUTH_LOCAL_REACTIVATION_REQUEST_SENT event", async (): Promise<void> => {
-      const payload: AuthLocalReactivationRequestSentEvent = {
-        name: EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT,
+    it("should handle AUTH_LOCAL_REACTIVATION_SENT event", async (): Promise<void> => {
+      const payload: AuthLocalReactivationSentEvent = {
+        name: EventName.AUTH_LOCAL_REACTIVATION_SENT,
         userId: user.id,
         modelId: authentication.id,
-        metadata: { email: user.email, username: user.username },
+        metadata: {
+          email: user.email,
+          username: user.username,
+        },
       };
 
       await eventsConsumer.handleEvent(payload);
@@ -103,12 +112,14 @@ describe("EventsConsumer", (): void => {
       expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
     });
 
-    it("should handle AUTH_LOCAL_PASSWORD_RESETED event", async (): Promise<void> => {
-      const payload: AuthLocalPasswordResetedEvent = {
-        name: EventName.AUTH_LOCAL_PASSWORD_RESETED,
+    it("should handle AUTH_LOCAL_PASSWORD_RESET_CONFIRMED event", async (): Promise<void> => {
+      const payload: AuthLocalPasswordResetConfirmedEvent = {
+        name: EventName.AUTH_LOCAL_PASSWORD_RESET_CONFIRMED,
         userId: user.id,
         modelId: authentication.id,
-        metadata: { email: user.email },
+        metadata: {
+          email: user.email,
+        },
       };
 
       await eventsConsumer.handleEvent(payload);
@@ -153,11 +164,13 @@ describe("EventsConsumer", (): void => {
     it("should pass EntityManager when provided", async (): Promise<void> => {
       const mockManager = {} as EntityManager;
 
-      const payload: AuthLocalEmailVerifiedEvent = {
+      const payload: AuthLocalEmailVerificationSentEvent = {
         name: EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT,
         userId: user.id,
         modelId: authentication.id,
-        metadata: { email: user.email },
+        metadata: {
+          email: user.email,
+        },
       };
 
       await eventsConsumer.handleEvent(payload, mockManager);

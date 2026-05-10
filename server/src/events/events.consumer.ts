@@ -24,10 +24,10 @@ export default class EventsConsumer {
    * @returns {Promise<void>} A promise that resolves when the event has been successfully handled.
    */
   @OnEvent(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT)
-  @OnEvent(EventName.AUTH_LOCAL_EMAIL_VERIFIED)
+  @OnEvent(EventName.AUTH_LOCAL_EMAIL_VERIFICATION_CONFIRMED)
   @OnEvent(EventName.AUTH_LOCAL_PASSWORD_RESET_SENT)
-  @OnEvent(EventName.AUTH_LOCAL_PASSWORD_RESETED)
-  @OnEvent(EventName.AUTH_LOCAL_REACTIVATION_REQUEST_SENT)
+  @OnEvent(EventName.AUTH_LOCAL_PASSWORD_RESET_CONFIRMED)
+  @OnEvent(EventName.AUTH_LOCAL_REACTIVATION_SENT)
   @OnEvent(EventName.USER_DEACTIVATED)
   @OnEvent(EventName.USER_REACTIVATED)
   async handleEvent(payload: EventType, manager?: EntityManager): Promise<void> {
