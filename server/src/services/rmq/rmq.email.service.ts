@@ -151,7 +151,7 @@ export default class RmqEmailService {
   async sendPasswordReset(payload: AuthLocalPasswordResetEvent): Promise<void> {
     const localPasswordResetTemplatePath: string = path.resolve(
       process.cwd(),
-      "templates/localPasswordResetConfirm.ejs",
+      "templates/localPasswordReset.ejs",
     );
     await fs.promises.access(localPasswordResetTemplatePath, fs.constants.R_OK);
 
