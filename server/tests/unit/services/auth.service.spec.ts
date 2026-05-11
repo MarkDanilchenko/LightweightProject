@@ -842,6 +842,7 @@ describe("AuthService", (): void => {
         select: {
           id: true,
           isDeactivated: true,
+          email: true,
           authentications: {
             id: true,
             metadata: true,
