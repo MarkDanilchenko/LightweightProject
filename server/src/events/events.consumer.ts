@@ -30,6 +30,7 @@ export default class EventsConsumer {
   @OnEvent(EventName.AUTH_LOCAL_REACTIVATION_SENT)
   @OnEvent(EventName.USER_DEACTIVATED)
   @OnEvent(EventName.USER_REACTIVATED)
+  @OnEvent(EventName.USER_DELETED)
   async handleEvent(payload: EventType, manager?: EntityManager): Promise<void> {
     await this.eventsService.createEvent(payload, manager);
   }

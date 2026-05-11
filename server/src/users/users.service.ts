@@ -9,7 +9,7 @@ import { EventName } from "#server/events/interfaces/events.interfaces";
 import EventsService from "#server/events/events.service";
 import TokensService from "#server/tokens/tokens.service";
 import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
-import { DeactivateDto } from "#server/auth/dto/auth.dto";
+import { UserDeactivateDto, UserDeleteDto } from "#server/auth/dto/auth.dto";
 
 @Injectable()
 export default class UsersService {
@@ -85,30 +85,39 @@ export default class UsersService {
     return manager.update(UserEntity, whereCondition, values);
   }
 
+  /**
+   * Soft deletes a user by marking them as deactivated.
+   *
+   * @param {FindOptionsWhere<UserEntity>} whereCondition - The condition to find the user(s) to soft delete.
+   * @param {EntityManager} [manager] - The entity manager to use for the query within a transaction.
+   *
+   * @returns {Promise<UpdateResult>} A promise that resolves with the update result.
+   */
+  async deleteUserSoft(whereCondition: FindOptionsWhere<UserEntity>, manager?: EntityManager): Promise<UpdateResult> {
     if (!manager) {
-      return this.dataSource.transaction(callback);
+      return this.userRepository.softDelete(whereCondition);
     }
 
-    return callback(manager);
+    return manager.softDelete(UserEntity, whereCondition);
   }
 
   /**
    * Deactivates user's profile.
    *
    * @param {TokenPayload} payload - The JWT token payload containing user authentication information.
-   * @param {DeactivateDto} deactivateDto - The DTO containing the confirmation word.
+   * @param {UserDeactivateDto} userDeactivateDto - The DTO containing the confirmation word.
    *
    * @returns {Promise<void>} A promise that resolves when the profile is successfully deactivated.
    */
-  async deactivateUser(payload: TokenPayload, deactivateDto: DeactivateDto): Promise<void> {
-    const { confirmationWord } = deactivateDto;
+  async deactivateUser(payload: TokenPayload, userDeactivateDto: UserDeactivateDto): Promise<void> {
+    const { confirmationWord } = userDeactivateDto;
     if (confirmationWord !== "deactivate") {
       throw new BadRequestException("Deactivation failed. Invalid confirmation word.");
     }
 
     const { userId, jwti, exp } = payload;
     if (!jwti || !exp) {
-      throw new UnauthorizedException("Authentication failed. Token is invalid.");
+      throw new UnauthorizedException("Token is invalid.");
     }
 
     const user: UserEntity | null = await this.findUser({
@@ -126,7 +135,7 @@ export default class UsersService {
       where: { id: userId },
     });
     if (!user || !user.authentications.length) {
-      throw new UnauthorizedException("Authentication failed. User is not found.");
+      throw new UnauthorizedException("User is not found.");
     }
 
     if (user.isDeactivated) {
@@ -148,6 +157,70 @@ export default class UsersService {
       this.rmqMicroserviceClient.emit(
         EventName.USER_DEACTIVATED,
         this.eventsService.buildInstance(EventName.USER_DEACTIVATED, user.id, user.id, {
+          email: user.email,
+          username: user.username,
+        }),
+      );
+    });
+  }
+
+  /**
+   * Deletes a user's profile, making it with deletedAt.
+   * Cron job deletes it permanently and anonymize its data after 30 days.
+   *
+   * @param {TokenPayload} payload - The JWT token payload containing user authentication information.
+   * @param {UserDeleteDto} userDeleteDto - The DTO containing the confirmation word.
+   *
+   * @returns {Promise<void>} A promise that resolves when the profile is successfully deleted.
+   */
+  async deleteUser(payload: TokenPayload, userDeleteDto: UserDeleteDto): Promise<void> {
+    const { confirmationWord } = userDeleteDto;
+    if (confirmationWord !== "delete") {
+      throw new BadRequestException("Deletion failed. Invalid confirmation word.");
+    }
+
+    const { userId, jwti, exp } = payload;
+    if (!jwti || !exp) {
+      throw new UnauthorizedException("Token is invalid.");
+    }
+
+    const user: UserEntity | null = await this.findUser({
+      relations: ["authentications"],
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        deletedAt: true,
+        authentications: {
+          id: true,
+          metadata: true,
+        },
+      },
+      where: { id: userId },
+    });
+    if (!user || !user.authentications.length) {
+      throw new UnauthorizedException("User is not found.");
+    }
+
+    if (user.deletedAt) {
+      throw new BadRequestException("User's profile is already deleted.");
+    }
+
+    await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
+      await this.deleteUserSoft({ id: user.id }, manager);
+      await manager.update(
+        AuthenticationEntity,
+        { userId: user.id },
+        {
+          refreshToken: null,
+          lastAccessedAt: () => "lastAccessedAt",
+        },
+      );
+      await this.tokensService.addToBlacklist(jwti, exp);
+
+      this.rmqMicroserviceClient.emit(
+        EventName.USER_DELETED,
+        this.eventsService.buildInstance(EventName.USER_DELETED, user.id, user.id, {
           email: user.email,
           username: user.username,
         }),

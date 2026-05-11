@@ -11,6 +11,7 @@ enum EventName {
   AUTH_LOCAL_REACTIVATION_SENT = "auth.local.reactivation.sent",
   USER_DEACTIVATED = "user.deactivated",
   USER_REACTIVATED = "user.reactivated",
+  USER_DELETED = "user.deleted",
 }
 
 interface EventMetadata {
@@ -52,6 +53,10 @@ interface UserDeactivatedEvent extends BaseEvent {
   metadata: EventMetadata & { username?: string | null };
 }
 
+interface UserDeletedEvent extends BaseEvent {
+  metadata: EventMetadata & { username?: string | null };
+}
+
 interface UserReactivatedEvent extends BaseEvent {}
 
 export {
@@ -68,4 +73,5 @@ export {
   AuthLocalReactivationSentEvent,
   UserDeactivatedEvent,
   UserReactivatedEvent,
+  UserDeletedEvent,
 };

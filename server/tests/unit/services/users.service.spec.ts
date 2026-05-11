@@ -12,7 +12,7 @@ import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import TokensService from "#server/tokens/tokens.service";
 import EventsService from "#server/events/events.service";
 import { RMQ_MICROSERVICE } from "#server/configs/constants";
-import { DeactivateDto } from "#server/auth/dto/auth.dto";
+import { UserDeactivateDto } from "#server/auth/dto/auth.dto";
 import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import { EventName } from "#server/events/interfaces/events.interfaces";
@@ -20,6 +20,7 @@ import { EventName } from "#server/events/interfaces/events.interfaces";
 describe("UsersService", (): void => {
   const mockEntityManager = {
     update: jest.fn(),
+    softDelete: jest.fn(),
   } as unknown as jest.Mocked<EntityManager>;
   let usersService: UsersService;
   let userRepository: jest.Mocked<Repository<UserEntity>>;
@@ -42,6 +43,7 @@ describe("UsersService", (): void => {
       findOne: jest.fn(),
       findOneBy: jest.fn(),
       update: jest.fn(),
+      softDelete: jest.fn(),
     };
 
     const mockDataSource = {
@@ -215,7 +217,7 @@ describe("UsersService", (): void => {
 
   describe("deactivateUser", (): void => {
     let payload: TokenPayload;
-    let deactivateDto: DeactivateDto;
+    let userDeactivateDto: UserDeactivateDto;
 
     beforeEach((): void => {
       payload = {
@@ -224,13 +226,13 @@ describe("UsersService", (): void => {
         jwti: faker.string.uuid(),
         exp: Math.floor(Date.now() / 1000) + 3600,
       };
-      deactivateDto = { confirmationWord: "deactivate" };
+      userDeactivateDto = { confirmationWord: "deactivate" };
     });
 
     it("should deactivate profile successfully", async (): Promise<void> => {
       userRepository.findOne.mockResolvedValue(user);
 
-      await usersService.deactivateUser(payload, deactivateDto);
+      await usersService.deactivateUser(payload, userDeactivateDto);
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
         relations: ["authentications"],
@@ -264,9 +266,9 @@ describe("UsersService", (): void => {
     });
 
     it("should throw BadRequestException for invalid confirmation word", async (): Promise<void> => {
-      deactivateDto.confirmationWord = "invalid";
+      userDeactivateDto.confirmationWord = "invalid";
 
-      await expect(usersService.deactivateUser(payload, deactivateDto)).rejects.toThrow(
+      await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
         new BadRequestException("Deactivation failed. Invalid confirmation word."),
       );
 
@@ -276,7 +278,7 @@ describe("UsersService", (): void => {
     it("should throw UnauthorizedException for invalid token (missing jwti)", async (): Promise<void> => {
       delete payload.jwti;
 
-      await expect(usersService.deactivateUser(payload, deactivateDto)).rejects.toThrow(
+      await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
         new UnauthorizedException("Authentication failed. Token is invalid."),
       );
 
@@ -286,7 +288,7 @@ describe("UsersService", (): void => {
     it("should throw UnauthorizedException for invalid token (missing exp)", async (): Promise<void> => {
       delete payload.exp;
 
-      await expect(usersService.deactivateUser(payload, deactivateDto)).rejects.toThrow(
+      await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
         new UnauthorizedException("Authentication failed. Token is invalid."),
       );
 
@@ -296,7 +298,7 @@ describe("UsersService", (): void => {
     it("should throw UnauthorizedException if user not found", async (): Promise<void> => {
       userRepository.findOne.mockResolvedValue(null);
 
-      await expect(usersService.deactivateUser(payload, deactivateDto)).rejects.toThrow(
+      await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
         new UnauthorizedException("Authentication failed. User is not found."),
       );
     });
@@ -305,7 +307,7 @@ describe("UsersService", (): void => {
       user.authentications = [];
       userRepository.findOne.mockResolvedValue(user);
 
-      await expect(usersService.deactivateUser(payload, deactivateDto)).rejects.toThrow(
+      await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
         new UnauthorizedException("Authentication failed. User is not found."),
       );
     });
@@ -314,7 +316,7 @@ describe("UsersService", (): void => {
       user.isDeactivated = true;
       userRepository.findOne.mockResolvedValue(user);
 
-      await expect(usersService.deactivateUser(payload, deactivateDto)).rejects.toThrow(
+      await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
         new BadRequestException("User's profile is already deactivated."),
       );
     });

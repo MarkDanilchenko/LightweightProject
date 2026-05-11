@@ -100,7 +100,7 @@ const localPasswordResetConfirmSchema = z
     example: { token: "Token in jwt format", password: "12345678Aa_" },
   });
 
-const deactivateSchema = z
+const userDeactivateSchema = z
   .object({
     confirmationWord: z
       .string()
@@ -111,6 +111,19 @@ const deactivateSchema = z
     title: "Deactivate schema",
     description: "Deactivation confirmation word.",
     example: { confirmationWord: "deactivate" },
+  });
+
+const userDeleteSchema = z
+  .object({
+    confirmationWord: z
+      .string()
+      .transform((value: string): string => value.toLowerCase())
+      .openapi({ title: "Confirmation word", description: "Confirmation word", example: "delete" }),
+  })
+  .openapi({
+    title: "Delete schema",
+    description: "Deletion confirmation word.",
+    example: { confirmationWord: "delete" },
   });
 
 const localReactivateConfirmSchema = z
@@ -132,5 +145,6 @@ export {
   localPasswordResetRequestSchema,
   localPasswordResetConfirmSchema,
   localReactivateConfirmSchema,
-  deactivateSchema,
+  userDeactivateSchema,
+  userDeleteSchema,
 };

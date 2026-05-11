@@ -11,6 +11,7 @@ import {
   EventName,
   UserDeactivatedEvent,
   UserReactivatedEvent,
+  UserDeletedEvent,
 } from "#server/events/interfaces/events.interfaces";
 
 class BaseEventClass implements BaseEvent {
@@ -142,6 +143,17 @@ class UserReactivatedEventClass extends BaseEventClass implements UserReactivate
   }
 }
 
+class UserDeletedEventClass extends BaseEventClass implements UserDeletedEvent {
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: UserDeletedEvent["metadata"],
+  ) {
+    super(name, userId, modelId, metadata);
+  }
+}
+
 const eventsRegistry = {
   [EventName.AUTH_LOCAL_CREATED]: AuthLocalCreatedEventClass,
   [EventName.AUTH_LOCAL_EMAIL_VERIFICATION_SENT]: AuthLocalEmailVerificationSentEventClass,
@@ -153,6 +165,7 @@ const eventsRegistry = {
   [EventName.AUTH_LOCAL_REACTIVATION_SENT]: AuthLocalReactivationSentEventClass,
   [EventName.USER_DEACTIVATED]: UserDeactivatedEventClass,
   [EventName.USER_REACTIVATED]: UserReactivatedEventClass,
+  [EventName.USER_DELETED]: UserDeletedEventClass,
 };
 
 export { eventsRegistry };

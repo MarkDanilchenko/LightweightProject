@@ -3,7 +3,7 @@ import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiCookieAuth } from "@nes
 import { Response } from "express";
 import { ZodValidationPipe } from "@anatine/zod-nestjs";
 import UsersService from "#server/users/users.service";
-import { DeactivateDto } from "#server/auth/dto/auth.dto";
+import { UserDeactivateDto, UserDeleteDto } from "#server/auth/dto/auth.dto";
 import { clearCookie } from "#server/utils/cookie";
 import JwtGuard from "#server/auth/guards/jwt.guard";
 import { RequestWithTokenPayload } from "#server/common/types/common.types";
@@ -39,18 +39,55 @@ export default class UsersController {
     description: "User not found.",
   })
   @ApiCookieAuth("accessToken")
-  @ApiBody({ type: DeactivateDto })
+  @ApiBody({ type: UserDeactivateDto })
   @UsePipes(ZodValidationPipe)
   @UseGuards(JwtGuard)
   async deactivateUser(
     @Req() req: RequestWithTokenPayload,
-    @Body() deactivateDto: DeactivateDto,
+    @Body() userDeactivateDto: UserDeactivateDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    await this.usersService.deactivateUser(req.tokenPayload, deactivateDto);
+    await this.usersService.deactivateUser(req.tokenPayload, userDeactivateDto);
 
     clearCookie(res, "accessToken");
 
     res.status(200).send({ message: "User profile deactivated successfully." });
+  }
+
+  @Post("delete")
+  @ApiOperation({
+    summary: "Delete user profile",
+    description: "Delete current user's profile and all associated data until the next login.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "User profile deleted successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Authentication failed. Invalid credentials.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "User not found.",
+  })
+  @ApiCookieAuth("accessToken")
+  @ApiBody({ type: UserDeleteDto })
+  @UsePipes(ZodValidationPipe)
+  @UseGuards(JwtGuard)
+  async deleteUser(
+    @Req() req: RequestWithTokenPayload,
+    @Body() userDeleteDto: UserDeleteDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    await this.usersService.deleteUser(req.tokenPayload, userDeleteDto);
+
+    clearCookie(res, "accessToken");
+
+    res.status(200).send({ message: "User profile deleted successfully." });
   }
 }

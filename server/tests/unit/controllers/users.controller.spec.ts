@@ -5,7 +5,7 @@ import UsersService from "#server/users/users.service";
 import { Response } from "express";
 import UserEntity from "#server/users/users.entity";
 import { buildUserFactory } from "../../factories";
-import { DeactivateDto } from "#server/auth/dto/auth.dto";
+import { UserDeactivateDto } from "#server/auth/dto/auth.dto";
 import { clearCookie } from "#server/utils/cookie";
 import { RequestWithTokenPayload } from "#server/common/types/common.types";
 import { v4 as uuidv4 } from "uuid";
@@ -52,14 +52,14 @@ describe("UsersController", (): void => {
 
   describe("deactivateUser", (): void => {
     it("should call authService.deactivateUser, clear cookie, and return 200", async (): Promise<void> => {
-      const deactivateDto: DeactivateDto = { confirmationWord: "deactivate" };
+      const userDeactivateDto: UserDeactivateDto = { confirmationWord: "deactivate" };
       const req = {
         tokenPayload: { userId: mockUser.id, provider: "local", jwti: uuidv4() },
       } as RequestWithTokenPayload;
 
-      await usersController.deactivateUser(req, deactivateDto, mockResponse);
+      await usersController.deactivateUser(req, userDeactivateDto, mockResponse);
 
-      expect(usersService.deactivateUser).toHaveBeenCalledWith(req.tokenPayload, deactivateDto);
+      expect(usersService.deactivateUser).toHaveBeenCalledWith(req.tokenPayload, userDeactivateDto);
       expect(clearCookie).toHaveBeenCalledWith(mockResponse, "accessToken");
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalledWith({ message: "User profile deactivated successfully." });
