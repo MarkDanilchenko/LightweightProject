@@ -69,7 +69,7 @@ export default class UsersService {
    *
    * @param {FindOptionsWhere<UserEntity>} whereCondition - The condition to find the users entity to update.
    * @param {Record<string, unknown>} values - The values to update the users entity with.
-   * @param {EntityManager} [manager] - The entity manager to use. If not provided, a new transaction will be started.
+   * @param {EntityManager} [manager] - The entity manager to use for the query within a transaction.
    *
    * @returns {Promise<UpdateResult>} A promise that resolves with the update result.
    */
@@ -78,9 +78,12 @@ export default class UsersService {
     values: Partial<UserEntity>,
     manager?: EntityManager,
   ): Promise<UpdateResult> {
-    const callback = async (manager: EntityManager): Promise<UpdateResult> => {
-      return manager.update(UserEntity, whereCondition, values);
-    };
+    if (!manager) {
+      return this.userRepository.update(whereCondition, values);
+    }
+
+    return manager.update(UserEntity, whereCondition, values);
+  }
 
     if (!manager) {
       return this.dataSource.transaction(callback);

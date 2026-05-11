@@ -183,12 +183,12 @@ describe("UsersService", (): void => {
     });
 
     it("should update a user with provided values", async (): Promise<void> => {
-      mockEntityManager.update.mockResolvedValue(updateResult);
+      userRepository.update.mockResolvedValue(updateResult);
 
       const result: UpdateResult = await usersService.updateUser(whereCondition, values);
 
-      expect(dataSource.transaction).toHaveBeenCalled();
-      expect(mockEntityManager.update).toHaveBeenCalledWith(UserEntity, whereCondition, values);
+      expect(dataSource.transaction).not.toHaveBeenCalled();
+      expect(userRepository.update).toHaveBeenCalledWith(whereCondition, values);
       expect(result).toEqual(updateResult);
     });
 
@@ -204,10 +204,10 @@ describe("UsersService", (): void => {
       expect(result).toEqual(updateResult);
     });
 
-    it("should handle transaction errors", async (): Promise<void> => {
-      const error = new Error("Transaction failed");
+    it("should handle update errors", async (): Promise<void> => {
+      const error = new Error("Update failed");
 
-      dataSource.transaction.mockRejectedValueOnce(error);
+      userRepository.update.mockRejectedValueOnce(error);
 
       await expect(usersService.updateUser(whereCondition, values)).rejects.toThrow(error);
     });
