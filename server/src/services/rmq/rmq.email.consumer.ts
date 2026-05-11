@@ -7,6 +7,7 @@ import {
   AuthLocalReactivationEvent,
   EventName,
   UserDeactivatedEvent,
+  UserDeletedEvent,
 } from "#server/events/interfaces/events.interfaces";
 import RmqRetryService from "#server/services/rmq/rmq.retry.service";
 import { Channel, Message } from "amqplib";
@@ -40,18 +41,7 @@ export default class RmqEmailConsumer {
    */
   @MessagePattern(EventName.AUTH_LOCAL_CREATED)
   async handleAuthLocalCreated(@Payload() payload: AuthLocalCreatedEvent, @Ctx() context: RmqContext): Promise<void> {
-    const channel: Channel = context.getChannelRef();
-    const originalMsg = context.getMessage() as Message;
-
-    try {
-      await this.rmqEmailService.sendEmailVerification(payload);
-
-      channel.ack(originalMsg);
-    } catch (error) {
-      this.logger.error("handleAuthCreatedLocal: " + (error as Error).message);
-
-      this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
-    }
+    await this.eventsHandler(payload, context);
   }
 
   /**
@@ -69,18 +59,7 @@ export default class RmqEmailConsumer {
     @Payload() payload: AuthLocalPasswordResetEvent,
     @Ctx() context: RmqContext,
   ): Promise<void> {
-    const channel: Channel = context.getChannelRef();
-    const originalMsg = context.getMessage() as Message;
-
-    try {
-      await this.rmqEmailService.sendPasswordReset(payload);
-
-      channel.ack(originalMsg);
-    } catch (error) {
-      this.logger.error("handleAuthLocalPasswordReset: " + (error as Error).message);
-
-      this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
-    }
+    await this.eventsHandler(payload, context);
   }
 
   /**
@@ -98,18 +77,7 @@ export default class RmqEmailConsumer {
     @Payload() payload: AuthLocalReactivationEvent,
     @Ctx() context: RmqContext,
   ): Promise<void> {
-    const channel: Channel = context.getChannelRef();
-    const originalMsg = context.getMessage() as Message;
-
-    try {
-      await this.rmqEmailService.sendReactivation(payload);
-
-      channel.ack(originalMsg);
-    } catch (error) {
-      this.logger.error("handleAuthLocalReactivation: " + (error as Error).message);
-
-      this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
-    }
+    await this.eventsHandler(payload, context);
   }
 
   /**
@@ -124,15 +92,88 @@ export default class RmqEmailConsumer {
    */
   @MessagePattern(EventName.USER_DEACTIVATED)
   async handleUserDeactivated(@Payload() payload: UserDeactivatedEvent, @Ctx() context: RmqContext): Promise<void> {
+    await this.eventsHandler(payload, context);
+  }
+
+  /**
+   * Handles the USER_DELETED event from the message queue.
+   * This method processes user deletion events by sending an email to notify the user
+   * about their profile deletion completion.
+   *
+   * @param {UserDeletedEvent} payload - The event payload containing user details and deletion metadata
+   * @param {RmqContext} context - The RabbitMQ context for message acknowledgment
+   *
+   * @returns {Promise<void>} A promise that resolves when the email is processed
+   */
+  @MessagePattern(EventName.USER_DELETED)
+  async handleUserDeleted(@Payload() payload: UserDeletedEvent, @Ctx() context: RmqContext): Promise<void> {
+    await this.eventsHandler(payload, context);
+  }
+
+  /**
+   * Handles events based on the event name.
+   * This method calls the appropriate email service methods to send notification emails.
+   *
+   * @param {
+   *   UserDeletedEvent |
+   *   UserDeactivatedEvent |
+   *   AuthLocalReactivationEvent |
+   *   AuthLocalPasswordResetEvent |
+   *   AuthLocalCreatedEvent
+   * } payload - The event payload containing user information.
+   * @param {RmqContext} context - The RabbitMQ context for message acknowledgment.
+   *
+   * @returns {Promise<void>} A promise that resolves when the email is sent or message is rejected.
+   */
+  private async eventsHandler(
+    payload:
+      | UserDeletedEvent
+      | UserDeactivatedEvent
+      | AuthLocalReactivationEvent
+      | AuthLocalPasswordResetEvent
+      | AuthLocalCreatedEvent,
+    context: RmqContext,
+  ): Promise<void> {
+    const eventName: EventName = payload.name;
     const channel: Channel = context.getChannelRef();
     const originalMsg = context.getMessage() as Message;
 
     try {
-      await this.rmqEmailService.sendUserDeactivatedNotification(payload);
+      switch (eventName) {
+        case EventName.USER_DELETED: {
+          await this.rmqEmailService.sendUserDeletedNotification(payload);
+
+          break;
+        }
+
+        case EventName.USER_DEACTIVATED: {
+          await this.rmqEmailService.sendUserDeactivatedNotification(payload);
+
+          break;
+        }
+
+        case EventName.AUTH_LOCAL_REACTIVATION: {
+          await this.rmqEmailService.sendReactivation(payload);
+
+          break;
+        }
+
+        case EventName.AUTH_LOCAL_PASSWORD_RESET: {
+          await this.rmqEmailService.sendPasswordReset(payload);
+
+          break;
+        }
+
+        case EventName.AUTH_LOCAL_CREATED: {
+          await this.rmqEmailService.sendEmailVerification(payload);
+
+          break;
+        }
+      }
 
       channel.ack(originalMsg);
     } catch (error) {
-      this.logger.error("handleUserDeactivated: " + (error as Error).message);
+      this.logger.error("eventsHandler: " + (error as Error).message);
 
       this.rmqRetryService.processFailedMessage(channel, originalMsg, error as Error);
     }

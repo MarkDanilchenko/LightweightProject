@@ -8,6 +8,7 @@ import {
   AuthLocalReactivationEvent,
   EventName,
   UserDeactivatedEvent,
+  UserDeletedEvent,
 } from "#server/events/interfaces/events.interfaces";
 import { ConfigService } from "@nestjs/config";
 import { Transporter } from "nodemailer";
@@ -149,10 +150,7 @@ export default class RmqEmailService {
    * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
    */
   async sendPasswordReset(payload: AuthLocalPasswordResetEvent): Promise<void> {
-    const localPasswordResetTemplatePath: string = path.resolve(
-      process.cwd(),
-      "templates/localPasswordReset.ejs",
-    );
+    const localPasswordResetTemplatePath: string = path.resolve(process.cwd(), "templates/localPasswordReset.ejs");
     await fs.promises.access(localPasswordResetTemplatePath, fs.constants.R_OK);
 
     const { userId, modelId, metadata } = payload;
@@ -346,5 +344,16 @@ export default class RmqEmailService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  /**
+   * Sends a reactivation notification email to the user.
+   *
+   * @param {UserDeletedEvent} payload - The event containing the user's information.
+   *
+   * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
+   */
+  async sendUserDeletedNotification(payload: UserDeletedEvent): Promise<void> {
+    // TODO: continue;
   }
 }

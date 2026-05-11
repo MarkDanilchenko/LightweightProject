@@ -9,6 +9,7 @@ import {
   AuthLocalReactivationEvent,
   EventName,
   UserDeactivatedEvent,
+  UserDeletedEvent,
 } from "#server/events/interfaces/events.interfaces";
 import UserEntity from "#server/users/users.entity";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
@@ -74,6 +75,7 @@ describe("RmqEmailConsumer", (): void => {
       sendPasswordReset: jest.fn(),
       sendReactivation: jest.fn(),
       sendUserDeactivatedNotification: jest.fn(),
+      sendUserDeletedNotification: jest.fn(),
     };
 
     const mockRmqRetryService = {
@@ -104,7 +106,7 @@ describe("RmqEmailConsumer", (): void => {
   describe("handleAuthLocalCreated", (): void => {
     let payload: AuthLocalCreatedEvent;
 
-    beforeAll((): void => {
+    beforeEach((): void => {
       payload = {
         name: EventName.AUTH_LOCAL_CREATED,
         userId: user.id,
@@ -145,7 +147,7 @@ describe("RmqEmailConsumer", (): void => {
   describe("handleAuthLocalPasswordReset", (): void => {
     let payload: AuthLocalPasswordResetEvent;
 
-    beforeAll((): void => {
+    beforeEach((): void => {
       payload = {
         name: EventName.AUTH_LOCAL_PASSWORD_RESET,
         userId: user.id,
@@ -183,7 +185,7 @@ describe("RmqEmailConsumer", (): void => {
   describe("handleUserDeactivated", (): void => {
     let payload: UserDeactivatedEvent;
 
-    beforeAll((): void => {
+    beforeEach((): void => {
       payload = {
         name: EventName.USER_DEACTIVATED,
         userId: user.id,
@@ -221,7 +223,7 @@ describe("RmqEmailConsumer", (): void => {
   describe("handleAuthLocalReactivation", (): void => {
     let payload: AuthLocalReactivationEvent;
 
-    beforeAll((): void => {
+    beforeEach((): void => {
       payload = {
         name: EventName.AUTH_LOCAL_REACTIVATION,
         userId: user.id,
@@ -248,6 +250,44 @@ describe("RmqEmailConsumer", (): void => {
       await rmqEmailConsumer.handleAuthLocalReactivation(payload, mockRmqContext);
 
       expect(rmqEmailService.sendReactivation).toHaveBeenCalledWith(payload);
+      expect(rmqRetryService.processFailedMessage).toHaveBeenCalledWith(
+        mockChannel,
+        mockRmqContext.getMessage(),
+        new Error("Failed to send email"),
+      );
+    });
+  });
+
+  describe("handleUserDeleted", (): void => {
+    let payload: UserDeletedEvent;
+
+    beforeEach((): void => {
+      payload = {
+        name: EventName.USER_DELETED,
+        userId: user.id,
+        modelId: user.id,
+        metadata: {
+          username: user.username,
+          email: user.email,
+        },
+      };
+    });
+
+    it("should send a user deleted email and ack the message", async (): Promise<void> => {
+      await rmqEmailConsumer.handleUserDeleted(payload, mockRmqContext);
+
+      expect(rmqEmailService.sendUserDeletedNotification).toHaveBeenCalledWith(payload);
+      expect(rmqRetryService.processFailedMessage).not.toHaveBeenCalled();
+      expect(mockChannel.ack).toHaveBeenCalled();
+      expect(mockChannel.nack).not.toHaveBeenCalled();
+    });
+
+    it("should nack the message if sending email fails", async (): Promise<void> => {
+      rmqEmailService.sendUserDeletedNotification.mockRejectedValueOnce(new Error("Failed to send email"));
+
+      await rmqEmailConsumer.handleUserDeleted(payload, mockRmqContext);
+
+      expect(rmqEmailService.sendUserDeletedNotification).toHaveBeenCalledWith(payload);
       expect(rmqRetryService.processFailedMessage).toHaveBeenCalledWith(
         mockChannel,
         mockRmqContext.getMessage(),
