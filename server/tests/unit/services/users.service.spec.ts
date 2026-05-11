@@ -215,6 +215,41 @@ describe("UsersService", (): void => {
     });
   });
 
+  describe("deleteUserSoft", (): void => {
+    let whereCondition: FindOptionsWhere<UserEntity>;
+    let updateResult: UpdateResult;
+
+    beforeEach((): void => {
+      whereCondition = { id: user.id };
+      updateResult = {
+        affected: 1,
+        raw: {},
+        generatedMaps: [],
+      };
+    });
+
+    it("should soft delete a user", async (): Promise<void> => {
+      userRepository.softDelete.mockResolvedValue(updateResult);
+
+      const result: UpdateResult = await usersService.deleteUserSoft(whereCondition);
+
+      expect(userRepository.softDelete).toHaveBeenCalledWith(whereCondition);
+      expect(result).toEqual(updateResult);
+    });
+
+    it("should soft delete a user with provided entity manager", async (): Promise<void> => {
+      const providedManager = {
+        softDelete: jest.fn().mockResolvedValue(updateResult),
+      } as unknown as EntityManager;
+
+      const result: UpdateResult = await usersService.deleteUserSoft(whereCondition, providedManager);
+
+      expect(userRepository.softDelete).not.toHaveBeenCalled();
+      expect(providedManager.softDelete).toHaveBeenCalledWith(UserEntity, whereCondition);
+      expect(result).toEqual(updateResult);
+    });
+  });
+
   describe("deactivateUser", (): void => {
     let payload: TokenPayload;
     let userDeactivateDto: UserDeactivateDto;
@@ -279,7 +314,7 @@ describe("UsersService", (): void => {
       delete payload.jwti;
 
       await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
-        new UnauthorizedException("Authentication failed. Token is invalid."),
+        new UnauthorizedException("Token is invalid."),
       );
 
       expect(userRepository.findOne).not.toHaveBeenCalled();
@@ -289,7 +324,7 @@ describe("UsersService", (): void => {
       delete payload.exp;
 
       await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
-        new UnauthorizedException("Authentication failed. Token is invalid."),
+        new UnauthorizedException("Token is invalid."),
       );
 
       expect(userRepository.findOne).not.toHaveBeenCalled();
@@ -299,7 +334,7 @@ describe("UsersService", (): void => {
       userRepository.findOne.mockResolvedValue(null);
 
       await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
-        new UnauthorizedException("Authentication failed. User is not found."),
+        new UnauthorizedException("User is not found."),
       );
     });
 
@@ -308,7 +343,7 @@ describe("UsersService", (): void => {
       userRepository.findOne.mockResolvedValue(user);
 
       await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
-        new UnauthorizedException("Authentication failed. User is not found."),
+        new UnauthorizedException("User is not found."),
       );
     });
 
