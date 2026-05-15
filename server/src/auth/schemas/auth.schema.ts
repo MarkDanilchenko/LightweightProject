@@ -126,7 +126,7 @@ const userDeleteSchema = z
     example: { confirmationWord: "delete" },
   });
 
-const localReactivateConfirmSchema = z
+const localReactivationConfirmSchema = z
   .object({
     token: z
       .string()
@@ -144,7 +144,7 @@ export {
   localEmailVerificationSchema,
   localPasswordResetRequestSchema,
   localPasswordResetConfirmSchema,
-  localReactivateConfirmSchema,
+  localReactivationConfirmSchema,
   userDeactivateSchema,
   userDeleteSchema,
 };

@@ -17,7 +17,7 @@ import transporter from "#server/utils/nodemailer";
 import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import AuthenticationEntity from "#server/auth/auth.entity";
-import { DataSource, EntityManager, QueryRunner } from "typeorm";
+import { DataSource, EntityManager } from "typeorm";
 import { InjectDataSource } from "@nestjs/typeorm";
 import EventsService from "#server/events/events.service";
 import UserService from "#server/users/users.service";
@@ -58,6 +58,24 @@ export default class RmqEmailService {
   }
 
   /**
+   * Resolves and validates the path to an EJS email template.
+   *
+   * @param {string} templateName - Template name without the `.ejs` extension.
+   *
+   * @returns {Promise<string>} Absolute path to the template file.
+   */
+  async getTemplatePath(templateName: string): Promise<string> {
+    try {
+      const templatePath: string = path.resolve(process.cwd(), `templates/${templateName}.ejs`);
+      await fs.promises.access(templatePath, fs.constants.R_OK);
+
+      return templatePath;
+    } catch {
+      throw new Error(`Template ${templateName} not found`);
+    }
+  }
+
+  /**
    * Send a welcome verification email to the users (local idp).
    *
    * @param {AuthLocalCreatedEvent} payload - The events payload containing the user's metadata.
@@ -65,13 +83,10 @@ export default class RmqEmailService {
    * @returns {Promise<void>} A promise, that resolves, when the email is successfully sent.
    */
   async sendEmailVerification(payload: AuthLocalCreatedEvent): Promise<void> {
-    const localEmailVerificationTemplatePath: string = path.resolve(
-      process.cwd(),
-      "templates/localEmailVerification.ejs",
-    );
-    await fs.promises.access(localEmailVerificationTemplatePath, fs.constants.R_OK);
-
     const { userId, modelId, metadata } = payload;
+
+    const localEmailVerificationTemplatePath: string = await this.getTemplatePath("localEmailVerification");
+
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
     const { baseUrl } = this.configService.get<AppConfiguration["clientConfiguration"]>("clientConfiguration")!;
 
@@ -100,13 +115,7 @@ export default class RmqEmailService {
       html,
     };
 
-    // Start transaction with updating authentication, creating event and sending email;
-    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    const manager: EntityManager = queryRunner.manager;
-
-    try {
+    await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
       await this.authService.updateAuthentication(
         { userId, provider: AuthenticationProvider.LOCAL },
         {
@@ -128,17 +137,9 @@ export default class RmqEmailService {
         manager,
       );
 
-      // Send an email after any successful database operations;
+      // Send an email after successful database operations;
       await this.transporter.sendMail(mailOptions);
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    });
   }
 
   /**
@@ -150,11 +151,11 @@ export default class RmqEmailService {
    * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
    */
   async sendPasswordReset(payload: AuthLocalPasswordResetEvent): Promise<void> {
-    const localPasswordResetTemplatePath: string = path.resolve(process.cwd(), "templates/localPasswordReset.ejs");
-    await fs.promises.access(localPasswordResetTemplatePath, fs.constants.R_OK);
-
     const { userId, modelId, metadata } = payload;
     const { username, email } = metadata;
+
+    const localPasswordResetTemplatePath: string = await this.getTemplatePath("localPasswordReset");
+
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
     const { baseUrl } = this.configService.get<AppConfiguration["clientConfiguration"]>("clientConfiguration")!;
 
@@ -185,30 +186,15 @@ export default class RmqEmailService {
       html,
     };
 
-    // Start transaction with creating event and sending email;
-    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    const manager: EntityManager = queryRunner.manager;
-
-    try {
+    await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
       this.eventEmitter.emit(
         EventName.AUTH_LOCAL_PASSWORD_RESET_SENT,
         this.eventsService.buildInstance(EventName.AUTH_LOCAL_PASSWORD_RESET_SENT, userId, modelId, { email }),
         manager,
       );
 
-      // Send an email after any successful database operations;
       await this.transporter.sendMail(mailOptions);
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    });
   }
 
   /**
@@ -220,11 +206,11 @@ export default class RmqEmailService {
    * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
    */
   async sendReactivation(payload: AuthLocalReactivationEvent): Promise<void> {
-    const reactivationTemplatePath: string = path.resolve(process.cwd(), "templates/localReactivation.ejs");
-    await fs.promises.access(reactivationTemplatePath, fs.constants.R_OK);
-
     const { userId, modelId, metadata } = payload;
     const { username, email } = metadata;
+
+    const reactivationTemplatePath: string = await this.getTemplatePath("localReactivation");
+
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
     const { baseUrl } = this.configService.get<AppConfiguration["clientConfiguration"]>("clientConfiguration")!;
 
@@ -255,30 +241,15 @@ export default class RmqEmailService {
       html,
     };
 
-    // Start transaction with creating event and sending email;
-    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    const manager: EntityManager = queryRunner.manager;
-
-    try {
+    await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
       this.eventEmitter.emit(
         EventName.AUTH_LOCAL_REACTIVATION_SENT,
         this.eventsService.buildInstance(EventName.AUTH_LOCAL_REACTIVATION_SENT, userId, modelId, { email }),
         manager,
       );
 
-      // Send an email after any successful database operations;
       await this.transporter.sendMail(mailOptions);
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    });
   }
 
   /**
@@ -289,21 +260,20 @@ export default class RmqEmailService {
    * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
    */
   async sendUserDeactivatedNotification(payload: UserDeactivatedEvent): Promise<void> {
-    const userDeactivatedNotificationTemplatePath: string = path.resolve(
-      process.cwd(),
-      "templates/userDeactivatedNotificationEmail.ejs",
-    );
-    await fs.promises.access(userDeactivatedNotificationTemplatePath, fs.constants.R_OK);
-
     const { userId, modelId, metadata } = payload;
     const { username, email } = metadata;
+
+    const userDeactivatedNotificationTemplatePath: string = await this.getTemplatePath(
+      "userDeactivatedNotificationEmail",
+    );
+
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
 
     const user: UserEntity | null = await this.userService.findUser({
       where: [{ id: userId }, { id: modelId }],
     });
     if (!user) {
-      throw new Error("Deactivation email: User not found");
+      throw new Error("User deactivation email: User not found");
     }
 
     const html: string = await ejs.renderFile(
@@ -314,18 +284,12 @@ export default class RmqEmailService {
     const mailOptions: MailOptions = {
       from,
       to: email,
-      subject: "LightweightProject: deactivation notification",
+      subject: "LightweightProject: User deactivation notification",
       text: "Deactivation user's account has been processed.",
       html,
     };
 
-    const queryRunner: QueryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    const manager: EntityManager = queryRunner.manager;
-
-    try {
-      // Remove username from event metadata for "user.deactivated";
+    await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
       this.eventEmitter.emit(
         EventName.USER_DEACTIVATED,
         this.eventsService.buildInstance(EventName.USER_DEACTIVATED, userId, modelId, {
@@ -335,15 +299,7 @@ export default class RmqEmailService {
       );
 
       await this.transporter.sendMail(mailOptions);
-
-      await queryRunner.commitTransaction();
-    } catch (error) {
-      await queryRunner.rollbackTransaction();
-
-      throw error;
-    } finally {
-      await queryRunner.release();
-    }
+    });
   }
 
   /**
@@ -354,6 +310,43 @@ export default class RmqEmailService {
    * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
    */
   async sendUserDeletedNotification(payload: UserDeletedEvent): Promise<void> {
-    // TODO: continue;
+    const { userId, modelId, metadata } = payload;
+    const { username, email } = metadata;
+
+    const userDeletedNotificationTemplatePath: string = await this.getTemplatePath("userDeletedNotificationEmail");
+
+    const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
+
+    const user: UserEntity | null = await this.userService.findUser({
+      where: [{ id: userId }, { id: modelId }],
+    });
+    if (!user) {
+      throw new Error("User deleted email: User not found");
+    }
+
+    const html: string = await ejs.renderFile(
+      userDeletedNotificationTemplatePath,
+      { username },
+      { root: path.resolve(process.cwd(), "templates") },
+    );
+    const mailOptions: MailOptions = {
+      from,
+      to: email,
+      subject: "LightweightProject: User deleted notification",
+      text: "Deleting user's account has been processed.",
+      html,
+    };
+
+    await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
+      this.eventEmitter.emit(
+        EventName.USER_DELETED,
+        this.eventsService.buildInstance(EventName.USER_DELETED, userId, modelId, {
+          email,
+        }),
+        manager,
+      );
+
+      await this.transporter.sendMail(mailOptions);
+    });
   }
 }
