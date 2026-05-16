@@ -86,9 +86,9 @@ export default class UsersService {
   }
 
   /**
-   * Soft deletes a user by marking them as deactivated.
+   * Soft deletes a user by marking it with deletedAt.
    *
-   * @param {FindOptionsWhere<UserEntity>} whereCondition - The condition to find the user(s) to soft delete.
+   * @param {FindOptionsWhere<UserEntity>} whereCondition - The condition to find the user to softly delete.
    * @param {EntityManager} [manager] - The entity manager to use for the query within a transaction.
    *
    * @returns {Promise<UpdateResult>} A promise that resolves with the update result.
@@ -109,7 +109,7 @@ export default class UsersService {
    *
    * @returns {Promise<void>} A promise that resolves when the profile is successfully deactivated.
    */
-  async deactivateUser(payload: TokenPayload, userDeactivateDto: UserDeactivateDto): Promise<void> {
+  async deactivateUserProfile(payload: TokenPayload, userDeactivateDto: UserDeactivateDto): Promise<void> {
     const { confirmationWord } = userDeactivateDto;
     if (confirmationWord !== "deactivate") {
       throw new BadRequestException("Deactivation failed. Invalid confirmation word.");
@@ -165,7 +165,7 @@ export default class UsersService {
   }
 
   /**
-   * Deletes a user's profile, making it with deletedAt.
+   * Deletes a user's profile.
    * Cron job deletes it permanently and anonymize its data after 30 days.
    *
    * @param {TokenPayload} payload - The JWT token payload containing user authentication information.
@@ -173,7 +173,7 @@ export default class UsersService {
    *
    * @returns {Promise<void>} A promise that resolves when the profile is successfully deleted.
    */
-  async deleteUser(payload: TokenPayload, userDeleteDto: UserDeleteDto): Promise<void> {
+  async deleteUserProfile(payload: TokenPayload, userDeleteDto: UserDeleteDto): Promise<void> {
     const { confirmationWord } = userDeleteDto;
     if (confirmationWord !== "delete") {
       throw new BadRequestException("Deletion failed. Invalid confirmation word.");

@@ -25,7 +25,7 @@ describe("UsersController", (): void => {
       findUserByPk: jest.fn(),
       findUser: jest.fn(),
       updateUser: jest.fn(),
-      deactivateUser: jest.fn(),
+      deactivateUserProfile: jest.fn(),
     };
 
     mockResponse = {
@@ -51,7 +51,7 @@ describe("UsersController", (): void => {
   });
 
   describe("deactivateUser", (): void => {
-    it("should call authService.deactivateUser, clear cookie, and return 200", async (): Promise<void> => {
+    it("should call authService.deactivateUserProfile, clear cookie, and return 200", async (): Promise<void> => {
       const userDeactivateDto: UserDeactivateDto = { confirmationWord: "deactivate" };
       const req = {
         tokenPayload: { userId: mockUser.id, provider: "local", jwti: uuidv4() },
@@ -59,7 +59,7 @@ describe("UsersController", (): void => {
 
       await usersController.deactivateUser(req, userDeactivateDto, mockResponse);
 
-      expect(usersService.deactivateUser).toHaveBeenCalledWith(req.tokenPayload, userDeactivateDto);
+      expect(usersService.deactivateUserProfile).toHaveBeenCalledWith(req.tokenPayload, userDeactivateDto);
       expect(clearCookie).toHaveBeenCalledWith(mockResponse, "accessToken");
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalledWith({ message: "User profile deactivated successfully." });

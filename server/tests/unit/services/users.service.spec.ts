@@ -250,7 +250,7 @@ describe("UsersService", (): void => {
     });
   });
 
-  describe("deactivateUser", (): void => {
+  describe("deactivateUserProfile", (): void => {
     let payload: TokenPayload;
     let userDeactivateDto: UserDeactivateDto;
 
@@ -267,7 +267,7 @@ describe("UsersService", (): void => {
     it("should deactivate profile successfully", async (): Promise<void> => {
       userRepository.findOne.mockResolvedValue(user);
 
-      await usersService.deactivateUser(payload, userDeactivateDto);
+      await usersService.deactivateUserProfile(payload, userDeactivateDto);
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
         relations: ["authentications"],
@@ -303,7 +303,7 @@ describe("UsersService", (): void => {
     it("should throw BadRequestException for invalid confirmation word", async (): Promise<void> => {
       userDeactivateDto.confirmationWord = "invalid";
 
-      await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
+      await expect(usersService.deactivateUserProfile(payload, userDeactivateDto)).rejects.toThrow(
         new BadRequestException("Deactivation failed. Invalid confirmation word."),
       );
 
@@ -313,7 +313,7 @@ describe("UsersService", (): void => {
     it("should throw UnauthorizedException for invalid token (missing jwti)", async (): Promise<void> => {
       delete payload.jwti;
 
-      await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
+      await expect(usersService.deactivateUserProfile(payload, userDeactivateDto)).rejects.toThrow(
         new UnauthorizedException("Token is invalid."),
       );
 
@@ -323,7 +323,7 @@ describe("UsersService", (): void => {
     it("should throw UnauthorizedException for invalid token (missing exp)", async (): Promise<void> => {
       delete payload.exp;
 
-      await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
+      await expect(usersService.deactivateUserProfile(payload, userDeactivateDto)).rejects.toThrow(
         new UnauthorizedException("Token is invalid."),
       );
 
@@ -333,7 +333,7 @@ describe("UsersService", (): void => {
     it("should throw UnauthorizedException if user not found", async (): Promise<void> => {
       userRepository.findOne.mockResolvedValue(null);
 
-      await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
+      await expect(usersService.deactivateUserProfile(payload, userDeactivateDto)).rejects.toThrow(
         new UnauthorizedException("User is not found."),
       );
     });
@@ -342,7 +342,7 @@ describe("UsersService", (): void => {
       user.authentications = [];
       userRepository.findOne.mockResolvedValue(user);
 
-      await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
+      await expect(usersService.deactivateUserProfile(payload, userDeactivateDto)).rejects.toThrow(
         new UnauthorizedException("User is not found."),
       );
     });
@@ -351,7 +351,7 @@ describe("UsersService", (): void => {
       user.isDeactivated = true;
       userRepository.findOne.mockResolvedValue(user);
 
-      await expect(usersService.deactivateUser(payload, userDeactivateDto)).rejects.toThrow(
+      await expect(usersService.deactivateUserProfile(payload, userDeactivateDto)).rejects.toThrow(
         new BadRequestException("User's profile is already deactivated."),
       );
     });
