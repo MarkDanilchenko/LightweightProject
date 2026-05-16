@@ -5,7 +5,7 @@ import UsersService from "#server/users/users.service";
 import { Response } from "express";
 import UserEntity from "#server/users/users.entity";
 import { buildUserFactory } from "../../factories";
-import { UserDeactivateDto } from "#server/auth/dto/auth.dto";
+import { UserDeactivateDto, UserDeleteDto } from "#server/auth/dto/auth.dto";
 import { clearCookie } from "#server/utils/cookie";
 import { RequestWithTokenPayload } from "#server/common/types/common.types";
 import { v4 as uuidv4 } from "uuid";
@@ -26,6 +26,7 @@ describe("UsersController", (): void => {
       findUser: jest.fn(),
       updateUser: jest.fn(),
       deactivateUserProfile: jest.fn(),
+      deleteUserProfile: jest.fn(),
     };
 
     mockResponse = {
@@ -62,7 +63,23 @@ describe("UsersController", (): void => {
       expect(usersService.deactivateUserProfile).toHaveBeenCalledWith(req.tokenPayload, userDeactivateDto);
       expect(clearCookie).toHaveBeenCalledWith(mockResponse, "accessToken");
       expect(mockResponse.status).toHaveBeenCalledWith(200);
-      expect(mockResponse.send).toHaveBeenCalledWith({ message: "User profile deactivated successfully." });
+      expect(mockResponse.send).toHaveBeenCalledWith({ message: "User's profile deactivated successfully." });
+    });
+  });
+
+  describe("deleteUser", (): void => {
+    it("should call authService.deleteUserProfile, clear cookie, and return 200", async (): Promise<void> => {
+      const userDeleteDto: UserDeleteDto = { confirmationWord: "delete" };
+      const req = {
+        tokenPayload: { userId: mockUser.id, provider: "local", jwti: uuidv4() },
+      } as RequestWithTokenPayload;
+
+      await usersController.deleteUser(req, userDeleteDto, mockResponse);
+
+      expect(usersService.deleteUserProfile).toHaveBeenCalledWith(req.tokenPayload, userDeleteDto);
+      expect(clearCookie).toHaveBeenCalledWith(mockResponse, "accessToken");
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.send).toHaveBeenCalledWith({ message: "User's profile deleted successfully." });
     });
   });
 });

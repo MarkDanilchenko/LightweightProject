@@ -12,7 +12,7 @@ import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import TokensService from "#server/tokens/tokens.service";
 import EventsService from "#server/events/events.service";
 import { RMQ_MICROSERVICE } from "#server/configs/constants";
-import { UserDeactivateDto } from "#server/auth/dto/auth.dto";
+import { UserDeactivateDto, UserDeleteDto } from "#server/auth/dto/auth.dto";
 import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import { EventName } from "#server/events/interfaces/events.interfaces";
@@ -174,7 +174,7 @@ describe("UsersService", (): void => {
     let values: Record<string, any>;
     let updateResult: UpdateResult;
 
-    beforeAll((): void => {
+    beforeEach((): void => {
       whereCondition = { id: user.id };
       values = { firstName: "Abdullahi Campos" };
       updateResult = {
@@ -353,6 +353,113 @@ describe("UsersService", (): void => {
 
       await expect(usersService.deactivateUserProfile(payload, userDeactivateDto)).rejects.toThrow(
         new BadRequestException("User's profile is already deactivated."),
+      );
+    });
+  });
+
+  describe("deleteUserProfile", (): void => {
+    let payload: TokenPayload;
+    let userDeleteDto: UserDeleteDto;
+
+    beforeEach((): void => {
+      payload = {
+        userId: user.id,
+        provider: AuthenticationProvider.LOCAL,
+        jwti: faker.string.uuid(),
+        exp: Math.floor(Date.now() / 1000) + 3600,
+      };
+      userDeleteDto = { confirmationWord: "delete" };
+    });
+
+    it("should delete profile successfully", async (): Promise<void> => {
+      userRepository.findOne.mockResolvedValue(user);
+
+      await usersService.deleteUserProfile(payload, userDeleteDto);
+
+      expect(userRepository.findOne).toHaveBeenCalledWith({
+        relations: ["authentications"],
+        select: {
+          id: true,
+          username: true,
+          email: true,
+          deletedAt: true,
+          authentications: {
+            id: true,
+            metadata: true,
+          },
+        },
+        where: { id: user.id },
+      });
+      expect(mockEntityManager.softDelete).toHaveBeenCalledWith(UserEntity, { id: user.id });
+      expect(mockEntityManager.update).toHaveBeenCalledWith(
+        AuthenticationEntity,
+        { userId: user.id },
+        {
+          refreshToken: null,
+          lastAccessedAt: expect.any(Function),
+        },
+      );
+      expect(tokensService.addToBlacklist).toHaveBeenCalledWith(payload.jwti, payload.exp);
+      expect(rmqMicroserviceClient.emit).toHaveBeenCalled();
+      expect(eventsService.buildInstance).toHaveBeenCalledWith(EventName.USER_DELETED, user.id, user.id, {
+        email: user.email,
+        username: user.username,
+      });
+    });
+
+    it("should throw BadRequestException for invalid confirmation word", async (): Promise<void> => {
+      userDeleteDto.confirmationWord = "invalid";
+
+      await expect(usersService.deleteUserProfile(payload, userDeleteDto)).rejects.toThrow(
+        new BadRequestException("Deletion failed. Invalid confirmation word."),
+      );
+
+      expect(userRepository.findOne).not.toHaveBeenCalled();
+    });
+
+    it("should throw UnauthorizedException for invalid token (missing jwti)", async (): Promise<void> => {
+      delete payload.jwti;
+
+      await expect(usersService.deleteUserProfile(payload, userDeleteDto)).rejects.toThrow(
+        new UnauthorizedException("Token is invalid."),
+      );
+
+      expect(userRepository.findOne).not.toHaveBeenCalled();
+    });
+
+    it("should throw UnauthorizedException for invalid token (missing exp)", async (): Promise<void> => {
+      delete payload.exp;
+
+      await expect(usersService.deleteUserProfile(payload, userDeleteDto)).rejects.toThrow(
+        new UnauthorizedException("Token is invalid."),
+      );
+
+      expect(userRepository.findOne).not.toHaveBeenCalled();
+    });
+
+    it("should throw UnauthorizedException if user not found", async (): Promise<void> => {
+      userRepository.findOne.mockResolvedValue(null);
+
+      await expect(usersService.deleteUserProfile(payload, userDeleteDto)).rejects.toThrow(
+        new UnauthorizedException("User is not found."),
+      );
+    });
+
+    it("should throw UnauthorizedException if user has no authentications", async (): Promise<void> => {
+      user.authentications = [];
+      userRepository.findOne.mockResolvedValue(user);
+
+      await expect(usersService.deleteUserProfile(payload, userDeleteDto)).rejects.toThrow(
+        new UnauthorizedException("User is not found."),
+      );
+    });
+
+    it("should throw BadRequestException if user is already deleted", async (): Promise<void> => {
+      user.deletedAt = new Date();
+      userRepository.findOne.mockResolvedValue(user);
+
+      await expect(usersService.deleteUserProfile(payload, userDeleteDto)).rejects.toThrow(
+        new BadRequestException("User's profile is already deleted."),
       );
     });
   });

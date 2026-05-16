@@ -173,4 +173,21 @@ describe("EventsFactory", (): void => {
       expect(event.metadata).toEqual(metadata);
     });
   });
+
+  describe("UserDeletedEvent", (): void => {
+    it("should create an instance with correct properties", (): void => {
+      const metadata = {
+        username: user.username,
+        email: user.email,
+      };
+
+      const EventClass = eventsRegistry[EventName.USER_DELETED];
+      const event = new EventClass(EventName.USER_DELETED, user.id, user.id, metadata);
+
+      expect(event.name).toBe(EventName.USER_DELETED);
+      expect(event.userId).toBe(user.id);
+      expect(event.modelId).toBe(user.id);
+      expect(event.metadata).toEqual(metadata);
+    });
+  });
 });

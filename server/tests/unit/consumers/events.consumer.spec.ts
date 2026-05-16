@@ -11,6 +11,7 @@ import {
   EventName,
   UserReactivatedEvent,
   AuthLocalReactivationSentEvent,
+  UserDeletedEvent,
 } from "#server/events/interfaces/events.interfaces";
 import { buildUserFactory, buildAuthenticationFactory } from "../../factories";
 import UserEntity from "#server/users/users.entity";
@@ -151,6 +152,23 @@ describe("EventsConsumer", (): void => {
         userId: user.id,
         modelId: user.id,
         metadata: {
+          email: user.email,
+        },
+      };
+
+      await eventsConsumer.handleEvent(payload);
+
+      expect(eventsService.createEvent).toHaveBeenCalledTimes(1);
+      expect(eventsService.createEvent).toHaveBeenCalledWith(payload, undefined);
+    });
+
+    it("should handle USER_DELETED event", async (): Promise<void> => {
+      const payload: UserDeletedEvent = {
+        name: EventName.USER_DELETED,
+        userId: user.id,
+        modelId: user.id,
+        metadata: {
+          username: user.username,
           email: user.email,
         },
       };
