@@ -319,9 +319,10 @@ export default class RmqEmailService {
 
     const user: UserEntity | null = await this.userService.findUser({
       where: [{ id: userId }, { id: modelId }],
+      withDeleted: true,
     });
     if (!user) {
-      throw new Error("User deleted email: User not found");
+      throw new Error("User not found");
     }
 
     const html: string = await ejs.renderFile(

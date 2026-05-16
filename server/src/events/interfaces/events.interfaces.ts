@@ -41,6 +41,10 @@ interface AuthLocalCreatedEvent extends BaseEvent {
   metadata: EventMetadata & NonNullable<NonNullable<AuthenticationInstanceMetadata["local"]>["temporaryInfo"]>;
 }
 
+interface UserDeactivatedEvent extends BaseEvent {
+  metadata: EventMetadata & { username?: string | null };
+}
+
 interface AuthLocalReactivationEvent extends BaseEvent {
   metadata: EventMetadata & { username?: string | null };
 }
@@ -49,15 +53,11 @@ interface AuthLocalReactivationSentEvent extends BaseEvent {
   metadata: EventMetadata & { username?: string | null };
 }
 
-interface UserDeactivatedEvent extends BaseEvent {
-  metadata: EventMetadata & { username?: string | null };
-}
+interface UserReactivatedEvent extends BaseEvent {}
 
 interface UserDeletedEvent extends BaseEvent {
   metadata: EventMetadata & { username?: string | null };
 }
-
-interface UserReactivatedEvent extends BaseEvent {}
 
 export {
   EventMetadata,
