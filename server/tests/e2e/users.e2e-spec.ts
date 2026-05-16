@@ -99,7 +99,7 @@ describe("UsersController E2E", (): void => {
           },
         );
 
-        // Sign in to get access token from cookie
+        // Sign in to get access token from cookie;
         const signinPayload = { login: user.email, password };
         const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
         const accessTokenCookie = signinResponse.header["set-cookie"][0];
@@ -111,7 +111,7 @@ describe("UsersController E2E", (): void => {
           .send(deactivatePayload);
 
         expect(response.statusCode).toBe(200);
-        expect(response.body.message).toBe("User profile deactivated successfully.");
+        expect(response.body.message).toBe("User's profile deactivated successfully.");
         expect(response.header["set-cookie"]).not.toBeNull();
         expect(response.header["set-cookie"][0]).toContain("accessToken=");
       });
@@ -140,7 +140,7 @@ describe("UsersController E2E", (): void => {
           },
         );
 
-        // Sign in to get access token from cookie
+        // Sign in to get access token from cookie;
         const signinPayload = { login: user.email, password };
         const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
         const accessTokenCookie = signinResponse.header["set-cookie"][0];
@@ -152,7 +152,7 @@ describe("UsersController E2E", (): void => {
           .send(deactivatePayload);
 
         expect(response.statusCode).toBe(200);
-        expect(response.body.message).toBe("User profile deactivated successfully.");
+        expect(response.body.message).toBe("User's profile deactivated successfully.");
         expect(response.header["set-cookie"]).not.toBeNull();
         expect(response.header["set-cookie"][0]).toContain("accessToken=");
       });
@@ -202,7 +202,7 @@ describe("UsersController E2E", (): void => {
           },
         );
 
-        // Sign in to get access token from cookie
+        // Sign in to get access token from cookie;
         const signinPayload = { login: user.email, password };
         const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
         const accessTokenCookie = signinResponse.header["set-cookie"][0];
@@ -241,7 +241,7 @@ describe("UsersController E2E", (): void => {
           },
         );
 
-        // Sign in to get access token from cookie
+        // Sign in to get access token from cookie;
         const signinPayload = { login: user.email, password };
         const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
         const accessTokenCookie = signinResponse.header["set-cookie"][0];
@@ -256,6 +256,324 @@ describe("UsersController E2E", (): void => {
         expect(response.body.message).toEqual(
           expect.arrayContaining(["confirmationWord: Expected string, received number"]),
         );
+      });
+
+      it("should return 400 for invalid confirmationWord", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory();
+        const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie;
+        const signinPayload = { login: user.email, password };
+        const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        const accessTokenCookie = signinResponse.header["set-cookie"][0];
+
+        const deactivatePayload = { confirmationWord: "invalid" };
+        const response = await httpServer
+          .post("/api/v1/users/deactivate")
+          .set("Cookie", accessTokenCookie)
+          .send(deactivatePayload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toBe("Deactivation failed. Invalid confirmation word.");
+      });
+
+      it("should return 400 when user is already deactivated", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory();
+        const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie;
+        const signinPayload = { login: user.email, password };
+        const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        const accessTokenCookie = signinResponse.header["set-cookie"][0];
+
+        await dataSource.getRepository(UserEntity).update({ id: user.id }, { isDeactivated: true });
+
+        const deactivatePayload = { confirmationWord: "deactivate" };
+        const response = await httpServer
+          .post("/api/v1/users/deactivate")
+          .set("Cookie", accessTokenCookie)
+          .send(deactivatePayload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toBe("User's profile is already deactivated.");
+      });
+    });
+  });
+
+  describe("DELETE /api/v1/users/delete", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200 and delete account successfully", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory({
+          email: faker.internet.email(),
+          username: faker.string.alphanumeric(10),
+          firstName: faker.person.firstName(),
+          lastName: faker.person.lastName(),
+          avatarUrl: faker.image.avatar(),
+        });
+        const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie;
+        const signinPayload = { login: user.email, password };
+        const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        const accessTokenCookie = signinResponse.header["set-cookie"][0];
+
+        const deletePayload = { confirmationWord: "delete" };
+        const response = await httpServer
+          .delete("/api/v1/users/delete")
+          .set("Cookie", accessTokenCookie)
+          .send(deletePayload);
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body.message).toBe("User's profile deleted successfully.");
+        expect(response.header["set-cookie"]).not.toBeNull();
+        expect(response.header["set-cookie"][0]).toContain("accessToken=");
+
+        // Verify user is soft deleted;
+        const deletedUser: UserEntity | null = await dataSource
+          .getRepository(UserEntity)
+          .findOne({ where: { id: user.id } });
+        expect(deletedUser?.deletedAt).not.toBeNull();
+      });
+
+      it("should return 200 and delete account with uppercase confirmation word", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory();
+        const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie;
+        const signinPayload = { login: user.email, password };
+        const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        const accessTokenCookie = signinResponse.header["set-cookie"][0];
+
+        const deletePayload = { confirmationWord: "DELETE" };
+        const response = await httpServer
+          .delete("/api/v1/users/delete")
+          .set("Cookie", accessTokenCookie)
+          .send(deletePayload);
+
+        expect(response.statusCode).toBe(200);
+        expect(response.body.message).toBe("User's profile deleted successfully.");
+        expect(response.header["set-cookie"]).not.toBeNull();
+        expect(response.header["set-cookie"][0]).toContain("accessToken=");
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 401 for missing accessToken", async (): Promise<void> => {
+        const deletePayload = { confirmationWord: "delete" };
+        const response = await httpServer.delete("/api/v1/users/delete").send(deletePayload);
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Unauthorized");
+      });
+
+      it("should return 401 for invalid accessToken", async (): Promise<void> => {
+        const deletePayload = { confirmationWord: "delete" };
+        const response = await httpServer
+          .delete("/api/v1/users/delete")
+          .set("Cookie", "accessToken=invalid-token")
+          .send(deletePayload);
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Unauthorized");
+      });
+
+      it("should return 400 for missing confirmationWord", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory();
+        const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie;
+        const signinPayload = { login: user.email, password };
+        const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        const accessTokenCookie = signinResponse.header["set-cookie"][0];
+
+        const deletePayload = {};
+        const response = await httpServer
+          .delete("/api/v1/users/delete")
+          .set("Cookie", accessTokenCookie)
+          .send(deletePayload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toEqual(expect.arrayContaining(["confirmationWord: Required"]));
+      });
+
+      it("should return 400 for invalid confirmationWord type", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory();
+        const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie;
+        const signinPayload = { login: user.email, password };
+        const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        const accessTokenCookie = signinResponse.header["set-cookie"][0];
+
+        const deletePayload = { confirmationWord: 123 };
+        const response = await httpServer
+          .delete("/api/v1/users/delete")
+          .set("Cookie", accessTokenCookie)
+          .send(deletePayload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toEqual(
+          expect.arrayContaining(["confirmationWord: Expected string, received number"]),
+        );
+      });
+
+      it("should return 400 for invalid confirmationWord", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory();
+        const refreshToken = await tokensService.generate({ userId: user.id, provider: AuthenticationProvider.LOCAL });
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+            refreshToken,
+          },
+        );
+
+        // Sign in to get access token from cookie;
+        const signinPayload = { login: user.email, password };
+        const signinResponse = await httpServer.post("/api/v1/auth/local/signin").send(signinPayload);
+        const accessTokenCookie = signinResponse.header["set-cookie"][0];
+
+        const deletePayload = { confirmationWord: "invalid" };
+        const response = await httpServer
+          .delete("/api/v1/users/delete")
+          .set("Cookie", accessTokenCookie)
+          .send(deletePayload);
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toBe("Deletion failed. Invalid confirmation word.");
       });
     });
   });
