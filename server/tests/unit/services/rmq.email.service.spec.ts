@@ -349,7 +349,7 @@ describe("RmqEmailService", (): void => {
     });
   });
 
-  describe("sendReactivation", (): void => {
+  describe("sendUserReactivation", (): void => {
     const user: UserEntity = buildUserFactory();
     const payload: AuthLocalReactivationEvent = {
       name: EventName.AUTH_LOCAL_REACTIVATION,
@@ -378,7 +378,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should send a reactivation request email successfully", async (): Promise<void> => {
-      await rmqEmailService.sendReactivation(payload);
+      await rmqEmailService.sendUserReactivation(payload);
 
       expect(fs.promises.access).toHaveBeenCalled();
       expect(usersService.findUser).toHaveBeenCalledWith({
@@ -396,13 +396,13 @@ describe("RmqEmailService", (): void => {
     it("should throw an error if template file does not exist", async (): Promise<void> => {
       jest.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
 
-      await expect(rmqEmailService.sendReactivation(payload)).rejects.toThrow("Template localReactivation not found");
+      await expect(rmqEmailService.sendUserReactivation(payload)).rejects.toThrow("Template localReactivation not found");
     });
 
     it("should throw an error if user not found", async (): Promise<void> => {
       usersService.findUser.mockResolvedValue(null);
 
-      await expect(rmqEmailService.sendReactivation(payload)).rejects.toThrow(
+      await expect(rmqEmailService.sendUserReactivation(payload)).rejects.toThrow(
         "Reactivation request email: User not found",
       );
     });
@@ -410,7 +410,7 @@ describe("RmqEmailService", (): void => {
     it("should throw an error when sending mail fails", async (): Promise<void> => {
       jest.spyOn(transporter, "sendMail").mockRejectedValue(new Error("Send mail failed"));
 
-      await expect(rmqEmailService.sendReactivation(payload)).rejects.toThrow("Send mail failed");
+      await expect(rmqEmailService.sendUserReactivation(payload)).rejects.toThrow("Send mail failed");
     });
   });
 
