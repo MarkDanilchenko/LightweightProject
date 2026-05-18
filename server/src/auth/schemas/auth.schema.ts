@@ -133,8 +133,20 @@ const localReactivationConfirmSchema = z
       .openapi({ title: "Token", description: "Token with short ttl (15 minutes).", example: "Token in jwt format" }),
   })
   .openapi({
-    title: "Local reactivate confirm schema",
-    description: "Local reactivate confirm with provided token.",
+    title: "Local reactivation confirm schema",
+    description: "Local reactivation confirm with provided token.",
+    example: { token: "Token in jwt format" },
+  });
+
+const localRestorationConfirmSchema = z
+  .object({
+    token: z
+      .string()
+      .openapi({ title: "Token", description: "Token with short ttl (15 minutes).", example: "Token in jwt format" }),
+  })
+  .openapi({
+    title: "Local restoration confirm schema",
+    description: "Local restoration confirm with provided token.",
     example: { token: "Token in jwt format" },
   });
 
@@ -145,6 +157,7 @@ export {
   localPasswordResetRequestSchema,
   localPasswordResetConfirmSchema,
   localReactivationConfirmSchema,
+  localRestorationConfirmSchema,
   userDeactivateSchema,
   userDeleteSchema,
 };
