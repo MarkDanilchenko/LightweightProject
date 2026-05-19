@@ -8,6 +8,7 @@ import {
   LocalPasswordResetRequestDto,
   LocalPasswordResetConfirmDto,
   LocalReactivationConfirmDto,
+  LocalRestorationConfirmDto,
   LocalSignInDto,
   LocalSignUpDto,
   LocalEmailVerificationDto,
@@ -41,6 +42,7 @@ describe("AuthController", (): void => {
       localPasswordResetRequest: jest.fn(),
       localPasswordResetConfirm: jest.fn(),
       localReactivationConfirm: jest.fn(),
+      localRestorationConfirm: jest.fn(),
       signIn: jest.fn(),
       signOut: jest.fn(),
       refreshAccessToken: jest.fn(),
@@ -224,6 +226,20 @@ describe("AuthController", (): void => {
       await authController.localReactivationConfirm(dto, mockResponse as Response);
 
       expect(authService.localReactivationConfirm).toHaveBeenCalledWith(dto);
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.send).toHaveBeenCalled();
+    });
+  });
+
+  describe("localRestorationConfirm", (): void => {
+    it("should call authService.localRestorationConfirm and return 200", async (): Promise<void> => {
+      const dto: LocalRestorationConfirmDto = {
+        token: randomValidJwt({ userId: user.id, provider: AuthenticationProvider.LOCAL }, { expiresIn: "15m" }),
+      };
+
+      await authController.localRestorationConfirm(dto, mockResponse as Response);
+
+      expect(authService.localRestorationConfirm).toHaveBeenCalledWith(dto);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
     });

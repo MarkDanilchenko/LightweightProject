@@ -44,6 +44,7 @@ describe("UsersService", (): void => {
       findOneBy: jest.fn(),
       update: jest.fn(),
       softDelete: jest.fn(),
+      restore: jest.fn(),
     };
 
     const mockDataSource = {
@@ -246,6 +247,41 @@ describe("UsersService", (): void => {
 
       expect(userRepository.softDelete).not.toHaveBeenCalled();
       expect(providedManager.softDelete).toHaveBeenCalledWith(UserEntity, whereCondition);
+      expect(result).toEqual(updateResult);
+    });
+  });
+
+  describe("restoreUser", (): void => {
+    let whereCondition: FindOptionsWhere<UserEntity>;
+    let updateResult: UpdateResult;
+
+    beforeEach((): void => {
+      whereCondition = { id: user.id };
+      updateResult = {
+        affected: 1,
+        raw: {},
+        generatedMaps: [],
+      };
+    });
+
+    it("should restore a soft-deleted user", async (): Promise<void> => {
+      const mockRestore = jest.fn().mockResolvedValue(updateResult);
+      userRepository.restore = mockRestore;
+
+      const result: UpdateResult = await usersService.restoreUser(whereCondition);
+
+      expect(mockRestore).toHaveBeenCalledWith(whereCondition);
+      expect(result).toEqual(updateResult);
+    });
+
+    it("should restore a soft-deleted user with provided entity manager", async (): Promise<void> => {
+      const providedManager = {
+        restore: jest.fn().mockResolvedValue(updateResult),
+      } as unknown as EntityManager;
+
+      const result: UpdateResult = await usersService.restoreUser(whereCondition, providedManager);
+
+      expect(providedManager.restore).toHaveBeenCalledWith(UserEntity, whereCondition);
       expect(result).toEqual(updateResult);
     });
   });

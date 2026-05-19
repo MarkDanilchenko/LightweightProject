@@ -7,6 +7,7 @@ import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   AuthLocalReactivationEvent,
+  AuthLocalRestorationEvent,
   EventName,
   UserDeactivatedEvent,
   UserDeletedEvent,
@@ -80,6 +81,7 @@ describe("RmqEmailConsumer", (): void => {
       sendUserReactivation: jest.fn(),
       sendUserDeactivatedNotification: jest.fn(),
       sendUserDeletedNotification: jest.fn(),
+      sendUserRestoration: jest.fn(),
     };
 
     const mockRmqRetryService = {
@@ -295,6 +297,43 @@ describe("RmqEmailConsumer", (): void => {
     });
   });
 
+  describe("handleAuthLocalRestoration", (): void => {
+    let payload: AuthLocalRestorationEvent;
+
+    beforeEach((): void => {
+      payload = {
+        name: EventName.AUTH_LOCAL_RESTORATION,
+        userId: user.id,
+        modelId: authentication.id,
+        metadata: {
+          username: user.username,
+          email: user.email,
+        },
+      };
+    });
+
+    it("should send a restoration request email and ack the message", async (): Promise<void> => {
+      await rmqEmailConsumer.handleAuthLocalRestoration(payload, mockRmqContext as unknown as RmqContext);
+
+      expect(rmqEmailService.sendUserRestoration).toHaveBeenCalledWith(payload);
+      expect(rmqRetryService.processFailedMessage).not.toHaveBeenCalled();
+      expect(mockChannel.ack).toHaveBeenCalled();
+      expect(mockChannel.nack).not.toHaveBeenCalled();
+    });
+
+    it("should call processFailedMessage if sending email fails", async (): Promise<void> => {
+      const testError = new Error("Failed to send email");
+      rmqEmailService.sendUserRestoration.mockRejectedValueOnce(testError);
+
+      await rmqEmailConsumer.handleAuthLocalRestoration(payload, mockRmqContext as unknown as RmqContext);
+
+      expect(rmqEmailService.sendUserRestoration).toHaveBeenCalledWith(payload);
+      expect(rmqRetryService.processFailedMessage).toHaveBeenCalledWith(mockChannel, mockMessage, testError);
+      expect(mockChannel.ack).not.toHaveBeenCalled();
+      expect(mockChannel.nack).not.toHaveBeenCalled();
+    });
+  });
+
   describe("eventsHandler", (): void => {
     describe("for EventName.USER_DELETED", (): void => {
       it("should call sendUserDeletedNotification and ack the message", async (): Promise<void> => {
@@ -394,6 +433,26 @@ describe("RmqEmailConsumer", (): void => {
         await rmqEmailConsumer.handleAuthLocalCreated(payload, mockRmqContext as unknown as RmqContext);
 
         expect(rmqEmailService.sendEmailVerification).toHaveBeenCalledWith(payload);
+        expect(mockChannel.ack).toHaveBeenCalled();
+        expect(mockChannel.nack).not.toHaveBeenCalled();
+      });
+    });
+
+    describe("for EventName.AUTH_LOCAL_RESTORATION", (): void => {
+      it("should call sendUserRestoration and ack the message", async (): Promise<void> => {
+        const payload: AuthLocalRestorationEvent = {
+          name: EventName.AUTH_LOCAL_RESTORATION,
+          userId: user.id,
+          modelId: authentication.id,
+          metadata: {
+            username: user.username,
+            email: user.email,
+          },
+        };
+
+        await rmqEmailConsumer.handleAuthLocalRestoration(payload, mockRmqContext as unknown as RmqContext);
+
+        expect(rmqEmailService.sendUserRestoration).toHaveBeenCalledWith(payload);
         expect(mockChannel.ack).toHaveBeenCalled();
         expect(mockChannel.nack).not.toHaveBeenCalled();
       });

@@ -1236,4 +1236,261 @@ describe("AuthController E2E", (): void => {
       });
     });
   });
+
+  describe("GET /api/v1/auth/local/restoration/confirm", (): void => {
+    describe("positive scenarios", (): void => {
+      it("should return 200, restore user and set cookies with access token", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory();
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+          },
+        );
+
+        // Soft delete the user to simulate restoration scenario;
+        await dataSource.getRepository(UserEntity).softRemove(user);
+
+        const token: string = await tokensService.generate(
+          { userId: user.id, provider: AuthenticationProvider.LOCAL },
+          { expiresIn: "15m" },
+        );
+
+        const response = await httpServer.get("/api/v1/auth/local/restoration/confirm").query({ token }).send();
+
+        const updatedUser: UserEntity | null = await dataSource
+          .getRepository(UserEntity)
+          .findOne({ where: { id: user.id }, withDeleted: true });
+        const updatedAuthentication: AuthenticationEntity | null = await dataSource
+          .getRepository(AuthenticationEntity)
+          .findOne({ where: { id: authentication.id } });
+        const event: EventEntity | null = await dataSource
+          .getRepository(EventEntity)
+          .findOne({ where: { name: EventName.USER_RESTORED, userId: user.id } });
+
+        expect(response.statusCode).toBe(200);
+        expect(response.header["set-cookie"]).not.toBeNull();
+        expect(response.header["set-cookie"][0]).toContain("accessToken");
+        expect(updatedUser).not.toBeNull();
+        expect(updatedUser?.deletedAt).toBeNull();
+        expect(updatedAuthentication).not.toBeNull();
+        expect(updatedAuthentication?.refreshToken).not.toBeNull();
+        expect(event).not.toBeNull();
+        expect(event?.name).toBe(EventName.USER_RESTORED);
+        expect(event?.userId).toBe(user.id);
+        expect(event?.modelId).toBe(user.id);
+      });
+
+      it("should return 200, restore user and set refreshToken of other authentications to NULL", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory();
+        const localAuthentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: localAuthentication.id },
+          {
+            metadata: {
+              local: {
+                ...localAuthentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+          },
+        );
+        const googleAuthentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.GOOGLE,
+          metadata: {
+            google: {},
+          },
+        });
+
+        // Soft delete the user to simulate restoration scenario;
+        await dataSource.getRepository(UserEntity).softRemove(user);
+
+        const token: string = await tokensService.generate(
+          { userId: user.id, provider: AuthenticationProvider.LOCAL },
+          { expiresIn: "15m" },
+        );
+
+        const response = await httpServer.get("/api/v1/auth/local/restoration/confirm").query({ token }).send();
+
+        const updatedUser: UserEntity | null = await dataSource
+          .getRepository(UserEntity)
+          .findOne({ where: { id: user.id }, withDeleted: true });
+        const updatedLocalAuthentication: AuthenticationEntity | null = await dataSource
+          .getRepository(AuthenticationEntity)
+          .findOne({ where: { id: localAuthentication.id } });
+        const updatedGoogleAuthentication: AuthenticationEntity | null = await dataSource
+          .getRepository(AuthenticationEntity)
+          .findOne({ where: { id: googleAuthentication.id } });
+
+        expect(response.statusCode).toBe(200);
+        expect(response.header["set-cookie"]).not.toBeNull();
+        expect(response.header["set-cookie"][0]).toContain("accessToken");
+        expect(updatedUser).not.toBeNull();
+        expect(updatedUser?.deletedAt).toBeNull();
+        expect(updatedLocalAuthentication).not.toBeNull();
+        expect(updatedLocalAuthentication?.refreshToken).not.toBeNull();
+        expect(updatedGoogleAuthentication?.refreshToken).toBeNull();
+      });
+    });
+
+    describe("negative scenarios", (): void => {
+      it("should return 400 when token is missing", async (): Promise<void> => {
+        const response = await httpServer.get("/api/v1/auth/local/restoration/confirm").send();
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toEqual(expect.arrayContaining(["token: Required"]));
+      });
+
+      it("should return 401 when token is invalid", async (): Promise<void> => {
+        const response = await httpServer
+          .get("/api/v1/auth/local/restoration/confirm")
+          .query({ token: "invalid-token" })
+          .send();
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Invalid token");
+      });
+
+      it("should return 401 when token is expired", async (): Promise<void> => {
+        const user: UserEntity = await factories.buildUserFactory();
+
+        const expiredToken: string = await tokensService.generate(
+          { userId: user.id, provider: AuthenticationProvider.LOCAL },
+          { expiresIn: "-1h" },
+        );
+
+        const response = await httpServer
+          .get("/api/v1/auth/local/restoration/confirm")
+          .query({ token: expiredToken })
+          .send();
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Token expired");
+      });
+
+      it("should return 404 when user has no local authentication", async (): Promise<void> => {
+        const user: UserEntity = await factories.buildUserFactory();
+        const token: string = await tokensService.generate({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+
+        const response = await httpServer.get("/api/v1/auth/local/restoration/confirm").query({ token });
+
+        expect(response.statusCode).toBe(404);
+        expect(response.body).toEqual({
+          message: "User not found",
+          error: "Not Found",
+          statusCode: 404,
+        });
+      });
+
+      it("should return 400 when user is not deleted", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory();
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: true,
+              },
+            },
+          },
+        );
+
+        const token: string = await tokensService.generate(
+          { userId: user.id, provider: AuthenticationProvider.LOCAL },
+          { expiresIn: "15m" },
+        );
+
+        const response = await httpServer.get("/api/v1/auth/local/restoration/confirm").query({ token });
+
+        expect(response.statusCode).toBe(400);
+        expect(response.body.message).toEqual("User is not deleted.");
+      });
+
+      it("should return 401 when email is not verified", async (): Promise<void> => {
+        const password = "Password123";
+        const hashedPassword: string = await hash(password);
+
+        const user: UserEntity = await factories.buildUserFactory();
+        const authentication: AuthenticationEntity = await factories.buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        });
+        await dataSource.getRepository(AuthenticationEntity).update(
+          { id: authentication.id },
+          {
+            metadata: {
+              local: {
+                ...authentication.metadata.local,
+                password: hashedPassword,
+                isEmailVerified: false,
+              },
+            },
+          },
+        );
+
+        // Soft delete the user to simulate restoration scenario;
+        await dataSource.getRepository(UserEntity).softRemove(user);
+
+        const token: string = await tokensService.generate(
+          { userId: user.id, provider: AuthenticationProvider.LOCAL },
+          { expiresIn: "15m" },
+        );
+
+        const response = await httpServer.get("/api/v1/auth/local/restoration/confirm").query({ token });
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body.message).toContain("Email is not verified.");
+      });
+
+      it("should return 401 when provider in token does not match local authentication provider", async (): Promise<void> => {
+        const user: UserEntity = await factories.buildUserFactory();
+        const token: string = await tokensService.generate({
+          userId: user.id,
+          provider: AuthenticationProvider.GOOGLE,
+        });
+
+        const response = await httpServer.get("/api/v1/auth/local/restoration/confirm").query({ token });
+
+        expect(response.statusCode).toBe(401);
+        expect(response.body).toEqual({
+          message: "Invalid token.",
+          error: "Unauthorized",
+          statusCode: 401,
+        });
+      });
+    });
+  });
 });

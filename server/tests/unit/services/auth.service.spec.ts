@@ -31,6 +31,7 @@ import {
   LocalPasswordResetConfirmDto,
   LocalReactivationConfirmDto,
   LocalEmailVerificationDto,
+  LocalRestorationConfirmDto,
 } from "#server/auth/dto/auth.dto";
 
 jest.mock("#server/utils/hasher", () => ({
@@ -68,7 +69,12 @@ describe("AuthService", (): void => {
 
     const mockDataSource = { transaction: jest.fn().mockImplementation((callback) => callback(entityManager)) };
     const mockRmqMicroserviceClient = { emit: jest.fn() };
-    const mockUsersService = { findUser: jest.fn(), findUserByPk: jest.fn(), updateUser: jest.fn() };
+    const mockUsersService = {
+      findUser: jest.fn(),
+      findUserByPk: jest.fn(),
+      updateUser: jest.fn(),
+      restoreUser: jest.fn(),
+    };
     const mockEventsService = { buildInstance: jest.fn(), createEvent: jest.fn() };
     const mockEventEmitter2 = { emit: jest.fn() };
     const mockTokensService = {
@@ -479,6 +485,22 @@ describe("AuthService", (): void => {
 
       expect(rmqMicroserviceClient.emit).toHaveBeenCalledWith(EventName.AUTH_LOCAL_REACTIVATION, expect.any(Object));
     });
+
+    it("should emit restoration event and throw error when user is deleted", async (): Promise<void> => {
+      user.deletedAt = new Date();
+      user.isDeactivated = false;
+      user.authentications = [authentication];
+
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValue(
+        expect.any(Object),
+      );
+
+      await expect(authService.signIn(user, AuthenticationProvider.LOCAL)).rejects.toThrow(
+        new UnauthorizedException("User is deleted."),
+      );
+
+      expect(rmqMicroserviceClient.emit).toHaveBeenCalledWith(EventName.AUTH_LOCAL_RESTORATION, expect.any(Object));
+    });
   });
 
   describe("signOut", (): void => {
@@ -833,6 +855,9 @@ describe("AuthService", (): void => {
       (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValue(
         expect.any(Object),
       );
+      jest
+        .spyOn(authService, "updateAuthentication")
+        .mockImplementation((where, values, manager) => manager!.update(AuthenticationEntity, where, values));
 
       await authService.localReactivationConfirm(dto);
 
@@ -856,16 +881,135 @@ describe("AuthService", (): void => {
         },
       });
       expect(dataSource.transaction).toHaveBeenCalled();
-      expect(eventEmitter2.emit).toHaveBeenCalledWith(
-        EventName.USER_REACTIVATED,
-        expect.any(Object),
-        expect.any(Object),
-      );
+      expect(authService.updateAuthentication).toHaveBeenCalledTimes(2);
+      expect(entityManager.update).toHaveBeenCalledTimes(2);
       expect(usersService.updateUser).toHaveBeenCalledWith(
         { id: user.id },
         { isDeactivated: false },
         expect.any(Object),
       );
+      expect(eventEmitter2.emit).toHaveBeenCalledWith(
+        EventName.USER_REACTIVATED,
+        expect.any(Object),
+        expect.any(Object),
+      );
+    });
+  });
+
+  describe("localRestorationConfirm", (): void => {
+    let dto: LocalRestorationConfirmDto;
+    let token: string;
+
+    beforeEach((): void => {
+      token = randomValidJwt({ userId: user.id, provider: AuthenticationProvider.LOCAL }, { expiresIn: "15m" });
+      dto = { token };
+      tokensService.verify.mockResolvedValue({
+        userId: user.id,
+        provider: AuthenticationProvider.LOCAL,
+      } as TokenPayload);
+    });
+
+    it("should throw UnauthorizedException when token is invalid (missing userId)", async (): Promise<void> => {
+      tokensService.verify.mockResolvedValue({ provider: AuthenticationProvider.LOCAL } as TokenPayload);
+
+      await expect(authService.localRestorationConfirm(dto)).rejects.toThrow(
+        new UnauthorizedException("Invalid token."),
+      );
+    });
+
+    it("should throw UnauthorizedException when token is invalid (missing provider)", async (): Promise<void> => {
+      tokensService.verify.mockResolvedValue({ userId: user.id } as TokenPayload);
+
+      await expect(authService.localRestorationConfirm(dto)).rejects.toThrow(
+        new UnauthorizedException("Invalid token."),
+      );
+    });
+
+    it("should throw NotFoundException when user not found", async (): Promise<void> => {
+      usersService.findUser.mockResolvedValue(null);
+
+      await expect(authService.localRestorationConfirm(dto)).rejects.toThrow(new NotFoundException("User not found"));
+    });
+
+    it("should throw UnauthorizedException when email is not verified", async (): Promise<void> => {
+      authentication.metadata.local!.isEmailVerified = false;
+      user.deletedAt = new Date();
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(authService.localRestorationConfirm(dto)).rejects.toThrow(
+        new UnauthorizedException("Email is not verified."),
+      );
+    });
+
+    it("should throw BadRequestException when user is not deleted", async (): Promise<void> => {
+      user.deletedAt = null;
+      authentication.metadata.local!.isEmailVerified = true;
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(authService.localRestorationConfirm(dto)).rejects.toThrow(
+        new BadRequestException("User is not deleted."),
+      );
+    });
+
+    it("should throw UnauthorizedException when provider in token does not match local authentication provider", async (): Promise<void> => {
+      user.deletedAt = new Date();
+      authentication.metadata.local!.isEmailVerified = true;
+      tokensService.verify.mockResolvedValue({
+        userId: user.id,
+        provider: AuthenticationProvider.GOOGLE,
+      });
+      usersService.findUser.mockResolvedValue(user);
+
+      await expect(authService.localRestorationConfirm(dto)).rejects.toThrow(
+        new UnauthorizedException("Invalid token."),
+      );
+    });
+
+    it("should restore user and emit USER_RESTORED event", async (): Promise<void> => {
+      user.deletedAt = new Date();
+      authentication.metadata.local!.isEmailVerified = true;
+      usersService.findUser.mockResolvedValue(user);
+      tokensService.generate.mockResolvedValue(expect.any(String));
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValue(
+        expect.any(Object),
+      );
+
+      await authService.localRestorationConfirm(dto);
+
+      expect(tokensService.verify).toHaveBeenCalledWith(token);
+      expect(usersService.findUser).toHaveBeenCalledWith({
+        relations: ["authentications"],
+        select: {
+          id: true,
+          isDeactivated: true,
+          deletedAt: true,
+          email: true,
+          authentications: {
+            id: true,
+            metadata: true,
+          },
+        },
+        where: {
+          id: user.id,
+          authentications: {
+            provider: AuthenticationProvider.LOCAL,
+          },
+        },
+        withDeleted: true,
+      });
+      expect(dataSource.transaction).toHaveBeenCalled();
+      expect(entityManager.update).toHaveBeenCalledWith(
+        AuthenticationEntity,
+        { userId: user.id, provider: AuthenticationProvider.LOCAL },
+        { refreshToken: expect.any(String) },
+      );
+      expect(entityManager.update).toHaveBeenCalledWith(
+        AuthenticationEntity,
+        { userId: user.id, provider: Not(AuthenticationProvider.LOCAL) },
+        { refreshToken: null, lastAccessedAt: expect.any(Function) },
+      );
+      expect(usersService.restoreUser).toHaveBeenCalledWith({ id: user.id }, expect.any(Object));
+      expect(eventEmitter2.emit).toHaveBeenCalledWith(EventName.USER_RESTORED, expect.any(Object), expect.any(Object));
     });
   });
 
@@ -889,17 +1033,20 @@ describe("AuthService", (): void => {
       (entityManager.create as jest.Mock).mockReturnValueOnce(newUser).mockReturnValueOnce(newAuthentication);
       (entityManager.save as jest.Mock).mockResolvedValue(undefined);
 
-      const result: UserEntity = await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
+      await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
 
-      expect(usersService.findUser).toHaveBeenCalledWith(
+      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        1,
         {
           select: { id: true },
           where: { username: userClaims.username },
+          withDeleted: true,
         },
         entityManager,
       );
-
-      expect(usersService.findUser).toHaveBeenCalledWith(
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        2,
         {
           where: { email: userClaims.email },
           relations: ["authentications"],
@@ -918,12 +1065,12 @@ describe("AuthService", (): void => {
               metadata: true,
             },
           },
+          withDeleted: true,
         },
         entityManager,
       );
       expect(entityManager.create).toHaveBeenCalledTimes(2);
       expect(entityManager.save).toHaveBeenCalledTimes(2);
-      expect(result).toEqual(newUser);
     });
 
     it("should update existing user with GOOGLE authentication", async (): Promise<void> => {
@@ -943,16 +1090,44 @@ describe("AuthService", (): void => {
       usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(user);
       (entityManager.save as jest.Mock).mockResolvedValue(undefined);
 
-      const result: UserEntity = await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
+      await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
 
-      expect(usersService.findUser).toHaveBeenCalledWith(
+      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        1,
         {
           select: { id: true },
           where: { username: userClaims.username },
+          withDeleted: true,
         },
         entityManager,
       );
-
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        2,
+        {
+          relations: ["authentications"],
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: {
+            email: user.email,
+          },
+          withDeleted: true,
+        },
+        entityManager,
+      );
       expect(usersService.updateUser).toHaveBeenCalledWith(
         { id: user.id },
         {
@@ -965,7 +1140,6 @@ describe("AuthService", (): void => {
       );
       expect(entityManager.save).toHaveBeenCalledWith(googleAuth);
       expect(user.reload).toHaveBeenCalled();
-      expect(result).toEqual(user);
     });
 
     it("should create GOOGLE authentication for existing user", async (): Promise<void> => {
@@ -985,8 +1159,34 @@ describe("AuthService", (): void => {
       (entityManager.create as jest.Mock).mockReturnValue(newGoogleAuth);
       (entityManager.save as jest.Mock).mockResolvedValue(undefined);
 
-      const result: UserEntity = await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
+      await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
 
+      expect(usersService.findUser).toHaveBeenCalledTimes(1);
+      expect(usersService.findUser).toHaveBeenCalledWith(
+        {
+          relations: ["authentications"],
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: {
+            email: user.email,
+          },
+          withDeleted: true,
+        },
+        entityManager,
+      );
       expect(usersService.updateUser).toHaveBeenCalledWith(
         { id: user.id },
         {
@@ -1003,7 +1203,6 @@ describe("AuthService", (): void => {
       });
       expect(entityManager.save).toHaveBeenCalledWith(newGoogleAuth);
       expect(user.reload).toHaveBeenCalled();
-      expect(result).toEqual(user);
     });
 
     it("should set username to undefined when it is already taken", async (): Promise<void> => {
@@ -1021,10 +1220,39 @@ describe("AuthService", (): void => {
 
       await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
 
-      expect(usersService.findUser).toHaveBeenCalledWith(
+      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        1,
         {
           select: { id: true },
           where: { username: userClaims.username },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        2,
+        {
+          relations: ["authentications"],
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: {
+            email: user.email,
+          },
+          withDeleted: true,
         },
         entityManager,
       );
@@ -1059,10 +1287,39 @@ describe("AuthService", (): void => {
 
       await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
 
-      expect(usersService.findUser).toHaveBeenCalledWith(
+      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        1,
         {
           select: { id: true },
           where: { username: userClaims.username },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        2,
+        {
+          relations: ["authentications"],
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: {
+            email: user.email,
+          },
+          withDeleted: true,
         },
         entityManager,
       );
@@ -1079,6 +1336,77 @@ describe("AuthService", (): void => {
           lastName: userClaims.lastName,
           avatarUrl: userClaims.avatarUrl,
           isDeactivated: false,
+        },
+        entityManager,
+      );
+      expect(user.reload).toHaveBeenCalled();
+    });
+
+    it("should restore deleted user with IdP login", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "John",
+        lastName: "Doe",
+        email: user.email,
+        avatarUrl: user.avatarUrl!,
+        username: "newUsername",
+      };
+      user.deletedAt = new Date();
+      user.authentications = [authentication];
+
+      usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(user);
+      (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+      (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValue(
+        expect.any(Object),
+      );
+      usersService.restoreUser.mockResolvedValue(expect.any(Object));
+
+      await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
+
+      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        1,
+        {
+          select: { id: true },
+          where: { username: userClaims.username },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        2,
+        {
+          relations: ["authentications"],
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: {
+            email: user.email,
+          },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.restoreUser).toHaveBeenCalledWith({ id: user.id }, entityManager);
+      expect(eventEmitter2.emit).toHaveBeenCalledWith(EventName.USER_RESTORED, expect.any(Object), expect.any(Object));
+      expect(usersService.updateUser).toHaveBeenCalledWith(
+        { id: user.id },
+        {
+          username: userClaims.username,
+          firstName: userClaims.firstName,
+          lastName: userClaims.lastName,
+          avatarUrl: userClaims.avatarUrl,
         },
         entityManager,
       );
