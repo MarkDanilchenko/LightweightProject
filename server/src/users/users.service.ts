@@ -102,6 +102,22 @@ export default class UsersService {
   }
 
   /**
+   * Restores a soft-deleted user.
+   *
+   * @param {FindOptionsWhere<UserEntity>} whereCondition - The condition to find the soft-deleted user to restore.
+   * @param {EntityManager} [manager] - The entity manager to use for the query within a transaction.
+   *
+   * @returns {Promise<UpdateResult>} A promise that resolves with the update result.
+   */
+  async restoreUser(whereCondition: FindOptionsWhere<UserEntity>, manager?: EntityManager): Promise<UpdateResult> {
+    if (!manager) {
+      return this.userRepository.restore(whereCondition);
+    }
+
+    return manager.restore(UserEntity, whereCondition);
+  }
+
+  /**
    * Deactivates user's profile.
    *
    * @param {TokenPayload} payload - The JWT token payload containing user authentication information.

@@ -5,6 +5,7 @@ import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   AuthLocalReactivationEvent,
+  AuthLocalRestorationEvent,
   EventName,
   UserDeactivatedEvent,
   UserDeletedEvent,
@@ -64,8 +65,8 @@ export default class RmqEmailConsumer {
 
   /**
    * Handles the AUTH_LOCAL_REACTIVATION event from the message queue.
-   * This method processes reactivation events by sending a reactivation email
-   * to the user who has requested to reactivate their account.
+   * This method processes profile reactivation events by sending a profile reactivation email
+   * to the user who has requested to reactivate account.
    *
    * @param {AuthLocalReactivationEvent} payload - The event payload containing user details and reactivation metadata
    * @param {RmqContext} context - The RabbitMQ context for message acknowledgment
@@ -75,6 +76,24 @@ export default class RmqEmailConsumer {
   @MessagePattern(EventName.AUTH_LOCAL_REACTIVATION)
   async handleAuthLocalReactivation(
     @Payload() payload: AuthLocalReactivationEvent,
+    @Ctx() context: RmqContext,
+  ): Promise<void> {
+    await this.eventsHandler(payload, context);
+  }
+
+  /**
+   * Handles the AUTH_LOCAL_RESTORATION event from the message queue.
+   * This method processes profile restoration events by sending a profile restoration email
+   * to the user who has requested to restore account.
+   *
+   * @param {AuthLocalRestorationEvent} payload - The event payload containing user details and metadata
+   * @param {RmqContext} context - The RabbitMQ context for message acknowledgment
+   *
+   * @returns {Promise<void>} A promise that resolves when the email is processed
+   */
+  @MessagePattern(EventName.AUTH_LOCAL_RESTORATION)
+  async handleAuthLocalRestoration(
+    @Payload() payload: AuthLocalRestorationEvent,
     @Ctx() context: RmqContext,
   ): Promise<void> {
     await this.eventsHandler(payload, context);
@@ -131,7 +150,8 @@ export default class RmqEmailConsumer {
       | UserDeactivatedEvent
       | AuthLocalReactivationEvent
       | AuthLocalPasswordResetEvent
-      | AuthLocalCreatedEvent,
+      | AuthLocalCreatedEvent
+      | AuthLocalRestorationEvent,
     context: RmqContext,
   ): Promise<void> {
     const eventName: EventName = payload.name;
@@ -153,7 +173,7 @@ export default class RmqEmailConsumer {
         }
 
         case EventName.AUTH_LOCAL_REACTIVATION: {
-          await this.rmqEmailService.sendReactivation(payload);
+          await this.rmqEmailService.sendUserReactivation(payload);
 
           break;
         }
@@ -166,6 +186,12 @@ export default class RmqEmailConsumer {
 
         case EventName.AUTH_LOCAL_CREATED: {
           await this.rmqEmailService.sendEmailVerification(payload);
+
+          break;
+        }
+
+        case EventName.AUTH_LOCAL_RESTORATION: {
+          await this.rmqEmailService.sendUserRestoration(payload);
 
           break;
         }

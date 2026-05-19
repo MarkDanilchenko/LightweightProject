@@ -27,6 +27,7 @@ import {
   LocalReactivationConfirmDto,
   LocalSignUpDto,
   LocalEmailVerificationDto,
+  LocalRestorationConfirmDto,
 } from "#server/auth/dto/auth.dto";
 import { RMQ_MICROSERVICE } from "#server/configs/constants";
 import { ClientProxy } from "@nestjs/microservices";
@@ -348,6 +349,18 @@ export default class AuthService {
       throw new UnauthorizedException("User is deactivated.");
     }
 
+    if (user.deletedAt) {
+      this.rmqMicroserviceClient.emit(
+        EventName.AUTH_LOCAL_RESTORATION,
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_RESTORATION, user.id, user.id, {
+          username: user.username,
+          email: user.email,
+        }),
+      );
+
+      throw new UnauthorizedException("User is deleted.");
+    }
+
     const accessToken: string = await this.tokensService.generate(
       { userId: user.id, provider, jwti: uuidv4() },
       { expiresIn: this.tokensService.jwtAccessTokenExpiresIn },
@@ -637,7 +650,7 @@ export default class AuthService {
     );
 
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
-      await this.updateAuthentication({ id: user.id, userId, provider }, { refreshToken }, manager);
+      await this.updateAuthentication({ userId, provider }, { refreshToken }, manager);
 
       // Set refreshToken to null for all other user's authentications;
       await this.updateAuthentication(
@@ -651,6 +664,83 @@ export default class AuthService {
       this.eventEmitter.emit(
         EventName.USER_REACTIVATED,
         this.eventsService.buildInstance(EventName.USER_REACTIVATED, userId, userId, {
+          email: user.email,
+        }),
+        manager,
+      );
+    });
+
+    return accessToken;
+  }
+
+  /**
+   * Confirms and processes a user account restoration request.
+   *
+   * @param {LocalRestorationConfirmDto} localRestorationConfirmDto - The data transfer object containing the restoration token.
+   *
+   * @returns {Promise<string>} - Access token.
+   */
+  async localRestorationConfirm(localRestorationConfirmDto: LocalRestorationConfirmDto): Promise<string> {
+    const { token } = localRestorationConfirmDto;
+
+    const { userId, provider } = await this.tokensService.verify(token);
+    if (!userId || !provider || provider !== AuthenticationProvider.LOCAL) {
+      throw new UnauthorizedException("Invalid token.");
+    }
+
+    const user: UserEntity | null = await this.userService.findUser({
+      relations: ["authentications"],
+      select: {
+        id: true,
+        isDeactivated: true,
+        deletedAt: true,
+        email: true,
+        authentications: {
+          id: true,
+          metadata: true,
+        },
+      },
+      where: {
+        id: userId,
+        authentications: {
+          provider,
+        },
+      },
+      withDeleted: true,
+    });
+
+    if (!user) {
+      throw new NotFoundException("User not found");
+    } else if (!user.authentications[0].metadata?.local?.isEmailVerified) {
+      throw new UnauthorizedException("Email is not verified.");
+    } else if (!user.deletedAt) {
+      throw new BadRequestException(`User is not deleted.`);
+    }
+
+    const accessToken: string = await this.tokensService.generate(
+      { userId, provider, jwti: uuidv4() },
+      { expiresIn: this.tokensService.jwtAccessTokenExpiresIn },
+    );
+    const refreshToken: string = await this.tokensService.generate(
+      { userId, provider },
+      { expiresIn: this.tokensService.jwtRefreshTokenExpiresIn },
+    );
+
+    await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
+      await this.updateAuthentication({ userId, provider }, { refreshToken }, manager);
+
+      // Set refreshToken to null for all other user's authentications;
+      await this.updateAuthentication(
+        { userId, provider: Not(AuthenticationProvider.LOCAL) },
+        { refreshToken: null, lastAccessedAt: () => "lastAccessedAt" },
+        manager,
+      );
+
+      await this.userService.restoreUser({ id: user.id }, manager);
+
+      this.eventEmitter.emit(
+        EventName.USER_RESTORED,
+        this.eventsService.buildInstance(EventName.USER_RESTORED, userId, userId, {
           email: user.email,
         }),
         manager,
@@ -683,6 +773,7 @@ export default class AuthService {
               {
                 select: { id: true },
                 where: { username },
+                withDeleted: true,
               },
               manager,
             );
@@ -709,6 +800,7 @@ export default class AuthService {
                 },
               },
               where: { email },
+              withDeleted: true,
               relations: ["authentications"],
             },
             manager,
@@ -748,6 +840,18 @@ export default class AuthService {
               this.eventEmitter.emit(
                 EventName.USER_REACTIVATED,
                 this.eventsService.buildInstance(EventName.USER_REACTIVATED, existingUser.id, existingUser.id, {
+                  email: existingUser.email,
+                }),
+                manager,
+              );
+            }
+
+            if (existingUser.deletedAt) {
+              await this.userService.restoreUser({ id: existingUser.id }, manager);
+
+              this.eventEmitter.emit(
+                EventName.USER_RESTORED,
+                this.eventsService.buildInstance(EventName.USER_RESTORED, existingUser.id, existingUser.id, {
                   email: existingUser.email,
                 }),
                 manager,

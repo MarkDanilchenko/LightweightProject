@@ -6,6 +6,7 @@ import {
   AuthLocalCreatedEvent,
   AuthLocalPasswordResetEvent,
   AuthLocalReactivationEvent,
+  AuthLocalRestorationEvent,
   EventName,
   UserDeactivatedEvent,
   UserDeletedEvent,
@@ -205,11 +206,11 @@ export default class RmqEmailService {
    *
    * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
    */
-  async sendReactivation(payload: AuthLocalReactivationEvent): Promise<void> {
+  async sendUserReactivation(payload: AuthLocalReactivationEvent): Promise<void> {
     const { userId, modelId, metadata } = payload;
     const { username, email } = metadata;
 
-    const reactivationTemplatePath: string = await this.getTemplatePath("localReactivation");
+    const reactivationTemplatePath: string = await this.getTemplatePath("localUserReactivation");
 
     const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
     const { baseUrl } = this.configService.get<AppConfiguration["clientConfiguration"]>("clientConfiguration")!;
@@ -245,6 +246,62 @@ export default class RmqEmailService {
       this.eventEmitter.emit(
         EventName.AUTH_LOCAL_REACTIVATION_SENT,
         this.eventsService.buildInstance(EventName.AUTH_LOCAL_REACTIVATION_SENT, userId, modelId, { email }),
+        manager,
+      );
+
+      await this.transporter.sendMail(mailOptions);
+    });
+  }
+
+  /**
+   * Sends a restoration email to the user.
+   * The email contains a link with a jwt token, which is valid for 15 minutes.
+   *
+   * @param {AuthLocalRestorationEvent} payload - The event containing the user's information.
+   *
+   * @returns {Promise<void>} A promise that resolves when the email has been successfully sent.
+   */
+  async sendUserRestoration(payload: AuthLocalRestorationEvent): Promise<void> {
+    const { userId, modelId, metadata } = payload;
+    const { username, email } = metadata;
+
+    const restorationTemplatePath: string = await this.getTemplatePath("localUserRestoration");
+
+    const { from } = this.configService.get<AppConfiguration["smtpConfiguration"]>("smtpConfiguration")!;
+    const { baseUrl } = this.configService.get<AppConfiguration["clientConfiguration"]>("clientConfiguration")!;
+
+    const user: UserEntity | null = await this.userService.findUser({
+      where: [{ id: userId }, { id: modelId }],
+      withDeleted: true,
+    });
+    if (!user) {
+      throw new Error("Restoration request email: User not found");
+    }
+
+    const token: string = await this.tokensService.generate(
+      { userId, provider: AuthenticationProvider.LOCAL },
+      { expiresIn: "15m" },
+    );
+    // TODO: note, that this callback url redirects to the client's page,
+    //  where /api/v1/auth/local/restoration/confirm (GET) with proper token in query should be called;
+    const callbackUrl: string = `${baseUrl}/....?token=${token}`;
+    const html: string = await ejs.renderFile(
+      restorationTemplatePath,
+      { username, callbackUrl },
+      { root: path.resolve(process.cwd(), "templates") },
+    );
+    const mailOptions: MailOptions = {
+      from,
+      to: email,
+      subject: "LightweightProject: restoration account",
+      text: "Please, click on the link below and follow the instructions to restore your account.",
+      html,
+    };
+
+    await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
+      this.eventEmitter.emit(
+        EventName.AUTH_LOCAL_RESTORATION_SENT,
+        this.eventsService.buildInstance(EventName.AUTH_LOCAL_RESTORATION_SENT, userId, modelId, { email }),
         manager,
       );
 
