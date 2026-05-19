@@ -67,6 +67,7 @@ describe("LocalAuthStrategy", (): void => {
         select: {
           id: true,
           isDeactivated: true,
+          deletedAt: true,
           username: true,
           email: true,
           authentications: {
@@ -79,6 +80,7 @@ describe("LocalAuthStrategy", (): void => {
           { email: user.email, authentications: { provider: AuthenticationProvider.LOCAL } },
           { username: user.email, authentications: { provider: AuthenticationProvider.LOCAL } },
         ],
+        withDeleted: true,
       });
       expect(verifyHash).toHaveBeenCalledWith(password, authentication.metadata.local?.password);
       expect(mockDone).toHaveBeenCalledWith(null, user);

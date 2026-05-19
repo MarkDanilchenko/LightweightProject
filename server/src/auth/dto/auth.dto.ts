@@ -5,8 +5,10 @@ import {
   localSignUpSchema,
   localPasswordResetRequestSchema,
   localPasswordResetConfirmSchema,
-  deactivateSchema,
-  localReactivateConfirmSchema,
+  userDeactivateSchema,
+  localReactivationConfirmSchema,
+  userDeleteSchema,
+  localRestorationConfirmSchema,
 } from "#server/auth/schemas/auth.schema";
 
 class LocalSignUpDto extends createZodDto(localSignUpSchema) {}
@@ -19,9 +21,13 @@ class LocalPasswordResetRequestDto extends createZodDto(localPasswordResetReques
 
 class LocalPasswordResetConfirmDto extends createZodDto(localPasswordResetConfirmSchema) {}
 
-class LocalReactivationConfirmDto extends createZodDto(localReactivateConfirmSchema) {}
+class LocalReactivationConfirmDto extends createZodDto(localReactivationConfirmSchema) {}
 
-class DeactivateDto extends createZodDto(deactivateSchema) {}
+class LocalRestorationConfirmDto extends createZodDto(localRestorationConfirmSchema) {}
+
+class UserDeactivateDto extends createZodDto(userDeactivateSchema) {}
+
+class UserDeleteDto extends createZodDto(userDeleteSchema) {}
 
 export {
   LocalSignUpDto,
@@ -30,5 +36,7 @@ export {
   LocalPasswordResetRequestDto,
   LocalPasswordResetConfirmDto,
   LocalReactivationConfirmDto,
-  DeactivateDto,
+  LocalRestorationConfirmDto,
+  UserDeactivateDto,
+  UserDeleteDto,
 };

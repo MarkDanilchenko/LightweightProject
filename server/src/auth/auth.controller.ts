@@ -23,6 +23,7 @@ import {
   LocalPasswordResetRequestDto,
   LocalPasswordResetConfirmDto,
   LocalReactivationConfirmDto,
+  LocalRestorationConfirmDto,
 } from "#server/auth/dto/auth.dto";
 import { clearCookie, setCookie } from "#server/utils/cookie";
 import LocalAuthGuard from "#server/auth/guards/local.guard";
@@ -161,6 +162,42 @@ export default class AuthController {
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     const accessToken = await this.authService.localReactivationConfirm(localReactivationConfirmDto);
+
+    setCookie(res, "accessToken", accessToken, this.https);
+
+    res.status(200).send();
+  }
+
+  @Get("local/restoration/confirm")
+  @ApiOperation({
+    summary: "Confirm restoration",
+    description:
+      "Confirm restoration for a user account that has been deleted (local authentication flow) and " +
+      "set accessToken in cookie.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "Restoration confirmed successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Invalid token or email is not verified.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "User not found.",
+  })
+  @ApiQuery({ type: LocalRestorationConfirmDto })
+  @UsePipes(ZodValidationPipe)
+  async localRestorationConfirm(
+    @Query() localRestorationConfirmDto: LocalRestorationConfirmDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    const accessToken = await this.authService.localRestorationConfirm(localRestorationConfirmDto);
 
     setCookie(res, "accessToken", accessToken, this.https);
 

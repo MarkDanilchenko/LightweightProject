@@ -11,6 +11,10 @@ import {
   EventName,
   UserDeactivatedEvent,
   UserReactivatedEvent,
+  UserDeletedEvent,
+  UserRestoredEvent,
+  AuthLocalRestorationEvent,
+  AuthLocalRestorationSentEvent,
 } from "#server/events/interfaces/events.interfaces";
 
 class BaseEventClass implements BaseEvent {
@@ -98,6 +102,17 @@ class AuthLocalPasswordResetedEventClass extends BaseEventClass implements AuthL
   }
 }
 
+class UserDeactivatedEventClass extends BaseEventClass implements UserDeactivatedEvent {
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: UserDeactivatedEvent["metadata"],
+  ) {
+    super(name, userId, modelId, metadata);
+  }
+}
+
 class AuthLocalReactivationEventClass extends BaseEventClass implements AuthLocalReactivationEvent {
   constructor(
     name: BaseEvent["name"],
@@ -120,23 +135,56 @@ class AuthLocalReactivationSentEventClass extends BaseEventClass implements Auth
   }
 }
 
-class UserDeactivatedEventClass extends BaseEventClass implements UserDeactivatedEvent {
-  constructor(
-    name: BaseEvent["name"],
-    userId: BaseEvent["userId"],
-    modelId: BaseEvent["modelId"],
-    metadata: UserDeactivatedEvent["metadata"],
-  ) {
-    super(name, userId, modelId, metadata);
-  }
-}
-
 class UserReactivatedEventClass extends BaseEventClass implements UserReactivatedEvent {
   constructor(
     name: BaseEvent["name"],
     userId: BaseEvent["userId"],
     modelId: BaseEvent["modelId"],
     metadata: UserReactivatedEvent["metadata"],
+  ) {
+    super(name, userId, modelId, metadata);
+  }
+}
+
+class UserDeletedEventClass extends BaseEventClass implements UserDeletedEvent {
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: UserDeletedEvent["metadata"],
+  ) {
+    super(name, userId, modelId, metadata);
+  }
+}
+
+class AuthLocalRestorationEventClass extends BaseEventClass implements AuthLocalRestorationEvent {
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: AuthLocalRestorationEvent["metadata"],
+  ) {
+    super(name, userId, modelId, metadata);
+  }
+}
+
+class AuthLocalRestorationSentEventClass extends BaseEventClass implements AuthLocalRestorationSentEvent {
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: AuthLocalRestorationSentEvent["metadata"],
+  ) {
+    super(name, userId, modelId, metadata);
+  }
+}
+
+class UserRestoredEventClass extends BaseEventClass implements UserRestoredEvent {
+  constructor(
+    name: BaseEvent["name"],
+    userId: BaseEvent["userId"],
+    modelId: BaseEvent["modelId"],
+    metadata: UserRestoredEvent["metadata"],
   ) {
     super(name, userId, modelId, metadata);
   }
@@ -151,8 +199,12 @@ const eventsRegistry = {
   [EventName.AUTH_LOCAL_PASSWORD_RESET_CONFIRMED]: AuthLocalPasswordResetedEventClass,
   [EventName.AUTH_LOCAL_REACTIVATION]: AuthLocalReactivationEventClass,
   [EventName.AUTH_LOCAL_REACTIVATION_SENT]: AuthLocalReactivationSentEventClass,
+  [EventName.AUTH_LOCAL_RESTORATION]: AuthLocalRestorationEventClass,
+  [EventName.AUTH_LOCAL_RESTORATION_SENT]: AuthLocalRestorationSentEventClass,
   [EventName.USER_DEACTIVATED]: UserDeactivatedEventClass,
   [EventName.USER_REACTIVATED]: UserReactivatedEventClass,
+  [EventName.USER_DELETED]: UserDeletedEventClass,
+  [EventName.USER_RESTORED]: UserRestoredEventClass,
 };
 
 export { eventsRegistry };

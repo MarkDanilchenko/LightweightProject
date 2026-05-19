@@ -1,0 +1,19 @@
+<%
+    const title = 'LightweightProject - User deleted notification';
+    const description = 'LightweightProject - User deleted notification';
+    const keywords = 'LightweightProject, email, profile, user, deleted';
+    const pageTitle = 'User deleted notification';
+    const additionalStyles = '';
+    const body = `
+        <p class="greeting-note">Hello <b>${username}</b> !</p>
+        <div>
+            <p>Your profile has been successfully deleted in LightweightProject.<br>
+               If you have any questions or would like to restore your account, please sign in again.<br>
+               Please note, that after 30 days, your account will be permanently deleted without the possibility of recovery.<br>
+               If you didn't request this action, please sign in again using your previous credentials and change
+               password immediately.</p>
+        </div>
+        <p class="info-note"><i>Need help? Contact our support team for assistance.</i></p>
+    `;
+%>
+<%- include('layouts/email-layout.ejs', { title, description, keywords, pageTitle, additionalStyles, body }) %>

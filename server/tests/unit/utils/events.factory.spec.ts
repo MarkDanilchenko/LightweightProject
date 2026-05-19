@@ -173,4 +173,66 @@ describe("EventsFactory", (): void => {
       expect(event.metadata).toEqual(metadata);
     });
   });
+
+  describe("UserDeletedEvent", (): void => {
+    it("should create an instance with correct properties", (): void => {
+      const metadata = {
+        username: user.username,
+        email: user.email,
+      };
+
+      const EventClass = eventsRegistry[EventName.USER_DELETED];
+      const event = new EventClass(EventName.USER_DELETED, user.id, user.id, metadata);
+
+      expect(event.name).toBe(EventName.USER_DELETED);
+      expect(event.userId).toBe(user.id);
+      expect(event.modelId).toBe(user.id);
+      expect(event.metadata).toEqual(metadata);
+    });
+  });
+
+  describe("AuthLocalRestorationEvent", (): void => {
+    it("should create an instance with correct properties", (): void => {
+      const metadata = {
+        username: user.username,
+        email: user.email,
+      };
+
+      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_RESTORATION];
+      const event = new EventClass(EventName.AUTH_LOCAL_RESTORATION, user.id, authentication.id, metadata);
+
+      expect(event.name).toBe(EventName.AUTH_LOCAL_RESTORATION);
+      expect(event.userId).toBe(user.id);
+      expect(event.modelId).toBe(authentication.id);
+      expect(event.metadata).toEqual(metadata);
+    });
+  });
+
+  describe("AuthLocalRestorationSentEvent", (): void => {
+    it("should create an instance with correct properties", (): void => {
+      const metadata = { email: user.email };
+
+      const EventClass = eventsRegistry[EventName.AUTH_LOCAL_RESTORATION_SENT];
+      const event = new EventClass(EventName.AUTH_LOCAL_RESTORATION_SENT, user.id, authentication.id, metadata);
+
+      expect(event.name).toBe(EventName.AUTH_LOCAL_RESTORATION_SENT);
+      expect(event.userId).toBe(user.id);
+      expect(event.modelId).toBe(authentication.id);
+      expect(event.metadata).toEqual(metadata);
+    });
+  });
+
+  describe("UserRestoredEvent", (): void => {
+    it("should create an instance with correct properties", (): void => {
+      const metadata = { email: user.email };
+
+      const EventClass = eventsRegistry[EventName.USER_RESTORED];
+      const event = new EventClass(EventName.USER_RESTORED, user.id, user.id, metadata);
+
+      expect(event.name).toBe(EventName.USER_RESTORED);
+      expect(event.userId).toBe(user.id);
+      expect(event.modelId).toBe(user.id);
+      expect(event.metadata).toEqual(metadata);
+    });
+  });
 });

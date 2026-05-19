@@ -27,6 +27,7 @@ export default class LocalAuthStrategy extends PassportStrategy(Strategy, "local
       select: {
         id: true,
         isDeactivated: true,
+        deletedAt: true,
         username: true,
         email: true,
         authentications: {
@@ -45,6 +46,7 @@ export default class LocalAuthStrategy extends PassportStrategy(Strategy, "local
           authentications: { provider: AuthenticationProvider.LOCAL },
         },
       ],
+      withDeleted: true,
     });
     if (!user || !user.authentications?.length) {
       return done(new UnauthorizedException("User or authentication not found."), false);

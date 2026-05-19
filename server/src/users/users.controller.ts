@@ -1,9 +1,9 @@
-import { Body, Controller, Post, Req, Res, UseGuards, UsePipes } from "@nestjs/common";
+import { Body, Controller, Delete, Post, Req, Res, UseGuards, UsePipes } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiCookieAuth } from "@nestjs/swagger";
 import { Response } from "express";
 import { ZodValidationPipe } from "@anatine/zod-nestjs";
 import UsersService from "#server/users/users.service";
-import { DeactivateDto } from "#server/auth/dto/auth.dto";
+import { UserDeactivateDto, UserDeleteDto } from "#server/auth/dto/auth.dto";
 import { clearCookie } from "#server/utils/cookie";
 import JwtGuard from "#server/auth/guards/jwt.guard";
 import { RequestWithTokenPayload } from "#server/common/types/common.types";
@@ -19,12 +19,12 @@ export default class UsersController {
 
   @Post("deactivate")
   @ApiOperation({
-    summary: "Deactivate user profile",
+    summary: "Deactivate user's profile",
     description: "Deactivate current user's profile until the next login.",
   })
   @ApiResponse({
     status: 200,
-    description: "User profile deactivated successfully.",
+    description: "User's profile deactivated successfully.",
   })
   @ApiResponse({
     status: 400,
@@ -39,18 +39,55 @@ export default class UsersController {
     description: "User not found.",
   })
   @ApiCookieAuth("accessToken")
-  @ApiBody({ type: DeactivateDto })
+  @ApiBody({ type: UserDeactivateDto })
   @UsePipes(ZodValidationPipe)
   @UseGuards(JwtGuard)
   async deactivateUser(
     @Req() req: RequestWithTokenPayload,
-    @Body() deactivateDto: DeactivateDto,
+    @Body() userDeactivateDto: UserDeactivateDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
-    await this.usersService.deactivateUser(req.tokenPayload, deactivateDto);
+    await this.usersService.deactivateUserProfile(req.tokenPayload, userDeactivateDto);
 
     clearCookie(res, "accessToken");
 
-    res.status(200).send({ message: "User profile deactivated successfully." });
+    res.status(200).send({ message: "User's profile deactivated successfully." });
+  }
+
+  @Delete("delete")
+  @ApiOperation({
+    summary: "Delete user's profile",
+    description: "Delete current user's profile and all associated data until the next login.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "User's profile deleted successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Authentication failed. Invalid credentials.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "User not found.",
+  })
+  @ApiCookieAuth("accessToken")
+  @ApiBody({ type: UserDeleteDto })
+  @UsePipes(ZodValidationPipe)
+  @UseGuards(JwtGuard)
+  async deleteUser(
+    @Req() req: RequestWithTokenPayload,
+    @Body() userDeleteDto: UserDeleteDto,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<void> {
+    await this.usersService.deleteUserProfile(req.tokenPayload, userDeleteDto);
+
+    clearCookie(res, "accessToken");
+
+    res.status(200).send({ message: "User's profile deleted successfully." });
   }
 }
