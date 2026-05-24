@@ -17,6 +17,7 @@ updates:
       - dependency-name: "@anatine/zod-nestjs"
       - dependency-name: "@anatine/zod-openapi"
       - dependency-name: "@swc/cli"
+      - dependency-name: "@nestjs/swagger"
     groups:
       dependencies:
         patterns:
@@ -26,6 +27,7 @@ updates:
           - "@anatine/zod-nestjs"
           - "@anatine/zod-openapi"
           - "@swc/cli"
+          - "@nestjs/swagger"
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
