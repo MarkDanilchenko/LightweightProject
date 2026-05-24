@@ -306,7 +306,7 @@ describe("UsersService", (): void => {
       await usersService.deactivateUserProfile(payload, userDeactivateDto);
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
-        relations: ["authentications"],
+        relations: { authentications: true },
         select: {
           id: true,
           username: true,
@@ -413,7 +413,7 @@ describe("UsersService", (): void => {
       await usersService.deleteUserProfile(payload, userDeleteDto);
 
       expect(userRepository.findOne).toHaveBeenCalledWith({
-        relations: ["authentications"],
+        relations: { authentications: true },
         select: {
           id: true,
           username: true,

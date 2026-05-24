@@ -23,7 +23,7 @@ export default class LocalAuthStrategy extends PassportStrategy(Strategy, "local
   async validate(req: Request, login: string, password: string, done: (...args: unknown[]) => void): Promise<void> {
     // Login can be either an email or a username;
     const user: UserEntity | null = await this.usersService.findUser({
-      relations: ["authentications"],
+      relations: { authentications: true },
       select: {
         id: true,
         isDeactivated: true,

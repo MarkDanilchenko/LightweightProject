@@ -63,7 +63,7 @@ describe("LocalAuthStrategy", (): void => {
       await localAuthStrategy.validate(mockReq, user.email, password, mockDone);
 
       expect(usersService.findUser).toHaveBeenCalledWith({
-        relations: ["authentications"],
+        relations: { authentications: true },
         select: {
           id: true,
           isDeactivated: true,

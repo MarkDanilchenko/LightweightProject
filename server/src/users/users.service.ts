@@ -137,7 +137,7 @@ export default class UsersService {
     }
 
     const user: UserEntity | null = await this.findUser({
-      relations: ["authentications"],
+      relations: { authentications: true },
       select: {
         id: true,
         isDeactivated: true,
@@ -201,7 +201,7 @@ export default class UsersService {
     }
 
     const user: UserEntity | null = await this.findUser({
-      relations: ["authentications"],
+      relations: { authentications: true },
       select: {
         id: true,
         email: true,
