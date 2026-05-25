@@ -12,6 +12,7 @@ import { RmqModule } from "#server/services/rmq/rmq.module";
 import { JwtModule } from "@nestjs/jwt";
 import { RedisModule } from "#server/services/redis/redis.module";
 import { EventEmitterModule } from "@nestjs/event-emitter";
+import { ScheduleModule } from "@nestjs/schedule";
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { EventEmitterModule } from "@nestjs/event-emitter";
     EventEmitterModule.forRoot({
       verboseMemoryLeak: true,
     }),
+    ScheduleModule.forRoot(),
     TokensModule,
     RedisModule,
     RmqModule,
