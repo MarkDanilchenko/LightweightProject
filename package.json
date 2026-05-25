@@ -58,7 +58,7 @@
     "@nestjs/microservices": "11.1.21",
     "@nestjs/passport": "11.0.5",
     "@nestjs/platform-express": "11.1.21",
-    "@nestjs/swagger": "11.4.3",
+    "@nestjs/swagger": "11.4.2",
     "@nestjs/typeorm": "11.0.1",
     "@node-saml/passport-saml": "5.1.0",
     "@types/nodemailer": "8.0.0",
@@ -82,7 +82,7 @@
     "pg": "8.20.0",
     "reflect-metadata": "0.2.2",
     "rxjs": "7.8.2",
-    "typeorm": "0.3.29",
+    "typeorm": "1.0.0",
     "uuid": "14.0.0",
     "winston": "3.19.0",
     "zod": "3.25.64"

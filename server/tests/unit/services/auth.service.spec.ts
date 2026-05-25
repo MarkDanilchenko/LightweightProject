@@ -863,7 +863,7 @@ describe("AuthService", (): void => {
 
       expect(tokensService.verify).toHaveBeenCalledWith(token);
       expect(usersService.findUser).toHaveBeenCalledWith({
-        relations: ["authentications"],
+        relations: { authentications: true },
         select: {
           id: true,
           isDeactivated: true,
@@ -978,7 +978,7 @@ describe("AuthService", (): void => {
 
       expect(tokensService.verify).toHaveBeenCalledWith(token);
       expect(usersService.findUser).toHaveBeenCalledWith({
-        relations: ["authentications"],
+        relations: { authentications: true },
         select: {
           id: true,
           isDeactivated: true,
@@ -1049,7 +1049,7 @@ describe("AuthService", (): void => {
         2,
         {
           where: { email: userClaims.email },
-          relations: ["authentications"],
+          relations: { authentications: true },
           select: {
             id: true,
             email: true,
@@ -1105,7 +1105,7 @@ describe("AuthService", (): void => {
       expect(usersService.findUser).toHaveBeenNthCalledWith(
         2,
         {
-          relations: ["authentications"],
+          relations: { authentications: true },
           select: {
             id: true,
             email: true,
@@ -1164,7 +1164,7 @@ describe("AuthService", (): void => {
       expect(usersService.findUser).toHaveBeenCalledTimes(1);
       expect(usersService.findUser).toHaveBeenCalledWith(
         {
-          relations: ["authentications"],
+          relations: { authentications: true },
           select: {
             id: true,
             email: true,
@@ -1233,7 +1233,7 @@ describe("AuthService", (): void => {
       expect(usersService.findUser).toHaveBeenNthCalledWith(
         2,
         {
-          relations: ["authentications"],
+          relations: { authentications: true },
           select: {
             id: true,
             email: true,
@@ -1300,7 +1300,7 @@ describe("AuthService", (): void => {
       expect(usersService.findUser).toHaveBeenNthCalledWith(
         2,
         {
-          relations: ["authentications"],
+          relations: { authentications: true },
           select: {
             id: true,
             email: true,
@@ -1375,7 +1375,7 @@ describe("AuthService", (): void => {
       expect(usersService.findUser).toHaveBeenNthCalledWith(
         2,
         {
-          relations: ["authentications"],
+          relations: { authentications: true },
           select: {
             id: true,
             email: true,

@@ -117,7 +117,7 @@ export default class AuthService {
     const { username, firstName, lastName, email, avatarUrl, password } = localSignUpDto;
 
     const user: UserEntity | null = await this.userService.findUser({
-      relations: ["authentications"],
+      relations: { authentications: true },
       select: {
         id: true,
         email: true,
@@ -133,6 +133,7 @@ export default class AuthService {
       },
     });
 
+    // TODO: need to set an event, after create new user;
     await this.dataSource.transaction(async (manager: EntityManager): Promise<void> => {
       if (!user) {
         const isUsernameTaken: UserEntity | null = await this.userService.findUser({
@@ -491,7 +492,7 @@ export default class AuthService {
     const { email } = localPasswordResetRequestDto;
 
     const user: UserEntity | null = await this.userService.findUser({
-      relations: ["authentications"],
+      relations: { authentications: true },
       select: {
         id: true,
         username: true,
@@ -542,7 +543,7 @@ export default class AuthService {
     }
 
     const user: UserEntity | null = await this.userService.findUser({
-      relations: ["authentications"],
+      relations: { authentications: true },
       select: {
         id: true,
         email: true,
@@ -614,7 +615,7 @@ export default class AuthService {
     }
 
     const user: UserEntity | null = await this.userService.findUser({
-      relations: ["authentications"],
+      relations: { authentications: true },
       select: {
         id: true,
         isDeactivated: true,
@@ -689,7 +690,7 @@ export default class AuthService {
     }
 
     const user: UserEntity | null = await this.userService.findUser({
-      relations: ["authentications"],
+      relations: { authentications: true },
       select: {
         id: true,
         isDeactivated: true,
@@ -801,7 +802,7 @@ export default class AuthService {
               },
               where: { email },
               withDeleted: true,
-              relations: ["authentications"],
+              relations: { authentications: true },
             },
             manager,
           );
