@@ -36,7 +36,6 @@
     "typeorm:run": "npm run typeorm migration:run -- -d ./server/src/configs/typeorm.configuration.ts",
     "typeorm:revert": "npm run typeorm migration:revert -- -d ./server/src/configs/typeorm.configuration.ts",
     "typeorm:generate": "npm run typeorm migration:generate -- -d ./server/src/configs/typeorm.configuration.ts",
-    "typeorm:check": "npm run typeorm migration:generate -- -d ./server/src/configs/typeorm.configuration.ts ./server/migrations/check",
     "typeorm:show": "npm run typeorm migration:show -- -d ./server/src/configs/typeorm.configuration.ts",
     "test:unit": "NODE_ENV=test jest --detectOpenHandles --bail --forceExit --passWithNoTests=false",
     "test:e2e": "NODE_ENV=test jest --detectOpenHandles --config server/tests/jest-e2e.json --bail --forceExit --passWithNoTests=false",
