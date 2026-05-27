@@ -68,6 +68,11 @@ describe("UserEntity", (): void => {
       expect(user.isDeactivated).toBeDefined();
       expect(typeof user.isDeactivated).toBe("boolean");
     });
+
+    it("should have optional anonymizedAt timestamp", (): void => {
+      expect(user.anonymizedAt).toBeDefined();
+      expect(user.anonymizedAt instanceof Date || user.anonymizedAt === null).toBe(true);
+    });
   });
 
   describe("UserEntity validation", (): void => {
