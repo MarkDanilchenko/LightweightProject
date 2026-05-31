@@ -47,6 +47,11 @@ export default class UserEntity extends CommonEntity {
   @IsBoolean()
   isDeactivated!: boolean;
 
+  @Column({ type: "timestamptz", nullable: true })
+  @IsDate()
+  @IsOptional()
+  anonymizedAt?: Date | null;
+
   @CreateDateColumn({ type: "timestamptz" })
   @IsDate()
   createdAt!: Date;

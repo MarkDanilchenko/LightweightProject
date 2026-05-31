@@ -1,7 +1,15 @@
 import { BadRequestException, Inject, Injectable, UnauthorizedException } from "@nestjs/common";
 import { InjectDataSource, InjectRepository } from "@nestjs/typeorm";
 import { ClientProxy } from "@nestjs/microservices";
-import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
+import {
+  DataSource,
+  EntityManager,
+  FindManyOptions,
+  FindOneOptions,
+  FindOptionsWhere,
+  Repository,
+  UpdateResult,
+} from "typeorm";
 import UserEntity from "#server/users/users.entity";
 import AuthenticationEntity from "#server/auth/auth.entity";
 import { RMQ_MICROSERVICE } from "#server/configs/constants";
@@ -62,6 +70,22 @@ export default class UsersService {
     }
 
     return manager.findOne(UserEntity, options);
+  }
+
+  /**
+   * Finds some users entities.
+   *
+   * @param {FindManyOptions<UserEntity>} options - Additional find options to customize the query.
+   * @param {EntityManager} [manager] - The entity manager to use for the query within a transaction.
+   *
+   * @returns {Promise<UserEntity | null>[]} A promise that resolves with the users entities if found, otherwise null.
+   */
+  async findUsers(options: FindManyOptions<UserEntity>, manager?: EntityManager): Promise<UserEntity[]> {
+    if (!manager) {
+      return this.userRepository.find(options);
+    }
+
+    return manager.find(UserEntity, options);
   }
 
   /**
@@ -242,5 +266,52 @@ export default class UsersService {
         }),
       );
     });
+  }
+
+  /**
+   * Anonymizes user profile by removing personal data and marking the account as anonymized.
+   *
+   * Updates user record, clears authentication data, and updates event metadata.
+   * All operations run within a database transaction for consistency.
+   *
+   * @param {UserEntity} user - The user entity to anonymize
+   * @param {EntityManager} [manager] - Optional EntityManager for existing transaction context
+   *
+   * @returns {Promise<void>} A promise that resolves when the profile is successfully anonymized.
+   */
+  async anonymizeUserProfile(user: UserEntity, manager?: EntityManager): Promise<void> {
+    const callback = async (manager: EntityManager): Promise<void> => {
+      user.username = null;
+      user.firstName = null;
+      user.lastName = null;
+      user.avatarUrl = null;
+      user.anonymizedAt = new Date();
+      user.email = `deleted_${user.id}@deleted.invalid`;
+
+      await manager.save(user);
+      await manager.update(
+        AuthenticationEntity,
+        { userId: user.id },
+        {
+          refreshToken: null,
+          metadata: {},
+          lastAccessedAt: () => "lastAccessedAt",
+        },
+      );
+      await manager.query(
+        `
+          UPDATE "events"
+          SET metadata = jsonb_set(metadata, '{email}', to_jsonb($1::text), false)
+          WHERE "userId" = $2
+        `,
+        [user.email, user.id],
+      );
+    };
+
+    if (!manager) {
+      return this.dataSource.transaction(callback);
+    }
+
+    return callback(manager);
   }
 }
