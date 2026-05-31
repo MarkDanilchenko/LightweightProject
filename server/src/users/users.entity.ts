@@ -49,7 +49,8 @@ export default class UserEntity extends CommonEntity {
 
   @Column({ type: "timestamptz", nullable: true })
   @IsDate()
-  anonymizedAt!: Date | null;
+  @IsOptional()
+  anonymizedAt?: Date | null;
 
   @CreateDateColumn({ type: "timestamptz" })
   @IsDate()
