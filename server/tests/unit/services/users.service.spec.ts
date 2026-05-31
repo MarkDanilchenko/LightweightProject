@@ -2,7 +2,16 @@
 import { Test, TestingModule } from "@nestjs/testing";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { ClientProxy } from "@nestjs/microservices";
-import { DataSource, EntityManager, FindOneOptions, FindOptionsWhere, Repository, UpdateResult } from "typeorm";
+import {
+  DataSource,
+  EntityManager,
+  FindManyOptions,
+  FindOneOptions,
+  FindOptionsWhere,
+  Like,
+  Repository,
+  UpdateResult,
+} from "typeorm";
 import { BadRequestException, UnauthorizedException } from "@nestjs/common";
 import { faker } from "@faker-js/faker";
 import UsersService from "#server/users/users.service";
@@ -21,6 +30,9 @@ describe("UsersService", (): void => {
   const mockEntityManager = {
     update: jest.fn(),
     softDelete: jest.fn(),
+    save: jest.fn(),
+    query: jest.fn(),
+    restore: jest.fn(),
   } as unknown as jest.Mocked<EntityManager>;
   let usersService: UsersService;
   let userRepository: jest.Mocked<Repository<UserEntity>>;
@@ -42,6 +54,7 @@ describe("UsersService", (): void => {
     const mockUserRepository = {
       findOne: jest.fn(),
       findOneBy: jest.fn(),
+      find: jest.fn(),
       update: jest.fn(),
       softDelete: jest.fn(),
       restore: jest.fn(),
@@ -167,6 +180,78 @@ describe("UsersService", (): void => {
       expect(userRepository.findOne).toHaveBeenCalledTimes(1);
       expect(userRepository.findOne).toHaveBeenCalledWith(options);
       expect(result).toBeNull();
+    });
+  });
+
+  describe("findUsers", (): void => {
+    let users: UserEntity[];
+
+    beforeEach((): void => {
+      const user1: UserEntity = buildUserFactory();
+      user1.authentications = [
+        buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        }),
+      ];
+
+      const user2: UserEntity = buildUserFactory();
+      user2.authentications = [
+        buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        }),
+      ];
+
+      const user3: UserEntity = buildUserFactory();
+      user3.authentications = [
+        buildAuthenticationFactory({
+          userId: user.id,
+          provider: AuthenticationProvider.LOCAL,
+        }),
+      ];
+
+      users = [user1, user2, user3];
+    });
+
+    it("should find users with custom options", async (): Promise<void> => {
+      const options: FindManyOptions<UserEntity> = { where: { email: Like("%@example.com") } };
+
+      userRepository.find.mockResolvedValue(users);
+
+      const result: UserEntity[] = await usersService.findUsers(options);
+
+      expect(userRepository.find).toHaveBeenCalledTimes(1);
+      expect(userRepository.find).toHaveBeenCalledWith(options);
+      expect(result).toEqual(users);
+      expect(result.length).toBe(3);
+    });
+
+    it("should find users with custom options and provided entity manager", async (): Promise<void> => {
+      const options: FindManyOptions<UserEntity> = { where: { email: Like("%@example.com") } };
+      const providedManager = {
+        find: jest.fn().mockResolvedValue(users),
+      } as unknown as EntityManager;
+
+      const result: UserEntity[] = await usersService.findUsers(options, providedManager);
+
+      expect(userRepository.find).not.toHaveBeenCalled();
+      expect(providedManager.find).toHaveBeenCalledTimes(1);
+      expect(providedManager.find).toHaveBeenCalledWith(UserEntity, options);
+      expect(result).toEqual(users);
+    });
+
+    it("should return empty array when no users found", async (): Promise<void> => {
+      const options: FindManyOptions<UserEntity> = { where: { email: "nonexistent@example.com" } };
+
+      userRepository.find.mockResolvedValue([]);
+
+      const result: UserEntity[] = await usersService.findUsers(options);
+
+      expect(userRepository.find).toHaveBeenCalledTimes(1);
+      expect(userRepository.find).toHaveBeenCalledWith(options);
+      expect(result).toEqual([]);
+      expect(result.length).toBe(0);
     });
   });
 
@@ -497,6 +582,133 @@ describe("UsersService", (): void => {
       await expect(usersService.deleteUserProfile(payload, userDeleteDto)).rejects.toThrow(
         new BadRequestException("User's profile is already deleted."),
       );
+    });
+  });
+
+  describe("anonymizeUserProfile", (): void => {
+    it("should anonymize user profile successfully", async (): Promise<void> => {
+      await usersService.anonymizeUserProfile(user);
+
+      expect(dataSource.transaction).toHaveBeenCalledTimes(1);
+      expect(mockEntityManager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: user.id,
+          username: null,
+          firstName: null,
+          lastName: null,
+          avatarUrl: null,
+          email: `deleted_${user.id}@deleted.invalid`,
+          anonymizedAt: expect.any(Date),
+        }),
+      );
+      expect(mockEntityManager.update).toHaveBeenCalledWith(
+        AuthenticationEntity,
+        { userId: user.id },
+        {
+          refreshToken: null,
+          metadata: {},
+          lastAccessedAt: expect.any(Function),
+        },
+      );
+      expect(mockEntityManager.query).toHaveBeenCalledWith(expect.stringContaining('UPDATE "events"'), [
+        `deleted_${user.id}@deleted.invalid`,
+        user.id,
+      ]);
+    });
+
+    it("should anonymize user profile within provided entity manager transaction", async (): Promise<void> => {
+      await usersService.anonymizeUserProfile(user, mockEntityManager);
+
+      expect(dataSource.transaction).not.toHaveBeenCalled();
+      expect(mockEntityManager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: user.id,
+          username: null,
+          firstName: null,
+          lastName: null,
+          avatarUrl: null,
+          email: `deleted_${user.id}@deleted.invalid`,
+          anonymizedAt: expect.any(Date),
+        }),
+      );
+      expect(mockEntityManager.update).toHaveBeenCalledWith(
+        AuthenticationEntity,
+        { userId: user.id },
+        {
+          refreshToken: null,
+          metadata: {},
+          lastAccessedAt: expect.any(Function),
+        },
+      );
+      expect(mockEntityManager.query).toHaveBeenCalledWith(expect.stringContaining('UPDATE "events"'), [
+        `deleted_${user.id}@deleted.invalid`,
+        user.id,
+      ]);
+    });
+
+    it("should clear all personal data fields during anonymization", async (): Promise<void> => {
+      await usersService.anonymizeUserProfile(user);
+
+      expect(mockEntityManager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          username: null,
+          firstName: null,
+          lastName: null,
+          avatarUrl: null,
+        }),
+      );
+    });
+
+    it("should set anonymizedAt timestamp", async (): Promise<void> => {
+      await usersService.anonymizeUserProfile(user);
+
+      expect(mockEntityManager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          anonymizedAt: expect.any(Date),
+        }),
+      );
+    });
+
+    it("should update email to anonymized format", async (): Promise<void> => {
+      await usersService.anonymizeUserProfile(user);
+
+      expect(mockEntityManager.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: `deleted_${user.id}@deleted.invalid`,
+        }),
+      );
+    });
+
+    it("should clear authentication data during anonymization", async (): Promise<void> => {
+      await usersService.anonymizeUserProfile(user);
+
+      expect(mockEntityManager.update).toHaveBeenCalledWith(
+        AuthenticationEntity,
+        { userId: user.id },
+        {
+          refreshToken: null,
+          metadata: {},
+          lastAccessedAt: expect.any(Function),
+        },
+      );
+    });
+
+    it("should update events metadata with anonymized email", async (): Promise<void> => {
+      await usersService.anonymizeUserProfile(user);
+
+      expect(mockEntityManager.query).toHaveBeenCalledWith(expect.stringContaining('UPDATE "events"'), [
+        `deleted_${user.id}@deleted.invalid`,
+        user.id,
+      ]);
+    });
+
+    it("should handle errors during anonymization", async (): Promise<void> => {
+      const error = new Error("Anonymization failed");
+      (usersService as any).dataSource = {
+        transaction: jest.fn().mockRejectedValue(error),
+      } as unknown as jest.Mocked<DataSource>;
+
+      await expect(usersService.anonymizeUserProfile(user)).rejects.toThrow(error);
     });
   });
 });

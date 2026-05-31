@@ -13,6 +13,7 @@ import { JwtModule } from "@nestjs/jwt";
 import { RedisModule } from "#server/services/redis/redis.module";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
+import { CronModule } from "#server/services/cron/cron.module";
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { ScheduleModule } from "@nestjs/schedule";
     RmqModule,
     EventsModule,
     UsersModule,
+    CronModule,
     AuthModule,
   ],
   controllers: [],
