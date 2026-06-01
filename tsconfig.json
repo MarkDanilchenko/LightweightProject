@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es2022",
+    "moduleResolution": "bundler",
     "module": "commonjs",
+    "target": "esnext",
     "allowJs": false,
     "removeComments": true,
     "emitDecoratorMetadata": true,
