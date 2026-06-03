@@ -14,6 +14,7 @@ import { RedisModule } from "#server/services/redis/redis.module";
 import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { CronModule } from "#server/services/cron/cron.module";
+import AdminModule from "#server/admin/admin.module";
 
 @Module({
   imports: [
@@ -53,6 +54,7 @@ import { CronModule } from "#server/services/cron/cron.module";
     UsersModule,
     CronModule,
     AuthModule,
+    AdminModule,
   ],
   controllers: [],
   providers: [],

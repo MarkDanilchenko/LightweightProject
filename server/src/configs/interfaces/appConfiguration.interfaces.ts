@@ -65,4 +65,11 @@ export default interface AppConfiguration {
     };
   };
   redisConfiguration: RedisOptions;
+  adminConfiguration: {
+    adminEmail: string;
+    adminPassword: string;
+    cookieName: string;
+    cookiePassword: string;
+    secret: string;
+  };
 }
