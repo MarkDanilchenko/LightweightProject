@@ -3,6 +3,7 @@
     "moduleResolution": "bundler",
     "module": "commonjs",
     "target": "esnext",
+    "importHelpers": true,
     "allowJs": false,
     "removeComments": true,
     "emitDecoratorMetadata": true,
