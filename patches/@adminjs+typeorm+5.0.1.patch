@@ -1,0 +1,12 @@
+diff --git a/node_modules/@adminjs/typeorm/package.json b/node_modules/@adminjs/typeorm/package.json
+index cb57e32..3f0389e 100644
+--- a/node_modules/@adminjs/typeorm/package.json
++++ b/node_modules/@adminjs/typeorm/package.json
+@@ -4,6 +4,7 @@
+   "exports": {
+     ".": {
+       "import": "./lib/index.js",
++      "default": "./lib/index.js",
+       "types": "./lib/index.d.ts"
+     }
+   },

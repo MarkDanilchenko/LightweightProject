@@ -18,6 +18,7 @@ tsconfig.tsbuildinfo
 /node_modules
 jspm_packages/
 **/build
+**/.adminjs
 
 # If build process includes running collectstatic, then you probably don't need or want to include staticfiles || mediafiles
 # in Git repository.

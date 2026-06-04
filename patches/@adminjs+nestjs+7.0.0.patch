@@ -1,0 +1,12 @@
+diff --git a/node_modules/@adminjs/nestjs/package.json b/node_modules/@adminjs/nestjs/package.json
+index 05e60dd..538c347 100644
+--- a/node_modules/@adminjs/nestjs/package.json
++++ b/node_modules/@adminjs/nestjs/package.json
+@@ -5,6 +5,7 @@
+   "exports": {
+     ".": {
+       "import": "./build/index.js",
++      "default": "./build/index.js",
+       "types": "./types/index.d.ts"
+     }
+   },
