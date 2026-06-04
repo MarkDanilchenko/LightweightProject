@@ -24,6 +24,7 @@
   "scripts": {
     "build:server": "cd server && npm run clear:server && nest build && tsc-alias",
     "clear:server": "rm -rf ./server/dist",
+    "clear:node_modules": "rm -rf ./node_modules",
     "start:server": "cd server && nest start",
     "start:server:dev": "cd server && nest start --watch",
     "start:server:debug": "cd server && nest start --debug --watch",
