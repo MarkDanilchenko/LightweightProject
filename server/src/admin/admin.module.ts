@@ -5,11 +5,11 @@ import { ConfigModule, ConfigService } from "@nestjs/config";
 import UsersModule from "#server/users/users.module";
 import AuthModule from "#server/auth/auth.module";
 import EventsModule from "#server/events/events.module";
-import UserEntity from "#server/users/users.entity";
 import AuthenticationEntity from "#server/auth/auth.entity";
 import EventEntity from "#server/events/events.entity";
 import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 import { AdminModuleOptions } from "@adminjs/nestjs";
+import UserEntity from "#server/users/users.entity";
 
 // Add/register AdminJS adapter;
 AdminJS.registerAdapter({
@@ -32,7 +32,25 @@ AdminJS.registerAdapter({
           const adminSettings: AdminModuleOptions = {
             adminJsOptions: {
               rootPath: "/admin",
-              resources: [UserEntity, AuthenticationEntity, EventEntity],
+              resources: [
+                UserEntity,
+                {
+                  resource: AuthenticationEntity,
+                  options: {
+                    properties: {
+                      refreshToken: {
+                        isVisible: {
+                          edit: false,
+                          show: false,
+                          list: false,
+                          filter: false,
+                        },
+                      },
+                    },
+                  },
+                },
+                EventEntity,
+              ],
             },
           };
 
