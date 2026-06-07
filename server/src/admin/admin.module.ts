@@ -10,6 +10,7 @@ import EventEntity from "#server/events/events.entity";
 import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 import { AdminModuleOptions } from "@adminjs/nestjs";
 import UserEntity from "#server/users/users.entity";
+import { dark, light, noSidebar } from "@adminjs/themes";
 
 // Add/register AdminJS adapter;
 AdminJS.registerAdapter({
@@ -31,6 +32,8 @@ AdminJS.registerAdapter({
           const logger = new Logger("AdminModule");
           const adminSettings: AdminModuleOptions = {
             adminJsOptions: {
+              defaultTheme: dark.id,
+              availableThemes: [dark, light],
               rootPath: "/admin",
               resources: [
                 UserEntity,
