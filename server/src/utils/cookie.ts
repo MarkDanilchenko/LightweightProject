@@ -15,7 +15,7 @@ function setCookie(res: Response, name: string, value: unknown, secure?: boolean
     httpOnly: true,
     sameSite: "lax",
     signed: true,
-    secure: secure ?? true, // TODO: think about default boolean value;
+    secure: secure ?? true,
   });
 }
 
