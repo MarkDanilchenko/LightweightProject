@@ -1,5 +1,6 @@
 import * as AdminJSTypeorm from "@adminjs/typeorm";
 import AdminJS from "adminjs";
+import { dark, light } from "@adminjs/themes";
 import { Logger, Module } from "@nestjs/common";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import UsersModule from "#server/users/users.module";
@@ -10,7 +11,7 @@ import EventEntity from "#server/events/events.entity";
 import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 import { AdminModuleOptions } from "@adminjs/nestjs";
 import UserEntity from "#server/users/users.entity";
-import { dark, light, noSidebar } from "@adminjs/themes";
+import { instanceMetadataShowAfterParser, instanceMetadataListAfterParser } from "#server/utils/admin";
 
 // Add/register AdminJS adapter;
 AdminJS.registerAdapter({
@@ -42,6 +43,7 @@ AdminJS.registerAdapter({
                   options: {
                     properties: {
                       refreshToken: {
+                        type: "textarea",
                         isVisible: {
                           edit: false,
                           show: false,
@@ -49,10 +51,50 @@ AdminJS.registerAdapter({
                           filter: false,
                         },
                       },
+                      metadata: {
+                        type: "textarea",
+                        isVisible: {
+                          edit: false,
+                          show: true,
+                          list: true,
+                          filter: true,
+                        },
+                      },
+                    },
+                    actions: {
+                      list: {
+                        after: [instanceMetadataListAfterParser],
+                      },
+                      show: {
+                        after: [instanceMetadataShowAfterParser],
+                      },
                     },
                   },
                 },
-                EventEntity,
+                {
+                  resource: EventEntity,
+                  options: {
+                    properties: {
+                      metadata: {
+                        type: "textarea",
+                        isVisible: {
+                          edit: false,
+                          show: true,
+                          list: true,
+                          filter: true,
+                        },
+                      },
+                    },
+                    actions: {
+                      list: {
+                        after: [instanceMetadataListAfterParser],
+                      },
+                      show: {
+                        after: [instanceMetadataShowAfterParser],
+                      },
+                    },
+                  },
+                },
               ],
             },
           };
