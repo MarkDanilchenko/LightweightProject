@@ -115,6 +115,11 @@ export default (): AppConfiguration => {
     TEST_DATABASE_NAME,
     TEST_DATABASE_USER,
     TEST_DATABASE_PASSWORD,
+    ADMIN_EMAIL,
+    ADMIN_PASSWORD,
+    ADMIN_COOKIE_NAME,
+    ADMIN_COOKIE_PASSWORD,
+    ADMIN_SECRET,
   } = process.env;
 
   let { HTTPS } = process.env;
@@ -256,6 +261,14 @@ export default (): AppConfiguration => {
     },
   };
 
+  const adminConfiguration: AppConfiguration["adminConfiguration"] = {
+    adminEmail: ADMIN_EMAIL || "",
+    adminPassword: ADMIN_PASSWORD || "",
+    cookieName: ADMIN_COOKIE_NAME || "adminjs",
+    cookiePassword: ADMIN_COOKIE_PASSWORD || "",
+    secret: ADMIN_SECRET || "",
+  };
+
   if (NODE_ENV === "test") {
     Object.assign(dbConfiguration, dbConfigurationTest);
   }
@@ -270,5 +283,6 @@ export default (): AppConfiguration => {
     smtpConfiguration,
     rabbitmqConfiguration,
     redisConfiguration,
+    adminConfiguration,
   };
 };

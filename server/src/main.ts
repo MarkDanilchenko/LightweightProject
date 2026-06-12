@@ -46,6 +46,9 @@ async function bootstrap(): Promise<void> {
   app.setGlobalPrefix("api/v1");
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 
+  // Necessary for secure cookie parser to work while have nginx proxy;
+  // app.getHttpAdapter().getInstance().set("trust proxy", 1);
+
   if (swaggerEnabled) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const packageJsonInfo: Record<string, string> = JSON.parse(

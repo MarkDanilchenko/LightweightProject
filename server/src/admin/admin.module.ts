@@ -1,0 +1,144 @@
+import * as AdminJSTypeorm from "@adminjs/typeorm";
+import AdminJS from "adminjs";
+import { dark, light } from "@adminjs/themes";
+import { Logger, Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import UsersModule from "#server/users/users.module";
+import AuthModule from "#server/auth/auth.module";
+import EventsModule from "#server/events/events.module";
+import AuthenticationEntity from "#server/auth/auth.entity";
+import EventEntity from "#server/events/events.entity";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
+import { AdminModuleOptions } from "@adminjs/nestjs";
+import UserEntity from "#server/users/users.entity";
+import { instanceMetadataShowAfterParser, instanceMetadataListAfterParser } from "#server/utils/admin";
+
+// Add/register AdminJS adapter;
+AdminJS.registerAdapter({
+  Resource: AdminJSTypeorm.Resource,
+  Database: AdminJSTypeorm.Database,
+});
+
+@Module({
+  imports: [
+    ConfigModule,
+    UsersModule,
+    AuthModule,
+    EventsModule,
+    import("@adminjs/nestjs").then(({ AdminModule }) =>
+      AdminModule.createAdminAsync({
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => {
+          const logger = new Logger("AdminModule");
+          const adminSettings: AdminModuleOptions = {
+            adminJsOptions: {
+              defaultTheme: dark.id,
+              availableThemes: [dark, light],
+              rootPath: "/admin",
+              resources: [
+                UserEntity,
+                {
+                  resource: AuthenticationEntity,
+                  options: {
+                    properties: {
+                      refreshToken: {
+                        type: "textarea",
+                        isVisible: {
+                          edit: false,
+                          show: false,
+                          list: false,
+                          filter: false,
+                        },
+                      },
+                      metadata: {
+                        type: "textarea",
+                        isVisible: {
+                          edit: false,
+                          show: true,
+                          list: true,
+                          filter: true,
+                        },
+                      },
+                    },
+                    actions: {
+                      list: {
+                        after: [instanceMetadataListAfterParser],
+                      },
+                      show: {
+                        after: [instanceMetadataShowAfterParser],
+                      },
+                    },
+                  },
+                },
+                {
+                  resource: EventEntity,
+                  options: {
+                    properties: {
+                      metadata: {
+                        type: "textarea",
+                        isVisible: {
+                          edit: false,
+                          show: true,
+                          list: true,
+                          filter: true,
+                        },
+                      },
+                    },
+                    actions: {
+                      list: {
+                        after: [instanceMetadataListAfterParser],
+                      },
+                      show: {
+                        after: [instanceMetadataShowAfterParser],
+                      },
+                    },
+                  },
+                },
+              ],
+            },
+          };
+
+          const { adminEmail, adminPassword, cookieName, cookiePassword, secret } =
+            configService.get<AppConfiguration["adminConfiguration"]>("adminConfiguration")!;
+          const https =
+            configService.get<AppConfiguration["serverConfiguration"]["https"]>("serverConfiguration.https");
+
+          if (!adminEmail || !adminPassword || !cookieName || !cookiePassword || !secret) {
+            logger.warn("Admin configuration is not set properly, unauthorized usage is possible!");
+
+            return adminSettings;
+          }
+
+          adminSettings.auth = {
+            authenticate: async (email: string, password: string): Promise<{ email: string } | null> => {
+              if (email === adminEmail && password === adminPassword) {
+                return Promise.resolve({ email: adminEmail });
+              }
+
+              return null;
+            },
+            cookieName,
+            cookiePassword,
+          };
+          adminSettings.sessionOptions = {
+            resave: true,
+            saveUninitialized: true,
+            secret,
+            cookie: {
+              httpOnly: true,
+              signed: true,
+              secure: https,
+            },
+          };
+
+          return adminSettings;
+        },
+      }),
+    ),
+  ],
+  controllers: [],
+  providers: [],
+  exports: [],
+})
+export default class AdminModule {}

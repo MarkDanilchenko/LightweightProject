@@ -4,7 +4,7 @@ import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import UserEntity from "#server/users/users.entity";
 import AuthenticationEntity from "#server/auth/auth.entity";
 
-describe("EventsFactory", (): void => {
+describe("EventsFactory Utility", (): void => {
   const user: UserEntity = buildUserFactory();
   const authentication: AuthenticationEntity = buildAuthenticationFactory({ userId: user.id });
 
