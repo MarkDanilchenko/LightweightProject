@@ -42,8 +42,9 @@ export class GoogleOAuth2Strategy extends PassportStrategy(Strategy, "googleOAut
    * @returns {Promise<void>} A promise that resolves once the validation is complete
    */
   async validate(accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback): Promise<void> {
-    // Both accessToken and refreshToken are tokens from Google, and are not used in the authentication flow;
-    // Inner access and refresh tokens are configured by the application itself for further access to the protected API;
+    // Both accessToken and refreshToken are tokens from Google and not used in the app authentication flow;
+    // Inner access and refresh tokens are configured by the app itself
+    // for further access to the protected API endpoints;
     const { given_name, family_name, email, picture } = profile._json;
     if (!email) {
       return done(new UnauthorizedException("Email is required"), undefined);

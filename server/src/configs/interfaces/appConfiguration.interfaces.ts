@@ -39,6 +39,11 @@ export default interface AppConfiguration {
       clientSecret: string;
       callbackURL: string;
     };
+    github: {
+      clientID: string;
+      clientSecret: string;
+      callbackURL: string;
+    };
     keycloak: {
       oidc: {
         clientID: string;

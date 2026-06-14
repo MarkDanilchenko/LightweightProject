@@ -764,6 +764,7 @@ export default class AuthService {
     userClaims: AuthenticationViaIdP["userClaims"],
   ): Promise<UserEntity> {
     switch (idP) {
+      case AuthenticationProvider.GITHUB:
       case AuthenticationProvider.GOOGLE: {
         const { firstName, lastName, email, avatarUrl } = userClaims;
         let { username } = userClaims;
@@ -876,10 +877,6 @@ export default class AuthService {
             return existingUser;
           }
         });
-      }
-
-      case AuthenticationProvider.GITHUB: {
-        throw new BadRequestException("GitHub authentication is not implemented yet");
       }
 
       default: {
