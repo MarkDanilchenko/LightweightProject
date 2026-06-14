@@ -338,6 +338,8 @@ export default class AuthService {
       throw new UnauthorizedException("Authentication not found.");
     }
 
+    // This block is only for local authentication,
+    // because it is already proceeded in strategies related to other idp;
     if (user.isDeactivated) {
       this.rmqMicroserviceClient.emit(
         EventName.AUTH_LOCAL_REACTIVATION,
@@ -350,6 +352,8 @@ export default class AuthService {
       throw new UnauthorizedException("User is deactivated.");
     }
 
+    // This block is only for local authentication,
+    // because it is already proceeded in strategies related to other idp;
     if (user.deletedAt) {
       this.rmqMicroserviceClient.emit(
         EventName.AUTH_LOCAL_RESTORATION,
@@ -784,7 +788,7 @@ export default class AuthService {
             }
           }
 
-          const existingUser: UserEntity | null = await this.userService.findUser(
+          let existingUser: UserEntity | null = await this.userService.findUser(
             {
               select: {
                 id: true,
@@ -872,7 +876,33 @@ export default class AuthService {
             // NOTE: Saving both already existing or new authentication instance is needed for updating the lastAuthenticatedAt;
             await manager.save(authentication);
 
-            await existingUser.reload();
+            // User reloaded;
+            existingUser = await this.userService.findUser(
+              {
+                select: {
+                  id: true,
+                  email: true,
+                  username: true,
+                  firstName: true,
+                  lastName: true,
+                  avatarUrl: true,
+                  isDeactivated: true,
+                  authentications: {
+                    id: true,
+                    provider: true,
+                    userId: true,
+                    metadata: true,
+                  },
+                },
+                where: { email },
+                relations: { authentications: true },
+              },
+              manager,
+            );
+
+            if (!existingUser) {
+              throw new NotFoundException("User not found");
+            }
 
             return existingUser;
           }
