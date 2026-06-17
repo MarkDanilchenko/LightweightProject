@@ -60,7 +60,7 @@ export default class GitHubOAuth2Strategy extends PassportStrategy(Strategy, "gi
     try {
       const user: UserEntity = await this.authService.idPAuthentication(AuthenticationProvider.GITHUB, {
         firstName: name?.givenName,
-        lastName: name?.givenName,
+        lastName: name?.familyName,
         username,
         email,
         avatarUrl: photos && Array.isArray(photos) && photos[0] ? photos[0].value : undefined,
