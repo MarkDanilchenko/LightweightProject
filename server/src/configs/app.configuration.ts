@@ -79,6 +79,8 @@ export default (): AppConfiguration => {
     JWT_REFRESH_TOKEN_EXPIRES_IN,
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
+    GITHUB_CLIENT_ID,
+    GITHUB_CLIENT_SECRET,
     KC_HOSTNAME,
     KC_PORT,
     KC_REALM_NAME,
@@ -208,6 +210,11 @@ export default (): AppConfiguration => {
       clientID: GOOGLE_CLIENT_ID!,
       clientSecret: GOOGLE_CLIENT_SECRET!,
       callbackURL: `${serverConfiguration.protocol}://${serverConfiguration.host}:${serverConfiguration.port}/api/v1/auth/google/redirect`,
+    },
+    github: {
+      clientID: GITHUB_CLIENT_ID!,
+      clientSecret: GITHUB_CLIENT_SECRET!,
+      callbackURL: `${serverConfiguration.protocol}://${serverConfiguration.host}:${serverConfiguration.port}/api/v1/auth/github/redirect`,
     },
     keycloak: {
       oidc: {

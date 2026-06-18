@@ -22,6 +22,7 @@ import { randomValidJwt } from "../../utils";
 import { v4 as uuidv4 } from "uuid";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import GoogleOAuth2Guard from "#server/auth/guards/google.guard";
+import GitHubOAuth2Guard from "#server/auth/guards/github.guard";
 
 jest.mock("#server/utils/cookie", () => ({
   setCookie: jest.fn(),
@@ -34,6 +35,7 @@ describe("AuthController", (): void => {
   let authService: jest.Mocked<AuthService>;
   let mockResponse: Response;
   let googleOAuth2Guard: jest.Mocked<GoogleOAuth2Guard>;
+  let githubOAuth2Guard: jest.Mocked<GitHubOAuth2Guard>;
 
   beforeEach(async (): Promise<void> => {
     const mockAuthService = {
@@ -50,6 +52,10 @@ describe("AuthController", (): void => {
     };
 
     const mockGoogleOAuth2Guard = jest.fn().mockImplementation(() => ({
+      canActivate: jest.fn().mockReturnValue(true),
+    }));
+
+    const mockGitHubOAuth2Guard = jest.fn().mockImplementation(() => ({
       canActivate: jest.fn().mockReturnValue(true),
     }));
 
@@ -83,12 +89,14 @@ describe("AuthController", (): void => {
         { provide: AuthService, useValue: mockAuthService },
         { provide: ConfigService, useValue: mockConfigService },
         { provide: GoogleOAuth2Guard, useValue: mockGoogleOAuth2Guard },
+        { provide: GitHubOAuth2Guard, useValue: mockGitHubOAuth2Guard },
       ],
     }).compile();
 
     authController = testingModule.get<AuthController>(AuthController);
     authService = testingModule.get<jest.Mocked<AuthService>>(AuthService);
     googleOAuth2Guard = testingModule.get<jest.Mocked<GoogleOAuth2Guard>>(GoogleOAuth2Guard);
+    githubOAuth2Guard = testingModule.get<jest.Mocked<GitHubOAuth2Guard>>(GitHubOAuth2Guard);
   });
 
   afterEach((): void => {
@@ -332,7 +340,7 @@ describe("AuthController", (): void => {
   });
 
   describe("googleRedirect", (): void => {
-    it("should sign in with Google provider, set cookie and redirect to home on success", async (): Promise<void> => {
+    it("should sign in with Google provider, set cookie and send 200 on success", async (): Promise<void> => {
       const req = { user } as RequestWithUser;
       const accessToken = randomValidJwt({
         userId: user.id,
@@ -345,6 +353,35 @@ describe("AuthController", (): void => {
       await authController.googleRedirect(req, mockResponse as Response);
 
       expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.GOOGLE);
+      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken, true);
+      expect(mockResponse.status).toHaveBeenCalledWith(200);
+      expect(mockResponse.send).toHaveBeenCalled();
+    });
+  });
+
+  describe("githubSignIn", (): void => {
+    it("should return void and let GitHubOAuth2Guard handle the redirect", async (): Promise<void> => {
+      const result: void = await authController.githubSignIn();
+
+      expect(result).toBeUndefined();
+      expect(githubOAuth2Guard).toBeDefined();
+    });
+  });
+
+  describe("githubRedirect", (): void => {
+    it("should sign in with GitHub provider, set cookie and redirect to home on success", async (): Promise<void> => {
+      const req = { user } as RequestWithUser;
+      const accessToken = randomValidJwt({
+        userId: user.id,
+        provider: AuthenticationProvider.GITHUB,
+        jwti: uuidv4(),
+      });
+
+      authService.signIn.mockResolvedValue(accessToken);
+
+      await authController.githubRedirect(req, mockResponse as Response);
+
+      expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.GITHUB);
       expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken, true);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();

@@ -123,8 +123,24 @@ async function bootstrap(): Promise<void> {
         },
         "keycloakOAuth2OIDC",
       )
-      // TODO: add github oauth2
-      // .addOAuth2({}, "githubOAuth2")
+      .addOAuth2(
+        {
+          type: "oauth2",
+          description: "GitHub OAuth2",
+          name: "githubOAuth2",
+          scheme: "githubOAuth2",
+          flows: {
+            authorizationCode: {
+              authorizationUrl: "https://github.com/login/oauth/authorize",
+              tokenUrl: "https://github.com/login/oauth/access_token",
+              scopes: {
+                email: "User's email",
+              },
+            },
+          },
+        },
+        "githubOAuth2",
+      )
       .build();
 
     // Swagger patch function to support zod validation;

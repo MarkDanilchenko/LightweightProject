@@ -59,7 +59,6 @@ describe("AuthService", (): void => {
       provider: AuthenticationProvider.LOCAL,
     });
     user.authentications = [authentication];
-    user.reload = jest.fn().mockResolvedValue(undefined);
 
     entityManager = {
       update: jest.fn(),
@@ -1087,12 +1086,12 @@ describe("AuthService", (): void => {
       });
       user.authentications = [authentication, googleAuth];
 
-      usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(user);
+      usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(user).mockResolvedValueOnce(user);
       (entityManager.save as jest.Mock).mockResolvedValue(undefined);
 
       await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
 
-      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.findUser).toHaveBeenCalledTimes(3);
       expect(usersService.findUser).toHaveBeenNthCalledWith(
         1,
         {
@@ -1128,6 +1127,29 @@ describe("AuthService", (): void => {
         },
         entityManager,
       );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        3,
+        {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: { email: user.email },
+          relations: { authentications: true },
+        },
+        entityManager,
+      );
       expect(usersService.updateUser).toHaveBeenCalledWith(
         { id: user.id },
         {
@@ -1139,7 +1161,6 @@ describe("AuthService", (): void => {
         entityManager,
       );
       expect(entityManager.save).toHaveBeenCalledWith(googleAuth);
-      expect(user.reload).toHaveBeenCalled();
     });
 
     it("should create GOOGLE authentication for existing user", async (): Promise<void> => {
@@ -1161,8 +1182,9 @@ describe("AuthService", (): void => {
 
       await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
 
-      expect(usersService.findUser).toHaveBeenCalledTimes(1);
-      expect(usersService.findUser).toHaveBeenCalledWith(
+      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        1,
         {
           relations: { authentications: true },
           select: {
@@ -1187,6 +1209,29 @@ describe("AuthService", (): void => {
         },
         entityManager,
       );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        2,
+        {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: { email: user.email },
+          relations: { authentications: true },
+        },
+        entityManager,
+      );
       expect(usersService.updateUser).toHaveBeenCalledWith(
         { id: user.id },
         {
@@ -1202,25 +1247,91 @@ describe("AuthService", (): void => {
         provider: AuthenticationProvider.GOOGLE,
       });
       expect(entityManager.save).toHaveBeenCalledWith(newGoogleAuth);
-      expect(user.reload).toHaveBeenCalled();
     });
 
-    it("should set username to undefined when it is already taken", async (): Promise<void> => {
+    it("should create new user and authentication for GITHUB provider", async (): Promise<void> => {
       const userClaims: AuthenticationViaIdP["userClaims"] = {
-        firstName: "John",
-        lastName: "Doe",
-        email: user.email,
-        avatarUrl: user.avatarUrl!,
-        username: "takenUsername",
+        firstName: "Jane",
+        lastName: "Smith",
+        email: "jane.smith@example.com",
+        avatarUrl: "https://github.com/avatars/jane.jpg",
+        username: "janesmith",
       };
-      user.authentications = [authentication];
+      const newUser: UserEntity = buildUserFactory({ ...userClaims });
+      const newAuthentication: AuthenticationEntity = buildAuthenticationFactory({
+        userId: newUser.id,
+        provider: AuthenticationProvider.GITHUB,
+      });
+      newUser.authentications = [newAuthentication];
 
-      usersService.findUser.mockResolvedValueOnce(user).mockResolvedValueOnce(user);
+      usersService.findUser.mockResolvedValue(null);
+      (entityManager.create as jest.Mock).mockReturnValueOnce(newUser).mockReturnValueOnce(newAuthentication);
       (entityManager.save as jest.Mock).mockResolvedValue(undefined);
 
-      await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
+      await authService.idPAuthentication(AuthenticationProvider.GITHUB, userClaims);
 
       expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        1,
+        {
+          select: { id: true },
+          where: { username: userClaims.username },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        2,
+        {
+          where: { email: userClaims.email },
+          relations: { authentications: true },
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(entityManager.create).toHaveBeenCalledTimes(2);
+      expect(entityManager.save).toHaveBeenCalledTimes(2);
+      expect(entityManager.create).toHaveBeenNthCalledWith(2, AuthenticationEntity, {
+        userId: newUser.id,
+        provider: AuthenticationProvider.GITHUB,
+      });
+    });
+
+    it("should update existing user with GITHUB authentication", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "Jane",
+        lastName: "Smith",
+        email: user.email,
+        avatarUrl: "https://github.com/avatars/jane-new.jpg",
+        username: "newJaneGithub",
+      };
+      const githubAuth: AuthenticationEntity = buildAuthenticationFactory({
+        userId: user.id,
+        provider: AuthenticationProvider.GITHUB,
+      });
+      user.authentications = [authentication, githubAuth];
+
+      usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(user).mockResolvedValueOnce(user);
+      (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+
+      await authService.idPAuthentication(AuthenticationProvider.GITHUB, userClaims);
+
+      expect(usersService.findUser).toHaveBeenCalledTimes(3);
       expect(usersService.findUser).toHaveBeenNthCalledWith(
         1,
         {
@@ -1253,6 +1364,229 @@ describe("AuthService", (): void => {
             email: user.email,
           },
           withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        3,
+        {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: { email: user.email },
+          relations: { authentications: true },
+        },
+        entityManager,
+      );
+      expect(usersService.updateUser).toHaveBeenCalledWith(
+        { id: user.id },
+        {
+          username: userClaims.username,
+          firstName: userClaims.firstName,
+          lastName: userClaims.lastName,
+          avatarUrl: userClaims.avatarUrl,
+        },
+        entityManager,
+      );
+      expect(entityManager.save).toHaveBeenCalledWith(githubAuth);
+    });
+
+    it("should create GITHUB authentication for existing user", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "Jane",
+        lastName: "Smith",
+        email: user.email,
+        avatarUrl: "https://github.com/avatars/jane.jpg",
+      };
+      const newGithubAuth: AuthenticationEntity = buildAuthenticationFactory({
+        userId: user.id,
+        provider: AuthenticationProvider.GITHUB,
+      });
+      user.authentications = [authentication];
+
+      usersService.findUser.mockResolvedValue(user);
+      (entityManager.create as jest.Mock).mockReturnValue(newGithubAuth);
+      (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+
+      await authService.idPAuthentication(AuthenticationProvider.GITHUB, userClaims);
+
+      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        1,
+        {
+          relations: { authentications: true },
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: {
+            email: user.email,
+          },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        2,
+        {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: { email: user.email },
+          relations: { authentications: true },
+        },
+        entityManager,
+      );
+      expect(usersService.updateUser).toHaveBeenCalledWith(
+        { id: user.id },
+        {
+          username: undefined,
+          firstName: userClaims.firstName,
+          lastName: userClaims.lastName,
+          avatarUrl: userClaims.avatarUrl,
+        },
+        entityManager,
+      );
+      expect(entityManager.create).toHaveBeenCalledWith(AuthenticationEntity, {
+        userId: user.id,
+        provider: AuthenticationProvider.GITHUB,
+      });
+      expect(entityManager.save).toHaveBeenCalledWith(newGithubAuth);
+    });
+
+    it("should handle user with no username from GitHub claims", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "Jane",
+        lastName: "Smith",
+        email: "jane.smith@example.com",
+        avatarUrl: "https://github.com/avatars/jane.jpg",
+      };
+      user.authentications = [authentication];
+
+      usersService.findUser.mockResolvedValue(user);
+      (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+
+      await authService.idPAuthentication(AuthenticationProvider.GITHUB, userClaims);
+
+      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.updateUser).toHaveBeenCalledWith(
+        { id: user.id },
+        {
+          username: undefined,
+          firstName: userClaims.firstName,
+          lastName: userClaims.lastName,
+          avatarUrl: userClaims.avatarUrl,
+        },
+        entityManager,
+      );
+    });
+
+    it("should set username to undefined when it is already taken", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "John",
+        lastName: "Doe",
+        email: user.email,
+        avatarUrl: user.avatarUrl!,
+        username: "takenUsername",
+      };
+      user.authentications = [authentication];
+
+      usersService.findUser.mockResolvedValue(user);
+      (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+
+      await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
+
+      expect(usersService.findUser).toHaveBeenCalledTimes(3);
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        1,
+        {
+          select: { id: true },
+          where: { username: userClaims.username },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        2,
+        {
+          relations: { authentications: true },
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: {
+            email: user.email,
+          },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        3,
+        {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: { email: user.email },
+          relations: { authentications: true },
         },
         entityManager,
       );
@@ -1279,7 +1613,7 @@ describe("AuthService", (): void => {
       user.isDeactivated = true;
       user.authentications = [authentication];
 
-      usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(user);
+      usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(user).mockResolvedValueOnce(user);
       (entityManager.save as jest.Mock).mockResolvedValue(undefined);
       (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValue(
         expect.any(Object),
@@ -1287,7 +1621,7 @@ describe("AuthService", (): void => {
 
       await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
 
-      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.findUser).toHaveBeenCalledTimes(3);
       expect(usersService.findUser).toHaveBeenNthCalledWith(
         1,
         {
@@ -1320,6 +1654,29 @@ describe("AuthService", (): void => {
             email: user.email,
           },
           withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        3,
+        {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: { email: user.email },
+          relations: { authentications: true },
         },
         entityManager,
       );
@@ -1339,7 +1696,6 @@ describe("AuthService", (): void => {
         },
         entityManager,
       );
-      expect(user.reload).toHaveBeenCalled();
     });
 
     it("should restore deleted user with IdP login", async (): Promise<void> => {
@@ -1353,7 +1709,7 @@ describe("AuthService", (): void => {
       user.deletedAt = new Date();
       user.authentications = [authentication];
 
-      usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(user);
+      usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(user).mockResolvedValueOnce(user);
       (entityManager.save as jest.Mock).mockResolvedValue(undefined);
       (eventsService.buildInstance as jest.MockedFunction<EventsService["buildInstance"]>).mockReturnValue(
         expect.any(Object),
@@ -1362,7 +1718,7 @@ describe("AuthService", (): void => {
 
       await authService.idPAuthentication(AuthenticationProvider.GOOGLE, userClaims);
 
-      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.findUser).toHaveBeenCalledTimes(3);
       expect(usersService.findUser).toHaveBeenNthCalledWith(
         1,
         {
@@ -1398,6 +1754,29 @@ describe("AuthService", (): void => {
         },
         entityManager,
       );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        3,
+        {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: { email: user.email },
+          relations: { authentications: true },
+        },
+        entityManager,
+      );
       expect(usersService.restoreUser).toHaveBeenCalledWith({ id: user.id }, entityManager);
       expect(eventEmitter2.emit).toHaveBeenCalledWith(EventName.USER_RESTORED, expect.any(Object), expect.any(Object));
       expect(usersService.updateUser).toHaveBeenCalledWith(
@@ -1410,7 +1789,6 @@ describe("AuthService", (): void => {
         },
         entityManager,
       );
-      expect(user.reload).toHaveBeenCalled();
     });
 
     it("should throw BadRequestException for invalid provider", async (): Promise<void> => {
