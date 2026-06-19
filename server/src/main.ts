@@ -20,6 +20,7 @@ import { HttpsOptions } from "@nestjs/common/interfaces/external/https-options.i
 async function bootstrap(): Promise<void> {
   const https: boolean = process.env.HTTPS === "true";
   let httpsOptions: HttpsOptions | undefined;
+  // HTTPS option is overwritten in the app.configuration if NODE_env is "test";
   if (https && process.env.NODE_ENV !== "test") {
     if (!process.env.CERT_PATH || !process.env.KEY_PATH) {
       throw new InternalServerErrorException(
@@ -28,8 +29,8 @@ async function bootstrap(): Promise<void> {
     }
 
     httpsOptions = {
-      key: fs.readFileSync(path.join(process.cwd(), "../" + process.env.KEY_PATH)),
-      cert: fs.readFileSync(path.join(process.cwd(), "../" + process.env.CERT_PATH)),
+      key: fs.readFileSync(path.join(__dirname, "../../../" + process.env.KEY_PATH)),
+      cert: fs.readFileSync(path.join(__dirname, "../../../" + process.env.CERT_PATH)),
     };
   }
 
@@ -52,7 +53,7 @@ async function bootstrap(): Promise<void> {
   if (swaggerEnabled) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const packageJsonInfo: Record<string, string> = JSON.parse(
-      fs.readFileSync(path.join(process.cwd(), "../package.json"), "utf-8"),
+      fs.readFileSync(path.join(__dirname, "../../../package.json"), "utf-8"),
     );
 
     const swaggerConfiguration = new DocumentBuilder()

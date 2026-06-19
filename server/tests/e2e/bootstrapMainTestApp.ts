@@ -11,6 +11,7 @@ import { RMQ_MICROSERVICE } from "#server/configs/constants";
 import { HttpsOptions } from "@nestjs/common/interfaces/external/https-options.interface";
 import { GoogleOAuth2Strategy } from "#server/auth/strategies/google.strategy";
 import { Profile, VerifyCallback } from "passport-google-oauth20";
+import GitHubOAuth2Strategy from "#server/auth/strategies/github.strategy";
 
 /**
  * Bootstrap the main test app.
@@ -22,6 +23,7 @@ import { Profile, VerifyCallback } from "passport-google-oauth20";
 export async function bootstrapMainTestApp(): Promise<INestApplication> {
   const https: boolean = process.env.HTTPS === "true";
   let httpsOptions: HttpsOptions | undefined;
+  // HTTPS option is overwritten in the app.configuration if NODE_env is "test";
   if (https && process.env.NODE_ENV !== "test") {
     if (!process.env.CERT_PATH || !process.env.KEY_PATH) {
       throw new InternalServerErrorException(
@@ -30,8 +32,8 @@ export async function bootstrapMainTestApp(): Promise<INestApplication> {
     }
 
     httpsOptions = {
-      key: fs.readFileSync(path.join(process.cwd(), process.env.KEY_PATH)),
-      cert: fs.readFileSync(path.join(process.cwd(), process.env.CERT_PATH)),
+      key: fs.readFileSync(path.join(__dirname, "../../../" + process.env.KEY_PATH)),
+      cert: fs.readFileSync(path.join(__dirname, "../../../" + process.env.CERT_PATH)),
     };
   }
 
@@ -45,8 +47,22 @@ export async function bootstrapMainTestApp(): Promise<INestApplication> {
       constructor: jest.fn(),
       validate: jest
         .fn()
-        .mockImplementation((accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback): void =>
+        .mockImplementation((accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) =>
           done(null, profile),
+        ),
+    })
+    .overrideProvider(GitHubOAuth2Strategy)
+    .useValue({
+      constructor: jest.fn(),
+      validate: jest
+        .fn()
+        .mockImplementation(
+          (
+            accessToken: string,
+            refreshToken: string,
+            profile: Profile,
+            done: (error: any, user: any, info?: any) => void,
+          ) => done(null, profile),
         ),
     })
     .compile();
