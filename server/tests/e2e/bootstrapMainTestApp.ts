@@ -1,8 +1,26 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 import cookieParser from "cookie-parser";
-import { INestApplication, InternalServerErrorException } from "@nestjs/common";
+import { INestApplication, InternalServerErrorException, Module } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+
+// Mock AdminModule entirely to prevent AdminJS execution because it's not needed in the e2e tests
+// and use ESM modules instead of CommonJS modules.
+jest.mock("#server/admin/admin.module", () => {
+  @Module({
+    imports: [],
+    controllers: [],
+    providers: [],
+    exports: [],
+  })
+  class MockAdminModule {}
+
+  return {
+    __esModule: true,
+    default: MockAdminModule,
+  };
+});
+
 import AppModule from "#server/app.module";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
