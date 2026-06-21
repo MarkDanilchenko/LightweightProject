@@ -21,7 +21,7 @@ export default async function globalSetup(): Promise<void> {
   // Connect to the test DB host, drop and recreate its database again;
   // This is needed to start e2e tests with clean, empty state;
   const { TEST_DATABASE_HOST, TEST_DATABASE_PORT, TEST_DATABASE_NAME, TEST_DATABASE_USER, TEST_DATABASE_PASSWORD } =
-    dotenv.parse(fs.readFileSync(path.join(process.cwd(), ".env")));
+    dotenv.parse(fs.readFileSync(path.join(__dirname, "../../.env")));
 
   if (
     !TEST_DATABASE_HOST ||
@@ -62,7 +62,6 @@ export default async function globalSetup(): Promise<void> {
   try {
     execSync("npm run build:server && npm run typeorm:run", {
       stdio: "inherit",
-      cwd: process.cwd(),
     });
   } catch (error) {
     logger.error("Failed to run migrations on the tests database", error);

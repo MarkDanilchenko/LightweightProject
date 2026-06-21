@@ -1,8 +1,26 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 import cookieParser from "cookie-parser";
-import { INestApplication, InternalServerErrorException } from "@nestjs/common";
+import { INestApplication, InternalServerErrorException, Module } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
+
+// Mock AdminModule entirely to prevent AdminJS execution because it's not needed in the e2e tests
+// and use ESM modules instead of CommonJS modules.
+jest.mock("#server/admin/admin.module", () => {
+  @Module({
+    imports: [],
+    controllers: [],
+    providers: [],
+    exports: [],
+  })
+  class MockAdminModule {}
+
+  return {
+    __esModule: true,
+    default: MockAdminModule,
+  };
+});
+
 import AppModule from "#server/app.module";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
@@ -11,6 +29,7 @@ import { RMQ_MICROSERVICE } from "#server/configs/constants";
 import { HttpsOptions } from "@nestjs/common/interfaces/external/https-options.interface";
 import { GoogleOAuth2Strategy } from "#server/auth/strategies/google.strategy";
 import { Profile, VerifyCallback } from "passport-google-oauth20";
+import GitHubOAuth2Strategy from "#server/auth/strategies/github.strategy";
 
 /**
  * Bootstrap the main test app.
@@ -22,6 +41,7 @@ import { Profile, VerifyCallback } from "passport-google-oauth20";
 export async function bootstrapMainTestApp(): Promise<INestApplication> {
   const https: boolean = process.env.HTTPS === "true";
   let httpsOptions: HttpsOptions | undefined;
+  // HTTPS option is overwritten in the app.configuration if NODE_env is "test";
   if (https && process.env.NODE_ENV !== "test") {
     if (!process.env.CERT_PATH || !process.env.KEY_PATH) {
       throw new InternalServerErrorException(
@@ -30,8 +50,8 @@ export async function bootstrapMainTestApp(): Promise<INestApplication> {
     }
 
     httpsOptions = {
-      key: fs.readFileSync(path.join(process.cwd(), process.env.KEY_PATH)),
-      cert: fs.readFileSync(path.join(process.cwd(), process.env.CERT_PATH)),
+      key: fs.readFileSync(path.join(__dirname, "../../../" + process.env.KEY_PATH)),
+      cert: fs.readFileSync(path.join(__dirname, "../../../" + process.env.CERT_PATH)),
     };
   }
 
@@ -45,8 +65,22 @@ export async function bootstrapMainTestApp(): Promise<INestApplication> {
       constructor: jest.fn(),
       validate: jest
         .fn()
-        .mockImplementation((accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback): void =>
+        .mockImplementation((accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) =>
           done(null, profile),
+        ),
+    })
+    .overrideProvider(GitHubOAuth2Strategy)
+    .useValue({
+      constructor: jest.fn(),
+      validate: jest
+        .fn()
+        .mockImplementation(
+          (
+            accessToken: string,
+            refreshToken: string,
+            profile: Profile,
+            done: (error: any, user: any, info?: any) => void,
+          ) => done(null, profile),
         ),
     })
     .compile();

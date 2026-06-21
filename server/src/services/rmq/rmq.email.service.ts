@@ -67,7 +67,7 @@ export default class RmqEmailService {
    */
   async getTemplatePath(templateName: string): Promise<string> {
     try {
-      const templatePath: string = path.resolve(process.cwd(), `templates/${templateName}.ejs`);
+      const templatePath: string = path.resolve(__dirname, `../../../../templates/${templateName}.ejs`);
       await fs.promises.access(templatePath, fs.constants.R_OK);
 
       return templatePath;
@@ -106,7 +106,7 @@ export default class RmqEmailService {
     const html: string = await ejs.renderFile(
       localEmailVerificationTemplatePath,
       { username: metadata.username, callbackUrl },
-      { root: path.resolve(process.cwd(), "templates") },
+      { root: path.resolve(__dirname, "../../../../templates") },
     );
     const mailOptions: MailOptions = {
       from,
@@ -177,7 +177,7 @@ export default class RmqEmailService {
     const html: string = await ejs.renderFile(
       localPasswordResetTemplatePath,
       { username, callbackUrl },
-      { root: path.resolve(process.cwd(), "templates") },
+      { root: path.resolve(__dirname, "../../../../templates") },
     );
     const mailOptions: MailOptions = {
       from,
@@ -232,7 +232,7 @@ export default class RmqEmailService {
     const html: string = await ejs.renderFile(
       reactivationTemplatePath,
       { username, callbackUrl },
-      { root: path.resolve(process.cwd(), "templates") },
+      { root: path.resolve(__dirname, "../../../../templates") },
     );
     const mailOptions: MailOptions = {
       from,
@@ -288,7 +288,7 @@ export default class RmqEmailService {
     const html: string = await ejs.renderFile(
       restorationTemplatePath,
       { username, callbackUrl },
-      { root: path.resolve(process.cwd(), "templates") },
+      { root: path.resolve(__dirname, "../../../../templates") },
     );
     const mailOptions: MailOptions = {
       from,
@@ -336,7 +336,7 @@ export default class RmqEmailService {
     const html: string = await ejs.renderFile(
       userDeactivatedNotificationTemplatePath,
       { username },
-      { root: path.resolve(process.cwd(), "templates") },
+      { root: path.resolve(__dirname, "../../../../templates") },
     );
     const mailOptions: MailOptions = {
       from,
@@ -385,7 +385,7 @@ export default class RmqEmailService {
     const html: string = await ejs.renderFile(
       userDeletedNotificationTemplatePath,
       { username },
-      { root: path.resolve(process.cwd(), "templates") },
+      { root: path.resolve(__dirname, "../../../../templates") },
     );
     const mailOptions: MailOptions = {
       from,

@@ -18,11 +18,17 @@ function getEnvPath(): string {
   let distEnvPath: string;
   let fallbackEnvPath: string;
 
+  if (!["development", "test", "production"].includes(node_env)) {
+    logger.error("NODE_ENV mode is not supported. Please, set NODE_ENV to 'development' | 'test' | 'production'");
+
+    process.exit(1);
+  }
+
   switch (node_env) {
     case "development":
     case "test": {
-      distEnvPath = path.join(process.cwd(), "../.env");
-      fallbackEnvPath = path.join(process.cwd(), ".env");
+      distEnvPath = path.join(__dirname, "../../../../.env");
+      fallbackEnvPath = path.join(__dirname, "../../../.env");
 
       break;
     }
@@ -40,12 +46,6 @@ function getEnvPath(): string {
 
       break;
     }
-  }
-
-  if (!distEnvPath || !fallbackEnvPath) {
-    logger.error("NODE_ENV mode is not supported. Please, set NODE_ENV to 'development' | 'test' | 'production'");
-
-    process.exit(1);
   }
 
   try {
