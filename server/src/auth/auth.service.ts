@@ -328,6 +328,7 @@ export default class AuthService {
           }
 
           case AuthenticationProvider.GITHUB:
+          case AuthenticationProvider.YANDEX:
           case AuthenticationProvider.GOOGLE: {
             return auth.provider === provider;
           }
@@ -769,6 +770,7 @@ export default class AuthService {
   ): Promise<UserEntity> {
     switch (idP) {
       case AuthenticationProvider.GITHUB:
+      case AuthenticationProvider.YANDEX:
       case AuthenticationProvider.GOOGLE: {
         const { firstName, lastName, email, avatarUrl } = userClaims;
         let { username } = userClaims;

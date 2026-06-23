@@ -142,6 +142,26 @@ async function bootstrap(): Promise<void> {
         },
         "githubOAuth2",
       )
+      .addOAuth2(
+        {
+          type: "oauth2",
+          description: "Yandex OAuth2",
+          name: "yandexOAuth2",
+          scheme: "yandexOAuth2",
+          flows: {
+            authorizationCode: {
+              authorizationUrl: "https://oauth.yandex.ru/authorize",
+              tokenUrl: "https://oauth.yandex.ru/token",
+              scopes: {
+                "login:email": "Access to user's email address",
+                "login:info": "Access to user's basic profile information",
+                "login:avatar": "Access to user's avatar image",
+              },
+            },
+          },
+        },
+        "yandexOAuth2",
+      )
       .build();
 
     // Swagger patch function to support zod validation;

@@ -34,6 +34,7 @@ import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import GoogleOAuth2Guard from "#server/auth/guards/google.guard";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import GitHubOAuth2Guard from "#server/auth/guards/github.guard";
+import YandexOAuth2Guard from "#server/auth/guards/yandex.guard";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -432,6 +433,57 @@ export default class AuthController {
   @UseGuards(GitHubOAuth2Guard)
   async githubRedirect(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
     const accessToken = await this.authService.signIn(req.user, AuthenticationProvider.GITHUB);
+
+    setCookie(res, "accessToken", accessToken, this.https);
+
+    res.status(200).send();
+  }
+
+  @Get("yandex/signin")
+  @ApiOperation({
+    summary: "OAuth2 Yandex authentication",
+    description: "Users will be redirected to Yandex for OAuth2 authentication.",
+  })
+  @ApiResponse({
+    status: 302,
+    description: "The users will be redirected to Yandex authentication form.",
+  })
+  @ApiOAuth2(["login:email", "login:info", "login:avatar"], "yandexOAuth2")
+  @UseGuards(YandexOAuth2Guard)
+  async yandexSignIn(): Promise<void> {
+    // Nothing more to do here;
+  }
+
+  @Get("yandex/redirect")
+  @ApiOperation({
+    summary: "OAuth2 Yandex authentication",
+    description:
+      "User will be redirected the home page of the web application after successful authentication within idp service.",
+  })
+  @ApiResponse({
+    status: 200,
+    description: "User is authenticated via Yandex successfully.",
+  })
+  @ApiResponse({
+    status: 400,
+    description: "Invalid request.",
+  })
+  @ApiResponse({
+    status: 401,
+    description: "Invalid token or authentication not found.",
+  })
+  @ApiResponse({
+    status: 404,
+    description: "User not found.",
+  })
+  @ApiOAuth2(["login:email", "login:info", "login:avatar"], "yandexOAuth2")
+  @UseGuards(YandexOAuth2Guard)
+  async yandexRedirect(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
+    if (!req.user) {
+      throw new UnauthorizedException();
+    }
+
+    const accessToken = await this.authService.signIn(req.user, AuthenticationProvider.YANDEX);
 
     setCookie(res, "accessToken", accessToken, this.https);
 

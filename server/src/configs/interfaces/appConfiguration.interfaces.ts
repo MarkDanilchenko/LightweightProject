@@ -44,6 +44,11 @@ export default interface AppConfiguration {
       clientSecret: string;
       callbackURL: string;
     };
+    yandex: {
+      clientID: string;
+      clientSecret: string;
+      callbackURL: string;
+    };
     keycloak: {
       oidc: {
         clientID: string;
