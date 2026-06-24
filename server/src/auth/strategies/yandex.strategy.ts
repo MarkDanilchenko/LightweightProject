@@ -43,13 +43,13 @@ export default class YandexOAuth2Strategy extends PassportStrategy(Strategy, "ya
   async validate(
     accessToken: string,
     refreshToken: string,
-    profile: Profile,
+    profile: Profile & { name?: { familyName?: string; givenName?: string } },
     done: (error: string | null, user: any) => void,
   ): Promise<void> {
     // Both accessToken and refreshToken are tokens from Yandex and not used in the app authentication flow;
     // Inner access and refresh tokens are configured by the app itself
     // for further access to the protected API endpoints;
-    const { emails, photos, username } = profile;
+    const { emails, photos, username, name } = profile;
 
     const email = emails && Array.isArray(emails) && emails[0] ? emails[0].value : undefined;
     if (!email) {
@@ -58,8 +58,8 @@ export default class YandexOAuth2Strategy extends PassportStrategy(Strategy, "ya
 
     try {
       const user: UserEntity = await this.authService.idPAuthentication(AuthenticationProvider.YANDEX, {
-        firstName: undefined,
-        lastName: undefined,
+        firstName: name?.givenName,
+        lastName: name?.familyName,
         username,
         email,
         avatarUrl: photos && Array.isArray(photos) && photos[0] ? photos[0].value : undefined,
