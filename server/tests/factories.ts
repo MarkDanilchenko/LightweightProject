@@ -43,6 +43,7 @@ function buildAuthenticationFactory(overrides: Partial<AuthenticationEntity> = {
     AuthenticationProvider.GOOGLE,
     AuthenticationProvider.KEYCLOAK,
     AuthenticationProvider.LOCAL,
+    AuthenticationProvider.YANDEX,
   ]);
   authentication.createdAt = faker.date.past();
   authentication.lastAccessedAt = faker.date.recent();
@@ -94,6 +95,14 @@ function buildAuthenticationFactory(overrides: Partial<AuthenticationEntity> = {
       case AuthenticationProvider.KEYCLOAK: {
         authentication.metadata = {
           keycloak: {},
+        };
+
+        break;
+      }
+
+      case AuthenticationProvider.YANDEX: {
+        authentication.metadata = {
+          yandex: {},
         };
 
         break;

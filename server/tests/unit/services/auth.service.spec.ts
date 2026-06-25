@@ -1791,6 +1791,246 @@ describe("AuthService", (): void => {
       );
     });
 
+    it("should create new user and authentication for YANDEX provider", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "Ivan",
+        lastName: "Petrov",
+        email: "ivan.petrov@yandex.ru",
+        avatarUrl: "https://yandex.ru/userpic/ivan.jpg",
+        username: "ivanpetrov",
+      };
+      const newUser: UserEntity = buildUserFactory({ ...userClaims });
+      const newAuthentication: AuthenticationEntity = buildAuthenticationFactory({
+        userId: newUser.id,
+        provider: AuthenticationProvider.YANDEX,
+      });
+      newUser.authentications = [newAuthentication];
+
+      usersService.findUser.mockResolvedValue(null);
+      (entityManager.create as jest.Mock).mockReturnValueOnce(newUser).mockReturnValueOnce(newAuthentication);
+      (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+
+      await authService.idPAuthentication(AuthenticationProvider.YANDEX, userClaims);
+
+      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        1,
+        {
+          select: { id: true },
+          where: { username: userClaims.username },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        2,
+        {
+          where: { email: userClaims.email },
+          relations: { authentications: true },
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(entityManager.create).toHaveBeenCalledTimes(2);
+      expect(entityManager.save).toHaveBeenCalledTimes(2);
+      expect(entityManager.create).toHaveBeenNthCalledWith(2, AuthenticationEntity, {
+        userId: newUser.id,
+        provider: AuthenticationProvider.YANDEX,
+      });
+    });
+
+    it("should update existing user with YANDEX authentication", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "Ivan",
+        lastName: "Petrov",
+        email: user.email,
+        avatarUrl: "https://yandex.ru/userpic/ivan-new.jpg",
+        username: "ivanYandex",
+      };
+      const yandexAuth: AuthenticationEntity = buildAuthenticationFactory({
+        userId: user.id,
+        provider: AuthenticationProvider.YANDEX,
+      });
+      user.authentications = [authentication, yandexAuth];
+
+      usersService.findUser.mockResolvedValueOnce(null).mockResolvedValueOnce(user).mockResolvedValueOnce(user);
+      (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+
+      await authService.idPAuthentication(AuthenticationProvider.YANDEX, userClaims);
+
+      expect(usersService.findUser).toHaveBeenCalledTimes(3);
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        1,
+        {
+          select: { id: true },
+          where: { username: userClaims.username },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        2,
+        {
+          relations: { authentications: true },
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: {
+            email: user.email,
+          },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        3,
+        {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: { email: user.email },
+          relations: { authentications: true },
+        },
+        entityManager,
+      );
+      expect(usersService.updateUser).toHaveBeenCalledWith(
+        { id: user.id },
+        {
+          username: userClaims.username,
+          firstName: userClaims.firstName,
+          lastName: userClaims.lastName,
+          avatarUrl: userClaims.avatarUrl,
+        },
+        entityManager,
+      );
+      expect(entityManager.save).toHaveBeenCalledWith(yandexAuth);
+    });
+
+    it("should create YANDEX authentication for existing user", async (): Promise<void> => {
+      const userClaims: AuthenticationViaIdP["userClaims"] = {
+        firstName: "Ivan",
+        lastName: "Petrov",
+        email: user.email,
+        avatarUrl: "https://yandex.ru/userpic/ivan.jpg",
+      };
+      const newYandexAuth: AuthenticationEntity = buildAuthenticationFactory({
+        userId: user.id,
+        provider: AuthenticationProvider.YANDEX,
+      });
+      user.authentications = [authentication];
+
+      usersService.findUser.mockResolvedValue(user);
+      (entityManager.create as jest.Mock).mockReturnValue(newYandexAuth);
+      (entityManager.save as jest.Mock).mockResolvedValue(undefined);
+
+      await authService.idPAuthentication(AuthenticationProvider.YANDEX, userClaims);
+
+      expect(usersService.findUser).toHaveBeenCalledTimes(2);
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        1,
+        {
+          relations: { authentications: true },
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: {
+            email: user.email,
+          },
+          withDeleted: true,
+        },
+        entityManager,
+      );
+      expect(usersService.findUser).toHaveBeenNthCalledWith(
+        2,
+        {
+          select: {
+            id: true,
+            email: true,
+            username: true,
+            firstName: true,
+            lastName: true,
+            avatarUrl: true,
+            isDeactivated: true,
+            authentications: {
+              id: true,
+              provider: true,
+              userId: true,
+              metadata: true,
+            },
+          },
+          where: { email: user.email },
+          relations: { authentications: true },
+        },
+        entityManager,
+      );
+      expect(usersService.updateUser).toHaveBeenCalledWith(
+        { id: user.id },
+        {
+          username: undefined,
+          firstName: userClaims.firstName,
+          lastName: userClaims.lastName,
+          avatarUrl: userClaims.avatarUrl,
+        },
+        entityManager,
+      );
+      expect(entityManager.create).toHaveBeenCalledWith(AuthenticationEntity, {
+        userId: user.id,
+        provider: AuthenticationProvider.YANDEX,
+      });
+      expect(entityManager.save).toHaveBeenCalledWith(newYandexAuth);
+    });
+
     it("should throw BadRequestException for invalid provider", async (): Promise<void> => {
       const userClaims: AuthenticationViaIdP["userClaims"] = {
         firstName: "John",
