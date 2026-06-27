@@ -10,11 +10,19 @@ import LocalAuthStrategy from "#server/auth/strategies/local.strategy";
 import JwtStrategy from "#server/auth/strategies/jwt.strategy";
 import { GoogleOAuth2Strategy } from "#server/auth/strategies/google.strategy";
 import GitHubOAuth2Strategy from "#server/auth/strategies/github.strategy";
+import YandexOAuth2Strategy from "#server/auth/strategies/yandex.strategy";
 
 @Module({
   imports: [TypeOrmModule.forFeature([AuthenticationEntity]), PassportModule, UsersModule, EventsModule],
   controllers: [AuthController],
-  providers: [AuthService, LocalAuthStrategy, JwtStrategy, GoogleOAuth2Strategy, GitHubOAuth2Strategy],
+  providers: [
+    AuthService,
+    LocalAuthStrategy,
+    JwtStrategy,
+    GoogleOAuth2Strategy,
+    GitHubOAuth2Strategy,
+    YandexOAuth2Strategy,
+  ],
   exports: [AuthService],
 })
 export default class AuthModule {}

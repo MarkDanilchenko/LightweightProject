@@ -81,6 +81,8 @@ export default (): AppConfiguration => {
     GOOGLE_CLIENT_SECRET,
     GITHUB_CLIENT_ID,
     GITHUB_CLIENT_SECRET,
+    YANDEX_CLIENT_ID,
+    YANDEX_CLIENT_SECRET,
     KC_HOSTNAME,
     KC_PORT,
     KC_REALM_NAME,
@@ -215,6 +217,11 @@ export default (): AppConfiguration => {
       clientID: GITHUB_CLIENT_ID!,
       clientSecret: GITHUB_CLIENT_SECRET!,
       callbackURL: `${serverConfiguration.protocol}://${serverConfiguration.host}:${serverConfiguration.port}/api/v1/auth/github/redirect`,
+    },
+    yandex: {
+      clientID: YANDEX_CLIENT_ID!,
+      clientSecret: YANDEX_CLIENT_SECRET!,
+      callbackURL: `${serverConfiguration.protocol}://${serverConfiguration.host}:${serverConfiguration.port}/api/v1/auth/yandex/redirect`,
     },
     keycloak: {
       oidc: {

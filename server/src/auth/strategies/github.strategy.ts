@@ -37,7 +37,7 @@ export default class GitHubOAuth2Strategy extends PassportStrategy(Strategy, "gi
    * @param {string} accessToken The access token received from GitHub
    * @param {string} refreshToken The refresh token received from GitHub
    * @param {Profile} profile The users profile received from GitHub
-   * @param {(error: any, user: any, info?: any) => void} done The callback for the validation result
+   * @param {(error: any, user?: any, info?: any) => void} done The callback for the validation result
    *
    * @returns {Promise<void>} A promise that resolves once the validation is complete
    */
@@ -45,7 +45,7 @@ export default class GitHubOAuth2Strategy extends PassportStrategy(Strategy, "gi
     accessToken: string,
     refreshToken: string,
     profile: Profile,
-    done: (error: any, user: any, info?: any) => void,
+    done: (error: any, user?: any, info?: any) => void,
   ): Promise<void> {
     // Both accessToken and refreshToken are tokens from GitHub and not used in the app authentication flow;
     // Inner access and refresh tokens are configured by the app itself

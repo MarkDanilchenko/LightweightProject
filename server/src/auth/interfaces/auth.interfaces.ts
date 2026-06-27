@@ -1,17 +1,3 @@
-// interface AuthAccordingToStrategyOptions {
-//   accessToken?: string;
-//   refreshToken?: string;
-//   [key: string]: any;
-// }
-//
-
-// interface JwtAuthGuardResponse {
-//   userId: string;
-//   username: string;
-//   email: string;
-//   provider: string;
-// }
-//
 // interface KeycloakOAuth2OIDC {
 //   defaultScope: {
 //     sub: string;
@@ -43,20 +29,13 @@
 //   email: string;
 //   avatarUrl?: string;
 // }
-//
-// interface AuthCredentials {
-//   provider: AuthenticationProvider;
-//   email: string;
-//   password?: string;
-//   // NOTE: "username" is used only in local strategy where users can signIn with either an email or username;
-//   username?: string;
-// }
 
 enum AuthenticationProvider {
   LOCAL = "local",
   GOOGLE = "google",
   KEYCLOAK = "keycloak",
   GITHUB = "github",
+  YANDEX = "yandex",
 }
 
 interface AuthenticationInstanceMetadata {
@@ -74,6 +53,7 @@ interface AuthenticationInstanceMetadata {
   google?: Record<string, any>;
   keycloak?: Record<string, any>;
   github?: Record<string, any>;
+  yandex?: Record<string, any>;
 }
 
 interface AuthenticationViaIdP {
@@ -86,13 +66,4 @@ interface AuthenticationViaIdP {
   };
 }
 
-export {
-  AuthenticationProvider,
-  AuthenticationInstanceMetadata,
-  AuthenticationViaIdP,
-  // JwtAuthGuardResponse,
-  // KeycloakOAuth2OIDC,
-  // AuthAccordingToStrategyOptions,
-  // AuthCredentials,
-  // KeycloakSAML,
-};
+export { AuthenticationProvider, AuthenticationInstanceMetadata, AuthenticationViaIdP };
