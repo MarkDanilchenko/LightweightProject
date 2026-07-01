@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from "@nestjs/testing";
-import { ConfigService } from "@nestjs/config";
 import { Response } from "express";
 import AuthController from "#server/auth/auth.controller";
 import AuthService from "#server/auth/auth.service";
@@ -65,24 +64,6 @@ describe("AuthController", (): void => {
       canActivate: jest.fn().mockReturnValue(true),
     }));
 
-    const mockConfigService = {
-      get: jest.fn((key: string) => {
-        switch (key) {
-          case "serverConfiguration.https": {
-            return true;
-          }
-
-          case "clientConfiguration.baseUrl": {
-            return "https://127.0.0.1:3001";
-          }
-
-          default: {
-            return null;
-          }
-        }
-      }),
-    };
-
     mockResponse = {
       status: jest.fn().mockReturnThis(),
       send: jest.fn(),
@@ -93,7 +74,6 @@ describe("AuthController", (): void => {
       controllers: [AuthController],
       providers: [
         { provide: AuthService, useValue: mockAuthService },
-        { provide: ConfigService, useValue: mockConfigService },
         { provide: GoogleOAuth2Guard, useValue: mockGoogleOAuth2Guard },
         { provide: GitHubOAuth2Guard, useValue: mockGitHubOAuth2Guard },
         { provide: YandexOAuth2Guard, useValue: mockYandexOAuth2Guard },
@@ -168,7 +148,7 @@ describe("AuthController", (): void => {
       await authController.localEmailVerification(dto, mockResponse as Response);
 
       expect(authService.localEmailVerification).toHaveBeenCalledWith(dto);
-      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken, true);
+      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
     });
@@ -200,7 +180,7 @@ describe("AuthController", (): void => {
       await authController.localSignIn(req, dto, mockResponse as Response);
 
       expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.LOCAL);
-      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken, true);
+      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
     });
@@ -296,7 +276,7 @@ describe("AuthController", (): void => {
       await authController.refreshAccessToken(req, mockResponse as Response);
 
       expect(authService.refreshAccessToken).toHaveBeenCalledWith(req.signedCookies.accessToken);
-      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", tokenData.accessToken, true);
+      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", tokenData.accessToken);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
     });
@@ -361,7 +341,7 @@ describe("AuthController", (): void => {
       await authController.googleRedirect(req, mockResponse as Response);
 
       expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.GOOGLE);
-      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken, true);
+      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
     });
@@ -390,7 +370,7 @@ describe("AuthController", (): void => {
       await authController.githubRedirect(req, mockResponse as Response);
 
       expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.GITHUB);
-      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken, true);
+      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
     });
@@ -419,7 +399,7 @@ describe("AuthController", (): void => {
       await authController.yandexRedirect(req, mockResponse as Response);
 
       expect(authService.signIn).toHaveBeenCalledWith(user, AuthenticationProvider.YANDEX);
-      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken, true);
+      expect(setCookie).toHaveBeenCalledWith(mockResponse, "accessToken", accessToken);
       expect(mockResponse.status).toHaveBeenCalledWith(200);
       expect(mockResponse.send).toHaveBeenCalled();
     });

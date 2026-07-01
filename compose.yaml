@@ -97,11 +97,15 @@ services:
       - ${NGINX_HTTPS_PORT}:${NGINX_HTTPS_PORT}
     env_file:
       - ./.env
+    environment:
+      NGINX_ENVSUBST_TEMPLATE_SUFFIX: ".conf"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./certs/???:/etc/nginx/certs:ro
+      - ./nginx/nginx.conf.conf:/etc/nginx/nginx.conf.conf:ro
+      - ./certs/selfsigned:/etc/nginx/certs:ro
+      - ./nginx/entrypoint.sh:/entrypoint.sh
     extra_hosts:
       - "host.docker.internal:host-gateway" # TODO: should be removed when nestjs server will be containerized;
+    entrypoint: [ "/entrypoint.sh" ]
 
 volumes:
   db_data:
