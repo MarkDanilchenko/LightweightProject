@@ -124,6 +124,7 @@ export default (): AppConfiguration => {
     ADMIN_COOKIE_NAME,
     ADMIN_COOKIE_PASSWORD,
     ADMIN_SECRET,
+    CORS_ORIGINS,
   } = process.env;
 
   let { HTTPS } = process.env;
@@ -140,6 +141,7 @@ export default (): AppConfiguration => {
     https: HTTPS === "true",
     protocol: HTTPS === "true" ? "https" : "http",
     baseUrl: "",
+    corsOrigins: CORS_ORIGINS?.split(",") || [],
   };
 
   serverConfiguration.baseUrl = `${serverConfiguration.protocol}://${serverConfiguration.host}:${serverConfiguration.port}`;
