@@ -12,8 +12,6 @@ import {
 } from "@nestjs/common";
 import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery, ApiCookieAuth, ApiOAuth2 } from "@nestjs/swagger";
 import { Response } from "express";
-import { ConfigService } from "@nestjs/config";
-import AppConfiguration from "../configs/interfaces/appConfiguration.interfaces";
 import { ZodValidationPipe } from "@anatine/zod-nestjs";
 import AuthService from "#server/auth/auth.service";
 import {
@@ -40,11 +38,9 @@ import YandexOAuth2Guard from "#server/auth/guards/yandex.guard";
 @Controller("auth")
 export default class AuthController {
   private readonly authService: AuthService;
-  private readonly https: boolean;
 
-  constructor(configService: ConfigService, authService: AuthService) {
+  constructor(authService: AuthService) {
     this.authService = authService;
-    this.https = configService.get<AppConfiguration["serverConfiguration"]["https"]>("serverConfiguration.https")!;
   }
 
   @Post("local/signup")
@@ -97,7 +93,7 @@ export default class AuthController {
   ): Promise<void> {
     const accessToken = await this.authService.localEmailVerification(localEmailVerificationDto);
 
-    setCookie(res, "accessToken", accessToken, this.https);
+    setCookie(res, "accessToken", accessToken);
 
     res.status(200).send();
   }
@@ -129,7 +125,7 @@ export default class AuthController {
   ): Promise<void> {
     const accessToken = await this.authService.signIn(req.user, AuthenticationProvider.LOCAL);
 
-    setCookie(res, "accessToken", accessToken, this.https);
+    setCookie(res, "accessToken", accessToken);
 
     res.status(200).send();
   }
@@ -165,7 +161,7 @@ export default class AuthController {
   ): Promise<void> {
     const accessToken = await this.authService.localReactivationConfirm(localReactivationConfirmDto);
 
-    setCookie(res, "accessToken", accessToken, this.https);
+    setCookie(res, "accessToken", accessToken);
 
     res.status(200).send();
   }
@@ -201,7 +197,7 @@ export default class AuthController {
   ): Promise<void> {
     const accessToken = await this.authService.localRestorationConfirm(localRestorationConfirmDto);
 
-    setCookie(res, "accessToken", accessToken, this.https);
+    setCookie(res, "accessToken", accessToken);
 
     res.status(200).send();
   }
@@ -315,7 +311,7 @@ export default class AuthController {
 
     const { accessToken: newAccessToken } = await this.authService.refreshAccessToken(accessToken);
 
-    setCookie(res, "accessToken", newAccessToken, this.https);
+    setCookie(res, "accessToken", newAccessToken);
 
     res.status(200).send();
   }
@@ -387,7 +383,7 @@ export default class AuthController {
   async googleRedirect(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
     const accessToken = await this.authService.signIn(req.user, AuthenticationProvider.GOOGLE);
 
-    setCookie(res, "accessToken", accessToken, this.https);
+    setCookie(res, "accessToken", accessToken);
 
     res.status(200).send();
   }
@@ -434,7 +430,7 @@ export default class AuthController {
   async githubRedirect(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
     const accessToken = await this.authService.signIn(req.user, AuthenticationProvider.GITHUB);
 
-    setCookie(res, "accessToken", accessToken, this.https);
+    setCookie(res, "accessToken", accessToken);
 
     res.status(200).send();
   }
@@ -485,7 +481,7 @@ export default class AuthController {
 
     const accessToken = await this.authService.signIn(req.user, AuthenticationProvider.YANDEX);
 
-    setCookie(res, "accessToken", accessToken, this.https);
+    setCookie(res, "accessToken", accessToken);
 
     res.status(200).send();
   }
@@ -539,7 +535,7 @@ export default class AuthController {
   //
   //     const { accessToken } = await this.authService.signIn(credentials);
   //
-  //     setCookie(res, "accessToken", accessToken, this.https);
+  //     setCookie(res, "accessToken", accessToken);
   //
   //     res.redirect("/");
   //   }
@@ -594,7 +590,7 @@ export default class AuthController {
   //
   //     const { accessToken } = await this.authService.signIn(credentials);
   //
-  //     setCookie(res, "accessToken", accessToken, this.https);
+  //     setCookie(res, "accessToken", accessToken);
   //
   //     res.redirect("/");
   //   }

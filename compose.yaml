@@ -51,24 +51,24 @@ services:
       timeout: 5s
       retries: 3
 
-  keycloak:
-    restart: always
-    image: quay.io/keycloak/keycloak:26.3.0
-    container_name: keycloak
-    command: start
-    ports:
-      - ${KC_PORT}:${KC_PORT}
-    env_file:
-      - ./.env
-    volumes:
-      - ./certs/???:/opt/keycloak/conf/certs:ro
-    depends_on:
-      - db
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://${KC_HOSTNAME}:${KC_PORT}/auth/realms/master" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+#  keycloak:
+#    restart: always
+#    image: quay.io/keycloak/keycloak:26.3.0
+#    container_name: keycloak
+#    command: start
+#    ports:
+#      - ${KC_PORT}:${KC_PORT}
+#    env_file:
+#      - ./.env
+#    volumes:
+#      - ./certs/???:/opt/keycloak/conf/certs:ro
+#    depends_on:
+#      - db
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://${KC_HOSTNAME}:${KC_PORT}/auth/realms/master" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 3
 
   rabbitmq:
     restart: always
@@ -88,6 +88,25 @@ services:
       timeout: 5s
       retries: 3
 
+  nginx:
+    restart: always
+    image: nginx:1.31.2
+    container_name: nginx
+    ports:
+      - ${NGINX_HTTP_PORT}:80
+      - ${NGINX_HTTPS_PORT}:443
+    env_file:
+      - ./.env
+    environment:
+      NGINX_ENVSUBST_TEMPLATE_SUFFIX: ".conf"
+    volumes:
+      - ./nginx/nginx.conf.conf:/etc/nginx/nginx.conf.conf:ro
+      - ./certs/selfsigned:/etc/nginx/certs:ro
+      - ./nginx/entrypoint.sh:/entrypoint.sh
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # TODO: should be removed when nestjs server will be containerized;
+    entrypoint: [ "/entrypoint.sh" ]
+
 volumes:
   db_data:
     driver: local
@@ -100,4 +119,6 @@ volumes:
   certs:
     driver: local
   rabbitmq_data:
+    driver: local
+  nginx:
     driver: local
