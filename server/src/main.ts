@@ -40,15 +40,19 @@ async function bootstrap(): Promise<void> {
   });
 
   const configService = app.get(ConfigService);
-  const { host, port, cookieSecret, swaggerEnabled, protocol } =
+  const { host, port, cookieSecret, swaggerEnabled, protocol, corsOrigins } =
     configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration")!;
 
-  app.use(cookieParser(cookieSecret));
-  app.setGlobalPrefix("api/v1");
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
-
-  // Necessary for secure cookie parser to work while have nginx proxy;
-  // app.getHttpAdapter().getInstance().set("trust proxy", 1);
+  app.setGlobalPrefix("api/v1");
+  app.enableCors({
+    origin: corsOrigins,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"],
+    credentials: true,
+    allowedHeaders: ["Origin", "X-Requested-With", "Content-Type", "Accept", "Authorization"],
+  });
+  app.set("trust proxy", 1); // Necessary for correct headers parsing from nginx proxy to nestjs;
+  app.use(cookieParser(cookieSecret));
 
   if (swaggerEnabled) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

@@ -12,6 +12,7 @@ export default interface AppConfiguration {
     https: boolean;
     protocol: "http" | "https";
     baseUrl: string;
+    corsOrigins: string[];
   };
   clientConfiguration: {
     host: string;
