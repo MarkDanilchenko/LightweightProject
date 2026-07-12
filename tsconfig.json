@@ -16,6 +16,8 @@
     "skipLibCheck": true,
     "esModuleInterop": true,
     "noUnusedLocals": true,
+    "ignoreDeprecations": "6.0",
+    "baseUrl": ".",
     "paths": {
       "#server/*": ["./server/src/*"],
       "#shared/*": ["./shared/*"]
