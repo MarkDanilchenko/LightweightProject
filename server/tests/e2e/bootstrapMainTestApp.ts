@@ -30,6 +30,7 @@ import { HttpsOptions } from "@nestjs/common/interfaces/external/https-options.i
 import { GoogleOAuth2Strategy } from "#server/auth/strategies/google.strategy";
 import { Profile, VerifyCallback } from "passport-google-oauth20";
 import GitHubOAuth2Strategy from "#server/auth/strategies/github.strategy";
+import YandexOAuth2Strategy from "#server/auth/strategies/yandex.strategy";
 
 /**
  * Bootstrap the main test app.
@@ -70,6 +71,20 @@ export async function bootstrapMainTestApp(): Promise<INestApplication> {
         ),
     })
     .overrideProvider(GitHubOAuth2Strategy)
+    .useValue({
+      constructor: jest.fn(),
+      validate: jest
+        .fn()
+        .mockImplementation(
+          (
+            accessToken: string,
+            refreshToken: string,
+            profile: Profile,
+            done: (error: any, user: any, info?: any) => void,
+          ) => done(null, profile),
+        ),
+    })
+    .overrideProvider(YandexOAuth2Strategy)
     .useValue({
       constructor: jest.fn(),
       validate: jest
