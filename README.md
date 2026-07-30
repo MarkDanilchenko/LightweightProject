@@ -121,19 +121,11 @@ The application supports multiple authentication strategies:
 
 ### Event-Driven Architecture
 
-- **Event Producers**: Services emit events to RabbitMQ exchanges
-- **Event Consumers**: Dedicated consumers listen to queues and process events asynchronously
-- **Decoupling**: Producers don't need to know about consumers, enabling scalable architecture
-
-### Database Interactions
-
-- **TypeORM**: Manages database connections and provides ORM functionality
+Services emit events to RabbitMQ exchanges. Dedicated consumers listen to queues and process events asynchronously.
 
 ### Caching Strategy
 
-- **Redis**: Caches frequently accessed data (tokens, user data)
-- **Session Storage**: Stateless JWT tokens with refresh tokens stored in PostgreSQL
-- **Cache Invalidation**: TTL-based expiration and manual invalidation
+Redis caches for frequently accessed data (tokens, user data). Stateless JWT tokens with refresh tokens stored in PostgreSQL.
 
 ## Architecture Diagram
 
@@ -242,7 +234,7 @@ Once the server is running, access the interactive API documentation at:
 ## Admin Panel
 
 Access the AdminJS panel for database management (if configured):
-- URL: `https://localhost/admin` (route configuration dependent)
+- URL: `https://localhost/admin`
 
 ## License
 
