@@ -18,6 +18,8 @@ updates:
       - dependency-name: "@anatine/zod-openapi"
       - dependency-name: "@swc/cli"
       - dependency-name: "@nestjs/swagger"
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
     groups:
       dependencies:
         patterns:
