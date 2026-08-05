@@ -300,6 +300,7 @@ export default class AuthController {
     description: "Invalid token.",
   })
   @ApiCookieAuth("accessToken")
+  // Without JwtGuard, because jwt is invalid here as expected;
   async refreshAccessToken(
     @Req() req: RequestWithSignedCookies & { headers: { authorization: string | undefined } },
     @Res({ passthrough: true }) res: Response,
