@@ -135,13 +135,13 @@ export default class HealthController {
           options: { urls: this.rabbitmqUrls },
         }),
       () => this.redisHealthIndicator.isHealthy("redis"),
-      () => this.memory.checkHeap("memoryHeap", 600 * 1024 * 1024), // < 600MB
+      () => this.memory.checkHeap("memoryHeap", 1024 * 1024 * 1024), // < 1024MB
       () =>
         this.disk.checkStorage("diskStorage", {
           path: "/",
           thresholdPercent: 0.95,
         }),
-      () => this.http.pingCheck("google", "https://google.com"),
+      () => this.http.pingCheck("http", "https://google.com"),
     ]);
   }
 }

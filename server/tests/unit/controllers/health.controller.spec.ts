@@ -24,7 +24,7 @@ describe("HealthController", (): void => {
       redis: { status: "up" },
       memoryHeap: { status: "up" },
       diskStorage: { status: "up" },
-      google: { status: "up" },
+      http: { status: "up" },
     },
     error: {},
     details: {
@@ -33,7 +33,7 @@ describe("HealthController", (): void => {
       redis: { status: "up" },
       memoryHeap: { status: "up" },
       diskStorage: { status: "up" },
-      google: { status: "up" },
+      http: { status: "up" },
     },
   };
 
@@ -106,12 +106,12 @@ describe("HealthController", (): void => {
         options: { urls: mockRabbitmqUrls },
       });
       expect(redisHealthIndicator.isHealthy).toHaveBeenCalledWith("redis");
-      expect(memoryHealthIndicator.checkHeap).toHaveBeenCalledWith("memoryHeap", 600 * 1024 * 1024);
+      expect(memoryHealthIndicator.checkHeap).toHaveBeenCalledWith("memoryHeap", 1024 * 1024 * 1024);
       expect(diskHealthIndicator.checkStorage).toHaveBeenCalledWith("diskStorage", {
         path: "/",
         thresholdPercent: 0.95,
       });
-      expect(httpHealthIndicator.pingCheck).toHaveBeenCalledWith("google", "https://google.com");
+      expect(httpHealthIndicator.pingCheck).toHaveBeenCalledWith("http", "https://google.com");
       expect(result).toEqual(mockHealthCheckResult);
     });
   });
