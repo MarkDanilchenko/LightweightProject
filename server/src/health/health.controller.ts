@@ -135,7 +135,7 @@ export default class HealthController {
           options: { urls: this.rabbitmqUrls },
         }),
       () => this.redisHealthIndicator.isHealthy("redis"),
-      () => this.memory.checkHeap("memoryHeap", 300 * 1024 * 1024), // < 300MB
+      () => this.memory.checkHeap("memoryHeap", 600 * 1024 * 1024), // < 600MB
       () =>
         this.disk.checkStorage("diskStorage", {
           path: "/",

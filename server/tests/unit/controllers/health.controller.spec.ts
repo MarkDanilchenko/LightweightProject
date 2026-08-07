@@ -106,7 +106,7 @@ describe("HealthController", (): void => {
         options: { urls: mockRabbitmqUrls },
       });
       expect(redisHealthIndicator.isHealthy).toHaveBeenCalledWith("redis");
-      expect(memoryHealthIndicator.checkHeap).toHaveBeenCalledWith("memoryHeap", 300 * 1024 * 1024);
+      expect(memoryHealthIndicator.checkHeap).toHaveBeenCalledWith("memoryHeap", 600 * 1024 * 1024);
       expect(diskHealthIndicator.checkStorage).toHaveBeenCalledWith("diskStorage", {
         path: "/",
         thresholdPercent: 0.95,
