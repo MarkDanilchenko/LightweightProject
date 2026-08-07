@@ -40,7 +40,7 @@ describe("RedisHealthIndicator", () => {
     it("should return up status when Redis responds with PONG", async (): Promise<void> => {
       const indicatorKey = "redis";
       const mockIndicator = {
-        up: jest.fn().mockReturnValue({ status: "up", message: "Redis is healthy" }),
+        up: jest.fn().mockReturnValue({ status: "up" }),
         down: jest.fn().mockReturnValue({ status: "down", message: "Redis is not healthy" }),
       } as unknown as HealthIndicatorSession;
 
@@ -51,9 +51,9 @@ describe("RedisHealthIndicator", () => {
 
       expect(healthIndicatorService.check).toHaveBeenCalledWith(indicatorKey);
       expect(redisClient.ping).toHaveBeenCalledTimes(1);
-      expect(mockIndicator.up).toHaveBeenCalledWith({ message: "Redis is healthy" });
+      expect(mockIndicator.up).toHaveBeenCalled();
       expect(mockIndicator.down).not.toHaveBeenCalled();
-      expect(result).toEqual({ status: "up", message: "Redis is healthy" });
+      expect(result).toEqual({ status: "up" });
     });
 
     it("should return down status when Redis does not respond with PONG", async (): Promise<void> => {

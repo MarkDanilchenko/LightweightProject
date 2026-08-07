@@ -25,7 +25,7 @@ export default class RedisHealthIndicator {
         return indicator.down({ message: "Redis is not healthy" });
       }
 
-      return indicator.up({ message: "Redis is healthy" });
+      return indicator.up();
     } catch (error) {
       return indicator.down({ message: (error as Error).message });
     }
