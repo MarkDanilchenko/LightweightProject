@@ -10,6 +10,7 @@ import AuthenticationEntity from "#server/auth/auth.entity";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import TokensService from "#server/tokens/tokens.service";
 import { hash } from "#server/utils/hasher";
+import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 
 // Mock nodemailer to prevent open handles;
 jest.mock("nodemailer", () => ({
@@ -22,7 +23,7 @@ jest.mock("nodemailer", () => ({
 // Mock the app configuration partially;
 jest.mock("#server/configs/app.configuration", () => {
   const mockSecret = "d227161a1d43c195902210e8e03d1021d5b0cd4d0662982597c431bafa3eb884";
-  const appConfiguration = {
+  const appConfiguration: AppConfiguration = {
     ...jest.requireActual("#server/configs/app.configuration").default(),
   };
 

@@ -36,6 +36,20 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 3
+      rabbitmq:
+        image: rabbitmq:4.1.4-management
+        env:
+          RABBITMQ_DEFAULT_USER: admin
+          RABBITMQ_DEFAULT_PASS: ${{ secrets.RABBITMQ_DEFAULT_PASS }}
+        ports:
+          - 5672:5672
+          - 15672:15672
+        options: >-
+          --health-cmd "rabbitmq-diagnostics ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+
     steps:
       - run: echo "The job was automatically triggered by a ${{ github.event_name }} event for ${{ github.event.pull_request.head.ref || github.ref_name }} branch."
       - run: echo "Author - ${{ github.actor }}"
@@ -60,6 +74,11 @@ jobs:
           echo "REDIS_PORT=6379" >> .env
           echo "REDIS_DB=0" >> .env
           echo "REDIS_KEY_PREFIX=lightweightproject" >> .env
+          echo "RABBITMQ_HOST=127.0.0.1" >> .env
+          echo "RABBITMQ_PORT=5672" >> .env
+          echo "RABBITMQ_DEFAULT_USER=admin" >> .env
+          echo "RABBITMQ_DEFAULT_PASS=${{ secrets.RABBITMQ_DEFAULT_PASS }}" >> .env
+          echo "RABBITMQ_MAIN_QUEUE=main-queue" >> .env
       - name: ESLint checks
         run: npm run lint:server
       - name: TS checks
