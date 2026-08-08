@@ -68,7 +68,7 @@
     "@nestjs/typeorm": "11.0.3",
     "@node-saml/passport-saml": "5.1.0",
     "@types/nodemailer": "8.0.1",
-    "@types/pg": "8.20.0",
+    "@types/pg": "8.20.4",
     "adminjs": "7.8.17",
     "amqp-connection-manager": "5.0.0",
     "amqplib": "2.0.1",
@@ -80,9 +80,9 @@
     "ejs": "6.0.1",
     "express-formidable": "1.2.0",
     "express-session": "1.19.0",
-    "ioredis": "5.11.1",
+    "ioredis": "6.0.0",
     "nest-winston": "1.10.2",
-    "nodemailer": "9.0.3",
+    "nodemailer": "9.0.4",
     "passport": "0.7.0",
     "passport-github2": "0.1.12",
     "passport-google-oauth20": "2.0.0",
@@ -125,7 +125,7 @@
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-jest": "29.16.0",
     "eslint-plugin-prettier": "5.5.6",
-    "globals": "17.8.0",
+    "globals": "17.9.0",
     "jest": "30.4.2",
     "nodemon": "3.1.14",
     "patch-package": "8.0.1",
@@ -138,7 +138,7 @@
     "tsc-alias": "1.9.1",
     "tsconfig-paths": "4.2.0",
     "typescript": "6.0.3",
-    "typescript-eslint": "8.65.0"
+    "typescript-eslint": "8.66.0"
   },
   "jest": {
     "moduleFileExtensions": [
