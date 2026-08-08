@@ -15,6 +15,4 @@ export default function globalTeardown(): void {
   // Nothing to do here;
 
   logger.log("Global teardown completed");
-
-  process.exit(0);
 }
