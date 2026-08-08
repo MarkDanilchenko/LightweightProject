@@ -27,6 +27,6 @@ import { REDIS_CLIENT } from "#server/configs/constants";
     },
     RedisService,
   ],
-  exports: [RedisService],
+  exports: [RedisService, REDIS_CLIENT],
 })
 export class RedisModule {}

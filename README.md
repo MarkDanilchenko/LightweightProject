@@ -38,14 +38,17 @@ The application is designed to be containerized using Docker Compose, providing 
 - **bcrypt** - Password hashing
 - **Cookie-based sessions** - Secure cookie management
 
-### API Documentation, validation & Admin service
+### API Documentation, Validation & Admin Service
 - **Swagger/OpenAPI** - Interactive API documentation
 - **AdminJS** - Admin panel for database management
 - **Zod** - Schema validation for endpoints
 
+### Monitoring & Health Checks
+- **@nestjs/terminus** - Production-grade health check GET endpoint (PostgreSQL, Redis, RabbitMQ, Memory Heap, Disk Space, External HTTP)
+
 ### Reverse Proxy & SSL
 - **Nginx 1.31.2** - Reverse proxy, SSL termination, and static file serving
-- **Self-signed certificates** - HTTPS support in development
+- **Self-signed certificates** - HTTPS support
 
 ### Development Tools
 - **Jest** - Testing framework (unit and e2e tests)
@@ -65,6 +68,7 @@ LightweightProject/
 │   │   ├── common/           # Shared utilities, decorators, and helpers
 │   │   ├── configs/          # Configuration files and interfaces
 │   │   ├── events/           # Event handling with RabbitMQ consumers
+│   │   ├── health/           # Health checks & monitoring module (@nestjs/terminus)
 │   │   ├── services/         # External service integrations
 │   │   │   ├── cron/        # Scheduled tasks with @nestjs/schedule
 │   │   │   ├── redis/       # Redis client configuration
@@ -144,6 +148,7 @@ graph TB
         Auth[Auth Module<br/>JWT/OAuth2/SAML]
         Users[Users Module]
         Events[Events Module<br/>RabbitMQ Consumer]
+        Health[Health Module<br/>Terminus]
         Admin[AdminJS Panel]
         Cron[Cron Jobs<br/>Scheduled Tasks]
     end
@@ -168,6 +173,7 @@ graph TB
     API --> Auth
     API --> Users
     API --> Events
+    API --> Health
     API --> Admin
     API --> Cron
     
@@ -180,6 +186,11 @@ graph TB
     API -->|Cache Operations| Redis
     Events -->|Publish/Subscribe| RabbitMQ
     Events -->|Consume Events| RabbitMQ
+
+    Health -->|Ping Check| PostgreSQL
+    Health -->|Ping Check| Redis
+    Health -->|Ping Check| RabbitMQ
+    Health -->|HTTP Ping| Google
     
     Auth -->|Session Storage| Redis
     Users -->|ORM Queries| PostgreSQL
@@ -191,20 +202,22 @@ graph TB
     style PostgreSQL fill:#f3e5f5
     style Redis fill:#fce4ec
     style RabbitMQ fill:#fff3e0
+    style Health fill:#e0f2f1
 ```
 
 ## Key Features
 
 - **Multi-Provider Authentication**: Support for local, JWT, and multiple OAuth2/SAML providers
 - **Event-Driven Architecture**: RabbitMQ integration for asynchronous event processing
+- **Health Checks & Monitoring**: Automated health checks (`@nestjs/terminus`) active for PostgreSQL, Redis, RabbitMQ, memory heap, disk space, and external services
 - **API Documentation**: Auto-generated Swagger/OpenAPI documentation
 - **Admin Panel**: AdminJS for database management and content administration
 - **Scheduled Tasks**: Cron jobs for periodic operations
 - **Caching Layer**: Redis integration for performance optimization
 - **SSL/TLS**: HTTPS support with Nginx SSL termination
-- **Type Safety**: Full TypeScript implementation with Zod validation
-- **Testing**: Comprehensive unit and e2e testing with Jest
-- **Docker Support**: Complete containerization with Docker Compose
+- **Type Safety**: TypeScript with Zod validation
+- **Testing**: Unit and e2e testing with Jest
+- **Docker Support**: Containerization with Docker Compose
 
 ## Getting Started
 
@@ -212,17 +225,13 @@ graph TB
 
 - Docker and Docker Compose
 - Node.js >=24.0.0
-- npm or yarn
+- npm
 
 ### Installation
 
 1. Clone the repository
 2. Copy environment and fill variables: `cp .env.public .env`
-3. Start services with Docker Compose: `docker-compose up -d`
-4. Install dependencies: `npm install`
-5. Run database migrations: `npm run typeorm:run`
-6. Start the development server: `npm run start:server:dev`
-7. Start th microservice (rmq) development server: `npm run start:microservice:rmq:dev`
+3. *...not implemented yet*
 
 ## API Documentation
 
@@ -231,10 +240,17 @@ Once the server is running, access the interactive API documentation at:
 - OpenAPI JSON: `https://localhost/docs/json`
 - OpenAPI YAML: `https://localhost/docs/yaml`
 
+## Health Checks
+
+The application exposes a public health probe endpoint used by Docker, orchestrators, and monitoring systems:
+- Health Check Endpoint: `https://localhost/api/v1/health` (or `/api/v1/health`)
+
 ## Admin Panel
 
 Access the AdminJS panel for database management (if configured):
 - URL: `https://localhost/admin`
+
+---
 
 ## License
 

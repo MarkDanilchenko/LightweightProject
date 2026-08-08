@@ -15,6 +15,7 @@ import { EventEmitterModule } from "@nestjs/event-emitter";
 import { ScheduleModule } from "@nestjs/schedule";
 import { CronModule } from "#server/services/cron/cron.module";
 import AdminModule from "#server/admin/admin.module";
+import HealthModule from "#server/health/health.module";
 
 @Module({
   imports: [
@@ -55,6 +56,7 @@ import AdminModule from "#server/admin/admin.module";
     CronModule,
     AuthModule,
     AdminModule,
+    HealthModule,
   ],
   controllers: [],
   providers: [],
