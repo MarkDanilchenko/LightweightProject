@@ -54,6 +54,7 @@ async function bootstrap(): Promise<void> {
   app.set("trust proxy", 1); // Necessary for correct headers parsing from nginx proxy to nestjs;
   app.use(cookieParser(cookieSecret));
 
+  // Swagger configuration;
   if (swaggerEnabled) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const packageJsonInfo: Record<string, string> = JSON.parse(
