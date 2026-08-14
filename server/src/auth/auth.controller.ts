@@ -33,6 +33,7 @@ import GoogleOAuth2Guard from "#server/auth/guards/google.guard";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import GitHubOAuth2Guard from "#server/auth/guards/github.guard";
 import YandexOAuth2Guard from "#server/auth/guards/yandex.guard";
+import { Throttle } from "@nestjs/throttler";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -98,6 +99,7 @@ export default class AuthController {
     res.status(200).send();
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post("local/signin")
   @ApiOperation({
     summary: "Sign in with local authentication",
@@ -202,6 +204,7 @@ export default class AuthController {
     res.status(200).send();
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post("local/password-reset/request")
   @ApiOperation({
     summary: "Reset password request",
@@ -286,6 +289,7 @@ export default class AuthController {
     res.status(200).send();
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post("refresh")
   @ApiOperation({
     summary: "Refresh access token",
