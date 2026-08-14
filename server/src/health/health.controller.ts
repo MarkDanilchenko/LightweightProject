@@ -13,7 +13,9 @@ import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { RmqOptions, Transport } from "@nestjs/microservices";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
+import { SkipThrottle } from "@nestjs/throttler";
 
+@SkipThrottle()
 @ApiTags("health")
 @Controller("health")
 export default class HealthController {
