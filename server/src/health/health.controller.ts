@@ -13,6 +13,7 @@ import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
 import { RmqOptions, Transport } from "@nestjs/microservices";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
+import { Throttle } from "@nestjs/throttler";
 
 @ApiTags("health")
 @Controller("health")
@@ -52,6 +53,7 @@ export default class HealthController {
     >("rabbitmqConfiguration.options.urls")!;
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Get()
   @HealthCheck()
   @ApiOperation({
@@ -125,6 +127,10 @@ export default class HealthController {
         },
       },
     },
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
   })
   healthCheck() {
     return this.health.check([

@@ -13,6 +13,10 @@ export default interface AppConfiguration {
     protocol: "http" | "https";
     baseUrl: string;
     corsOrigins: string[];
+    throttler: {
+      limit: number;
+      ttl: number; // ms
+    };
   };
   clientConfiguration: {
     host: string;
