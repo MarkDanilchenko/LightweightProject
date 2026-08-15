@@ -9,6 +9,7 @@ describe("CustomThrottlerGuard", (): void => {
   let customThrottlerGuard: CustomThrottlerGuard;
   let mockExecutionContext: jest.Mocked<ExecutionContext>;
   let mockResponse: { setHeader: jest.Mock };
+  const originalNodeEnv = process.env.NODE_ENV;
 
   beforeEach(async (): Promise<void> => {
     mockResponse = { setHeader: jest.fn() };
@@ -33,10 +34,36 @@ describe("CustomThrottlerGuard", (): void => {
 
   afterEach((): void => {
     jest.clearAllMocks();
+    process.env.NODE_ENV = originalNodeEnv;
   });
 
   it("should be defined", (): void => {
     expect(customThrottlerGuard).toBeDefined();
+  });
+
+  describe("canActivate", (): void => {
+    it("should return true in test environment (disable rate limiting)", async (): Promise<void> => {
+      process.env.NODE_ENV = "test";
+
+      const result = await customThrottlerGuard.canActivate(mockExecutionContext);
+
+      expect(result).toBe(true);
+      expect(mockExecutionContext.switchToHttp).not.toHaveBeenCalled();
+    });
+
+    it("should call parent canActivate in non-test environment", async (): Promise<void> => {
+      process.env.NODE_ENV = "development";
+
+      // Spy on the parent canActivate method;
+      const canActivateSpy = jest
+        .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(customThrottlerGuard)), "canActivate")
+        .mockImplementation(() => jest.fn());
+
+      await customThrottlerGuard.canActivate(mockExecutionContext);
+
+      expect(canActivateSpy).toHaveBeenCalledWith(mockExecutionContext);
+      canActivateSpy.mockRestore();
+    });
   });
 
   describe("throwThrottlingException", (): void => {

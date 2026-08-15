@@ -11,6 +11,21 @@ export interface ThrottlerLimitDetailWithTimeToReset extends ThrottlerLimitDetai
 @Injectable()
 export default class CustomThrottlerGuard extends ThrottlerGuard {
   /**
+   * Disables rate limiting in test environment to avoid blocking E2E tests.
+   *
+   * @param {ExecutionContext} context - The execution context
+   *
+   * @returns {Promise<boolean>} true if request should be allowed, false if rate limit exceeded
+   */
+  public async canActivate(context: ExecutionContext): Promise<boolean> {
+    if (process.env.NODE_ENV === "test") {
+      return true;
+    }
+
+    return super.canActivate(context);
+  }
+
+  /**
    * Throws a throttling exception when rate limit is exceeded.
    * Sets the "Retry-After" header on the HTTP response to inform the client when they can retry the request.
    *
