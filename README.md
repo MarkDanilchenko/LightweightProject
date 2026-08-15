@@ -219,6 +219,35 @@ graph TB
 - **Testing**: Unit and e2e testing with Jest
 - **Docker Support**: Containerization with Docker Compose
 
+## API Documentation
+
+Once the server is running, access the interactive API documentation at:
+- Swagger UI: `https://localhost/docs`
+- OpenAPI JSON: `https://localhost/docs/json`
+- OpenAPI YAML: `https://localhost/docs/yaml`
+
+## Rate Limiting
+
+The API implements rate limiting. All endpoints may return a `429 Too Many Requests` status code when rate limits are exceeded.
+
+### Response
+
+When rate limits are exceeded, the API returns:
+- **Status Code**: `429 Too Many Requests`
+- **Description**: Indicates that the user has sent too many requests in a given amount of time
+
+## Health Checks
+
+The application exposes a public health probe endpoint used by Docker, orchestrators, and monitoring systems:
+- Health Check Endpoint: `https://localhost/api/v1/health` (or `/api/v1/health`)
+
+## Admin Panel
+
+Access the AdminJS panel for database management (if configured):
+- URL: `https://localhost/admin`
+
+---
+
 ## Getting Started
 
 ### Prerequisites
@@ -232,25 +261,6 @@ graph TB
 1. Clone the repository
 2. Copy environment and fill variables: `cp .env.public .env`
 3. *...not implemented yet*
-
-## API Documentation
-
-Once the server is running, access the interactive API documentation at:
-- Swagger UI: `https://localhost/docs`
-- OpenAPI JSON: `https://localhost/docs/json`
-- OpenAPI YAML: `https://localhost/docs/yaml`
-
-## Health Checks
-
-The application exposes a public health probe endpoint used by Docker, orchestrators, and monitoring systems:
-- Health Check Endpoint: `https://localhost/api/v1/health` (or `/api/v1/health`)
-
-## Admin Panel
-
-Access the AdminJS panel for database management (if configured):
-- URL: `https://localhost/admin`
-
----
 
 ## License
 
