@@ -128,6 +128,10 @@ export default class HealthController {
       },
     },
   })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
+  })
   healthCheck() {
     return this.health.check([
       () => this.db.pingCheck("database"), // SELECT 1

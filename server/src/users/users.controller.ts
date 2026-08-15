@@ -38,6 +38,10 @@ export default class UsersController {
     status: 404,
     description: "User not found.",
   })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
+  })
   @ApiCookieAuth("accessToken")
   @ApiBody({ type: UserDeactivateDto })
   @UsePipes(ZodValidationPipe)
@@ -74,6 +78,10 @@ export default class UsersController {
   @ApiResponse({
     status: 404,
     description: "User not found.",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
   })
   @ApiCookieAuth("accessToken")
   @ApiBody({ type: UserDeleteDto })
