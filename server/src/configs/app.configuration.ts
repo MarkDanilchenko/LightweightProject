@@ -125,6 +125,8 @@ export default (): AppConfiguration => {
     ADMIN_COOKIE_PASSWORD,
     ADMIN_SECRET,
     CORS_ORIGINS,
+    THROTTLE_TTL,
+    THROTTLE_LIMIT,
   } = process.env;
 
   let { HTTPS } = process.env;
@@ -142,6 +144,10 @@ export default (): AppConfiguration => {
     protocol: HTTPS === "true" ? "https" : "http",
     baseUrl: "",
     corsOrigins: CORS_ORIGINS?.split(",") || [],
+    throttler: {
+      limit: Number(THROTTLE_LIMIT) || 10,
+      ttl: Number(THROTTLE_TTL) || 60_000,
+    },
   };
 
   serverConfiguration.baseUrl = `${serverConfiguration.protocol}://${serverConfiguration.host}:${serverConfiguration.port}`;

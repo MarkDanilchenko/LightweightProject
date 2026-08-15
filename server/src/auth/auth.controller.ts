@@ -33,6 +33,7 @@ import GoogleOAuth2Guard from "#server/auth/guards/google.guard";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import GitHubOAuth2Guard from "#server/auth/guards/github.guard";
 import YandexOAuth2Guard from "#server/auth/guards/yandex.guard";
+import { Throttle } from "@nestjs/throttler";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -55,6 +56,10 @@ export default class AuthController {
   @ApiResponse({
     status: 400,
     description: "Invalid credentials or user already exists.",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
   })
   @ApiBody({ type: LocalSignUpDto })
   @UsePipes(ZodValidationPipe)
@@ -85,6 +90,10 @@ export default class AuthController {
     status: 404,
     description: "Authentication not found.",
   })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
+  })
   @ApiQuery({ type: LocalEmailVerificationDto })
   @UsePipes(ZodValidationPipe)
   async localEmailVerification(
@@ -98,6 +107,7 @@ export default class AuthController {
     res.status(200).send();
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post("local/signin")
   @ApiOperation({
     summary: "Sign in with local authentication",
@@ -114,6 +124,10 @@ export default class AuthController {
   @ApiResponse({
     status: 401,
     description: "Invalid credentials, authentication not found or email is not verified.",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
   })
   @ApiBody({ type: LocalSignInDto })
   @UsePipes(ZodValidationPipe)
@@ -153,6 +167,10 @@ export default class AuthController {
     status: 404,
     description: "User not found.",
   })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
+  })
   @ApiQuery({ type: LocalReactivationConfirmDto })
   @UsePipes(ZodValidationPipe)
   async localReactivationConfirm(
@@ -189,6 +207,10 @@ export default class AuthController {
     status: 404,
     description: "User not found.",
   })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
+  })
   @ApiQuery({ type: LocalRestorationConfirmDto })
   @UsePipes(ZodValidationPipe)
   async localRestorationConfirm(
@@ -202,6 +224,7 @@ export default class AuthController {
     res.status(200).send();
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post("local/password-reset/request")
   @ApiOperation({
     summary: "Reset password request",
@@ -218,6 +241,10 @@ export default class AuthController {
   @ApiResponse({
     status: 401,
     description: "Email is not verified.",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
   })
   @ApiBody({ type: LocalPasswordResetRequestDto })
   @UsePipes(ZodValidationPipe)
@@ -252,6 +279,10 @@ export default class AuthController {
     status: 404,
     description: "User not found.",
   })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
+  })
   @ApiBody({ type: LocalPasswordResetConfirmDto })
   @UsePipes(ZodValidationPipe)
   async localPasswordResetConfirm(
@@ -276,6 +307,10 @@ export default class AuthController {
     status: 401,
     description: "Invalid token.",
   })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
+  })
   @ApiCookieAuth("accessToken")
   @UseGuards(JwtGuard)
   async signOut(@Req() req: RequestWithTokenPayload, @Res({ passthrough: true }) res: Response): Promise<void> {
@@ -286,6 +321,7 @@ export default class AuthController {
     res.status(200).send();
   }
 
+  @Throttle({ default: { limit: 3, ttl: 60_000 } })
   @Post("refresh")
   @ApiOperation({
     summary: "Refresh access token",
@@ -298,6 +334,10 @@ export default class AuthController {
   @ApiResponse({
     status: 401,
     description: "Invalid token.",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
   })
   @ApiCookieAuth("accessToken")
   // Without JwtGuard, because jwt is invalid here as expected;
@@ -334,6 +374,10 @@ export default class AuthController {
     status: 404,
     description: "User not found.",
   })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
+  })
   @ApiCookieAuth("accessToken")
   @UseGuards(JwtGuard)
   async me(@Req() req: RequestWithTokenPayload): Promise<Partial<UserEntity>> {
@@ -350,6 +394,10 @@ export default class AuthController {
   @ApiResponse({
     status: 302,
     description: "The users will be redirected to Google authentication form.",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
   })
   @ApiOAuth2(["email", "profile"], "googleOAuth2")
   @UseGuards(GoogleOAuth2Guard)
@@ -379,6 +427,10 @@ export default class AuthController {
     status: 404,
     description: "User not found.",
   })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
+  })
   @ApiOAuth2(["email", "profile"], "googleOAuth2")
   @UseGuards(GoogleOAuth2Guard)
   async googleRedirect(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
@@ -397,6 +449,10 @@ export default class AuthController {
   @ApiResponse({
     status: 302,
     description: "The users will be redirected to GitHub authentication form.",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
   })
   @ApiOAuth2(["email"], "githubOAuth2")
   @UseGuards(GitHubOAuth2Guard)
@@ -426,6 +482,10 @@ export default class AuthController {
     status: 404,
     description: "User not found.",
   })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
+  })
   @ApiOAuth2(["email"], "githubOAuth2")
   @UseGuards(GitHubOAuth2Guard)
   async githubRedirect(@Req() req: RequestWithUser, @Res({ passthrough: true }) res: Response): Promise<void> {
@@ -444,6 +504,10 @@ export default class AuthController {
   @ApiResponse({
     status: 302,
     description: "The users will be redirected to Yandex authentication form.",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
   })
   @ApiOAuth2(["login:email", "login:info", "login:avatar"], "yandexOAuth2")
   @UseGuards(YandexOAuth2Guard)
@@ -472,6 +536,10 @@ export default class AuthController {
   @ApiResponse({
     status: 404,
     description: "User not found.",
+  })
+  @ApiResponse({
+    status: 429,
+    description: "Too many requests.",
   })
   @ApiOAuth2(["login:email", "login:info", "login:avatar"], "yandexOAuth2")
   @UseGuards(YandexOAuth2Guard)

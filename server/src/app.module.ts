@@ -16,6 +16,9 @@ import { ScheduleModule } from "@nestjs/schedule";
 import { CronModule } from "#server/services/cron/cron.module";
 import AdminModule from "#server/admin/admin.module";
 import HealthModule from "#server/health/health.module";
+import { ThrottlerModule } from "@nestjs/throttler";
+import { APP_GUARD } from "@nestjs/core";
+import CustomThrottlerGuard from "#server/common/guards/throttler.guard";
 
 @Module({
   imports: [
@@ -57,9 +60,28 @@ import HealthModule from "#server/health/health.module";
     AuthModule,
     AdminModule,
     HealthModule,
+    ThrottlerModule.forRootAsync({
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => [
+        {
+          name: "default",
+          ttl: configService.get<AppConfiguration["serverConfiguration"]["throttler"]["ttl"]>(
+            "serverConfiguration.throttler.ttl",
+          )!,
+          limit: configService.get<AppConfiguration["serverConfiguration"]["throttler"]["limit"]>(
+            "serverConfiguration.throttler.limit",
+          )!,
+        },
+      ],
+    }),
   ],
   controllers: [],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: CustomThrottlerGuard,
+    },
+  ],
   exports: [],
 })
 export default class AppModule {}
