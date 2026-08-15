@@ -25,7 +25,13 @@ export default class CustomThrottlerGuard extends ThrottlerGuard {
   ): Promise<void> {
     const response = context.switchToHttp().getResponse();
 
-    response.setHeader("Retry-After", throttlerLimitDetail.timeToReset);
+    // Time to reset in seconds fallback;
+    const timeToResetInSeconds =
+      throttlerLimitDetail.timeToExpire ??
+      throttlerLimitDetail.timeToReset ??
+      Math.ceil((throttlerLimitDetail.ttl ?? 60_000) / 1_000);
+
+    response.setHeader("Retry-After", timeToResetInSeconds);
 
     throw new ThrottlerException(
       `Rate limit exceeded. Please, try again in ${throttlerLimitDetail.timeToReset} seconds`,
