@@ -1,16 +1,17 @@
-ARG NODE_VERSION=24.0.0-alpine
+ARG NODE_VERSION=24-alpine
 
 # --- BUILD STAGE ---
-FROM node:${NODE_VERSION} as builder
+FROM node:${NODE_VERSION} AS builder
 
 LABEL maintainer="2026 MyHomeworks, { }"
 
 WORKDIR /LightweightProject
 
 COPY package*.json ./
+COPY tsconfig*.json ./
 COPY patches ./patches
 
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 COPY certs ./certs
 COPY screenshots ./screenshots
@@ -30,8 +31,9 @@ ENV NODE_ENV=production
 
 COPY package*.json ./
 COPY patches ./patches
+COPY tsconfig*.json ./
 
-RUN npm ci --only=production && npm cache clean --force
+RUN npm ci --omit=dev --legacy-peer-deps && npm cache clean --force
 
 COPY --from=builder /LightweightProject/server/dist ./server/dist
 COPY --from=builder /LightweightProject/server/templates ./server/templates
