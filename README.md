@@ -19,11 +19,13 @@ The application is designed to be containerized using Docker Compose, providing 
 
 ### Database & Storage
 - **PostgreSQL 16.4** - Primary relational database
+- **PostgreSQL 16.4 (test)** - Separate test database instance
 - **TypeORM 1.1.0** - ORM for database operations and migrations
 - **Redis 8.2.2** - Caching and session storage
 
 ### Message Queue & Events
 - **RabbitMQ 4.1.4** - Message broker for event-driven architecture
+- **RabbitMQ Worker** - Dedicated microservice worker for async event processing
 - **amqplib** - RabbitMQ client for Node.js
 
 ### Authentication & Security
@@ -91,9 +93,8 @@ LightweightProject/
 │   └── db/                   # SQL scripts for database setup
 ├── certs/                     # SSL certificates
 │   └── selfsigned/          # Self-signed certificates for development
-├── compose.yaml              # Production Docker Compose configuration
-├── compose.development.yaml  # Development Docker Compose configuration
-├── Dockerfile                # Docker image build configuration
+├── compose.yaml              # Docker Compose configuration with health checks
+├── Dockerfile                # Multi-stage Docker image build configuration (builder + production stages)
 ├── package.json              # Root package.json with scripts
 ├── tsconfig.json             # TypeScript configuration
 └── .env                      # Environment variables (not committed)
@@ -145,7 +146,8 @@ graph TB
     
     subgraph "Application Layer"
         API[NestJS API Server<br/>Port 3000]
-        Auth[Auth Module<br/>JWT/OAuth2/SAML]
+        Worker[RabbitMQ Worker<br/>Async Processing]
+        Auth[Auth Module<br/>JWT/OAuth2]
         Users[Users Module]
         Events[Events Module<br/>RabbitMQ Consumer]
         Health[Health Module<br/>Terminus]
@@ -155,6 +157,7 @@ graph TB
     
     subgraph "Data Layer"
         PostgreSQL[(PostgreSQL 16.4<br/>Primary Database)]
+        PostgreSQL_Test[(PostgreSQL 16.4<br/>Test Database)]
         Redis[(Redis 8.2.2<br/>Cache/Sessions)]
         RabbitMQ[RabbitMQ 4.1.4<br/>Message Broker]
     end
@@ -176,6 +179,7 @@ graph TB
     API --> Health
     API --> Admin
     API --> Cron
+    API --> Worker
     
     Auth --> Google
     Auth --> GitHub
@@ -185,9 +189,10 @@ graph TB
     API -->|ORM Queries| PostgreSQL
     API -->|Cache Operations| Redis
     Events -->|Publish/Subscribe| RabbitMQ
-    Events -->|Consume Events| RabbitMQ
+    Worker -->|Consume Events| RabbitMQ
 
     Health -->|Ping Check| PostgreSQL
+    Health -->|Ping Check| PostgreSQL_Test
     Health -->|Ping Check| Redis
     Health -->|Ping Check| RabbitMQ
     Health -->|HTTP Ping| Google
@@ -207,9 +212,10 @@ graph TB
 
 ## Key Features
 
-- **Multi-Provider Authentication**: Support for local, JWT, and multiple OAuth2/SAML providers
-- **Event-Driven Architecture**: RabbitMQ integration for asynchronous event processing
-- **Health Checks & Monitoring**: Automated health checks (`@nestjs/terminus`) active for PostgreSQL, Redis, RabbitMQ, memory heap, disk space, and external services
+- **Multi-Provider Authentication**: Support for local, JWT, and multiple OAuth2 providers
+- **Event-Driven Architecture**: RabbitMQ integration with dedicated worker for asynchronous event processing
+- **Health Checks & Monitoring**: Automated health checks (`@nestjs/terminus`) and Docker health checks for PostgreSQL, Redis, RabbitMQ, memory heap, disk space, and external services
+- **Test Database**: Separate PostgreSQL instance for testing with isolated data
 - **API Documentation**: Auto-generated Swagger/OpenAPI documentation
 - **Admin Panel**: AdminJS for database management and content administration
 - **Scheduled Tasks**: Cron jobs for periodic operations
@@ -260,7 +266,7 @@ Access the AdminJS panel for database management (if configured):
 
 1. Clone the repository
 2. Copy environment and fill variables: `cp .env.public .env`
-3. *...not implemented yet*
+3. Build and start services: `docker compose --env-file ./.env -f ./compose.yaml up -d --build`
 
 ## License
 
