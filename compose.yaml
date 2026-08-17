@@ -1,4 +1,50 @@
 services:
+  # Server API;
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    container_name: server
+    ports:
+      - ${SERVER_PORT}:${SERVER_PORT}
+    env_file:
+      - ./.env
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: [
+        "CMD-SHELL",
+        "SCHEME=$([ \"$$HTTPS\" = \"true\" ] && echo \"https\" || echo \"http\"); wget --no-verbose --tries=1 --no-check-certificate --spider $$SCHEME://localhost:${SERVER_PORT}/api/v1/health || exit 1"
+      ]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Server microservices;
+  rabbitmq-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    container_name: rabbitmq-worker
+    # Modify start command for rmq microservice need;
+    command: [ "node", "server/dist/src/microservice.rmq.js" ]
+    env_file:
+      - ./.env
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
   db:
     restart: always
     image: postgres:16.4
@@ -51,24 +97,24 @@ services:
       timeout: 5s
       retries: 3
 
-#  keycloak:
-#    restart: always
-#    image: quay.io/keycloak/keycloak:26.3.0
-#    container_name: keycloak
-#    command: start
-#    ports:
-#      - ${KC_PORT}:${KC_PORT}
-#    env_file:
-#      - ./.env
-#    volumes:
-#      - ./certs/???:/opt/keycloak/conf/certs:ro
-#    depends_on:
-#      - db
-#    healthcheck:
-#      test: [ "CMD", "curl", "-f", "http://${KC_HOSTNAME}:${KC_PORT}/auth/realms/master" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 3
+  #  keycloak:
+  #    restart: always
+  #    image: quay.io/keycloak/keycloak:26.3.0
+  #    container_name: keycloak
+  #    command: start
+  #    ports:
+  #      - ${KC_PORT}:${KC_PORT}
+  #    env_file:
+  #      - ./.env
+  #    volumes:
+  #      - ./certs/???:/opt/keycloak/conf/certs:ro
+  #    depends_on:
+  #      - db
+  #    healthcheck:
+  #      test: [ "CMD", "curl", "-f", "http://${KC_HOSTNAME}:${KC_PORT}/auth/realms/master" ]
+  #      interval: 10s
+  #      timeout: 5s
+  #      retries: 3
 
   rabbitmq:
     restart: always
@@ -103,8 +149,11 @@ services:
       - ./nginx/nginx.conf.conf:/etc/nginx/nginx.conf.conf:ro
       - ./certs/selfsigned:/etc/nginx/certs:ro
       - ./nginx/entrypoint.sh:/entrypoint.sh
-    extra_hosts:
-      - "host.docker.internal:host-gateway" # TODO: should be removed when nestjs server will be containerized;
+    depends_on:
+      - server
+#    extra_hosts should be commented when nestjs server is containerized;
+#    extra_hosts:
+#      - "host.docker.internal:host-gateway"
     entrypoint: [ "/entrypoint.sh" ]
 
 volumes:
