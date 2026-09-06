@@ -92,7 +92,15 @@ describe("HealthController", (): void => {
   describe("healthCheck", (): void => {
     it("should call health.check with all indicators and return result", async (): Promise<void> => {
       healthCheckService.check.mockImplementation(async (indicators): Promise<HealthCheckResult> => {
-        await Promise.all(indicators.map((indicatorFn): Promise<unknown> => indicatorFn() as Promise<unknown>));
+        await Promise.all(
+          indicators.map((indicatorFn): Promise<unknown> => {
+            if (typeof indicatorFn === "function") {
+              return indicatorFn() as Promise<unknown>;
+            }
+
+            return Promise.resolve();
+          }),
+        );
 
         return mockHealthCheckResult;
       });

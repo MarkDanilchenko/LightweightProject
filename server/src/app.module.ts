@@ -33,6 +33,7 @@ import CustomThrottlerGuard from "#server/common/guards/throttler.guard";
       },
     }),
     WinstonModule.forRootAsync({
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         return configService.get<AppConfiguration["loggerConfiguration"]>("loggerConfiguration")!;
@@ -61,6 +62,7 @@ import CustomThrottlerGuard from "#server/common/guards/throttler.guard";
     AdminModule,
     HealthModule,
     ThrottlerModule.forRootAsync({
+      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => [
         {
