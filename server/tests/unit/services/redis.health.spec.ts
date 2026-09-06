@@ -4,7 +4,8 @@ import RedisHealthIndicator from "#server/health/redis.health";
 import { HealthIndicatorService } from "@nestjs/terminus";
 import { REDIS_CLIENT } from "#server/configs/constants";
 import Redis from "ioredis";
-import { HealthIndicatorSession } from "@nestjs/terminus/dist/health-indicator/health-indicator.service";
+
+type HealthIndicatorSession = ReturnType<HealthIndicatorService["check"]>;
 
 describe("RedisHealthIndicator", () => {
   let redisHealthIndicator: RedisHealthIndicator;
