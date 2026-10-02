@@ -1,6 +1,17 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import * as fs from "node:fs";
 import { Test, TestingModule } from "@nestjs/testing";
+
+// Mock the nodemailer createTransport before import both RmqEmailConsumer and RmqEmailService;
+jest.mock("nodemailer", () => ({
+  createTransport: jest.fn().mockReturnValue({
+    verify: jest.fn().mockImplementation((callback: (error: Error | null) => void): void => {
+      callback(null);
+    }),
+    sendMail: jest.fn(),
+  }),
+}));
+
 import RmqEmailService from "#server/services/rmq/rmq.email.service";
 import { ConfigService } from "@nestjs/config";
 import { DataSource } from "typeorm";
@@ -23,16 +34,6 @@ import transporter from "#server/utils/nodemailer";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import UsersService from "#server/users/users.service";
-
-// Mock the nodemailer createTransport before import both RmqEmailConsumer and RmqEmailService;
-jest.mock("nodemailer", () => ({
-  createTransport: jest.fn().mockReturnValue({
-    verify: jest.fn().mockImplementation((callback: (error: Error | null) => void): void => {
-      callback(null);
-    }),
-    sendMail: jest.fn(),
-  }),
-}));
 
 const mockEjsRenderFile = jest.fn();
 jest.mock("ejs", () => ({
@@ -178,7 +179,7 @@ describe("RmqEmailService", (): void => {
     beforeEach((): void => {
       jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
       mockEjsRenderFile.mockResolvedValue(testHtml);
-      jest.spyOn(transporter, "sendMail").mockResolvedValue({} as any);
+      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockResolvedValue({} as any);
       (dataSource.transaction as jest.Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
         await callback({});
       });
@@ -220,7 +221,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error when sending mail fails", async (): Promise<void> => {
-      jest.spyOn(transporter, "sendMail").mockRejectedValue(new Error("Send mail failed"));
+      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockRejectedValue(new Error("Send mail failed"));
 
       await expect(rmqEmailService.sendEmailVerification(payload)).rejects.toThrow("Send mail failed");
     });
@@ -242,7 +243,7 @@ describe("RmqEmailService", (): void => {
     beforeEach((): void => {
       jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
       mockEjsRenderFile.mockResolvedValue(testHtml);
-      jest.spyOn(transporter, "sendMail").mockResolvedValue({} as any);
+      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockResolvedValue({} as any);
       (dataSource.transaction as jest.Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
         await callback({});
       });
@@ -282,7 +283,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error when sending mail fails", async (): Promise<void> => {
-      jest.spyOn(transporter, "sendMail").mockRejectedValue(new Error("Send mail failed"));
+      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockRejectedValue(new Error("Send mail failed"));
 
       await expect(rmqEmailService.sendPasswordReset(payload)).rejects.toThrow("Send mail failed");
     });
@@ -303,7 +304,7 @@ describe("RmqEmailService", (): void => {
     beforeEach((): void => {
       jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
       mockEjsRenderFile.mockResolvedValue(testHtml);
-      jest.spyOn(transporter, "sendMail").mockResolvedValue({} as any);
+      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockResolvedValue({} as any);
       (dataSource.transaction as jest.Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
         await callback({});
       });
@@ -344,7 +345,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error when sending mail fails", async (): Promise<void> => {
-      jest.spyOn(transporter, "sendMail").mockRejectedValue(new Error("Send mail failed"));
+      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockRejectedValue(new Error("Send mail failed"));
 
       await expect(rmqEmailService.sendUserDeactivatedNotification(payload)).rejects.toThrow("Send mail failed");
     });
@@ -365,7 +366,7 @@ describe("RmqEmailService", (): void => {
     beforeEach((): void => {
       jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
       mockEjsRenderFile.mockResolvedValue(testHtml);
-      jest.spyOn(transporter, "sendMail").mockResolvedValue({} as any);
+      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockResolvedValue({} as any);
       (dataSource.transaction as jest.Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
         await callback({});
       });
@@ -411,7 +412,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error when sending mail fails", async (): Promise<void> => {
-      jest.spyOn(transporter, "sendMail").mockRejectedValue(new Error("Send mail failed"));
+      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockRejectedValue(new Error("Send mail failed"));
 
       await expect(rmqEmailService.sendUserReactivation(payload)).rejects.toThrow("Send mail failed");
     });
@@ -432,7 +433,7 @@ describe("RmqEmailService", (): void => {
     beforeEach((): void => {
       jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
       mockEjsRenderFile.mockResolvedValue(testHtml);
-      jest.spyOn(transporter, "sendMail").mockResolvedValue({} as any);
+      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockResolvedValue({} as any);
       (dataSource.transaction as jest.Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
         await callback({});
       });
@@ -472,7 +473,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error when sending mail fails", async (): Promise<void> => {
-      jest.spyOn(transporter, "sendMail").mockRejectedValue(new Error("Send mail failed"));
+      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockRejectedValue(new Error("Send mail failed"));
 
       await expect(rmqEmailService.sendUserDeletedNotification(payload)).rejects.toThrow("Send mail failed");
     });
@@ -493,7 +494,7 @@ describe("RmqEmailService", (): void => {
     beforeEach((): void => {
       jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
       mockEjsRenderFile.mockResolvedValue(testHtml);
-      jest.spyOn(transporter, "sendMail").mockResolvedValue({} as any);
+      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockResolvedValue({} as any);
       (dataSource.transaction as jest.Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
         await callback({});
       });
@@ -540,7 +541,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error when sending mail fails", async (): Promise<void> => {
-      jest.spyOn(transporter, "sendMail").mockRejectedValue(new Error("Send mail failed"));
+      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockRejectedValue(new Error("Send mail failed"));
 
       await expect(rmqEmailService.sendUserRestoration(payload)).rejects.toThrow("Send mail failed");
     });
