@@ -4,7 +4,6 @@ import RedisHealthIndicator from "#server/health/redis.health";
 import { HealthIndicatorService } from "@nestjs/terminus";
 import { REDIS_CLIENT } from "#server/configs/constants";
 import Redis from "ioredis";
-import { HealthIndicatorSession } from "@nestjs/terminus/dist/health-indicator/health-indicator.service";
 
 describe("RedisHealthIndicator", () => {
   let redisHealthIndicator: RedisHealthIndicator;
@@ -39,13 +38,13 @@ describe("RedisHealthIndicator", () => {
   describe("isHealthy", (): void => {
     it("should return up status when Redis responds with PONG", async (): Promise<void> => {
       const indicatorKey = "redis";
-      const mockIndicator = {
+      const mockIndicator: any = {
         up: jest.fn().mockReturnValue({ status: "up" }),
         down: jest.fn().mockReturnValue({ status: "down", message: "Redis is not healthy" }),
-      } as unknown as HealthIndicatorSession;
+      };
 
-      redisClient.ping.mockResolvedValue("PONG");
       healthIndicatorService.check.mockReturnValue(mockIndicator);
+      redisClient.ping.mockResolvedValue("PONG");
 
       const result = await redisHealthIndicator.isHealthy(indicatorKey);
 
@@ -58,10 +57,10 @@ describe("RedisHealthIndicator", () => {
 
     it("should return down status when Redis does not respond with PONG", async (): Promise<void> => {
       const indicatorKey = "redis";
-      const mockIndicator = {
+      const mockIndicator: any = {
         up: jest.fn().mockReturnValue({ status: "up", message: "Redis is healthy" }),
         down: jest.fn().mockReturnValue({ status: "down", message: "Redis is not healthy" }),
-      } as unknown as HealthIndicatorSession;
+      };
 
       redisClient.ping.mockResolvedValue("NOT_PONG");
       healthIndicatorService.check.mockReturnValue(mockIndicator);
@@ -78,10 +77,10 @@ describe("RedisHealthIndicator", () => {
     it("should return down status when Redis throws an error", async (): Promise<void> => {
       const indicatorKey = "redis";
       const errorMessage = "Connection refused";
-      const mockIndicator = {
+      const mockIndicator: any = {
         up: jest.fn().mockReturnValue({ status: "up", message: "Redis is healthy" }),
         down: jest.fn().mockReturnValue({ status: "down", message: errorMessage }),
-      } as unknown as HealthIndicatorSession;
+      };
 
       redisClient.ping.mockRejectedValue(new Error(errorMessage));
       healthIndicatorService.check.mockReturnValue(mockIndicator);
