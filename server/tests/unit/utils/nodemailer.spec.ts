@@ -1,19 +1,20 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { createTransport } from "nodemailer";
 import appConfiguration from "#server/configs/app.configuration";
+import { expect, Mock } from "vitest";
 
-jest.mock("nodemailer", () => ({
-  createTransport: jest.fn().mockReturnValue({
-    verify: jest.fn().mockImplementation((callback: (error: Error | null) => void): void => {
+vi.mock("nodemailer", () => ({
+  createTransport: vi.fn().mockReturnValue({
+    verify: vi.fn().mockImplementation((callback: (error: Error | null) => void): void => {
       callback(null);
     }),
   }),
 }));
 
 // Mock the app SMTP configuration;
-jest.mock("#server/configs/app.configuration", () => ({
+vi.mock("#server/configs/app.configuration", () => ({
   __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
+  default: vi.fn().mockImplementation(() => ({
     smtpConfiguration: {
       host: "smtp.example.com",
       port: 587,
@@ -26,11 +27,11 @@ jest.mock("#server/configs/app.configuration", () => ({
 
 describe("Nodemailer Utility", (): void => {
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
-  it("should create a transporter with correct configuration", (): void => {
-    jest.requireActual("#server/utils/nodemailer");
+  it("should create a transporter with correct configuration", async (): Promise<void> => {
+    await vi.importActual<typeof import("#server/utils/nodemailer")>("#server/utils/nodemailer");
 
     expect(createTransport).toHaveBeenCalledTimes(1);
     expect(createTransport).toHaveBeenCalledWith({
@@ -44,14 +45,14 @@ describe("Nodemailer Utility", (): void => {
     });
   });
 
-  it("should throw an error if SMTP host is missing", (): void => {
+  it("should throw an error if SMTP host is missing", async (): Promise<void> => {
     const originalProcessExit = process.exit;
-    const mockProcessExit = jest.fn().mockImplementationOnce((code: number): void => {
+    const mockProcessExit = vi.fn().mockImplementationOnce((code: number): void => {
       throw new Error(`Process exited with code ${code}`);
     });
     process.exit = mockProcessExit as unknown as (code: number) => never;
 
-    (appConfiguration as jest.Mock).mockReturnValueOnce({
+    (appConfiguration as Mock).mockReturnValueOnce({
       smtpConfiguration: {
         port: 587,
         username: "tests@example.com",
@@ -60,18 +61,17 @@ describe("Nodemailer Utility", (): void => {
       },
     });
 
-    jest.isolateModules((): void => {
-      // Ensure, that process.exit is called with code 1;
-      expect((): void => {
-        jest.requireActual("#server/utils/nodemailer");
-      }).toThrow("Process exited with code 1");
-    });
+    vi.resetModules();
+    // Ensure, that process.exit is called with code 1;
+    await expect(async (): Promise<void> => {
+      await vi.importActual<typeof import("#server/utils/nodemailer")>("#server/utils/nodemailer");
+    }).rejects.toThrow("Process exited with code 1");
 
     process.exit = originalProcessExit;
   });
 
-  it("should use secure: true for port 465", (): void => {
-    (appConfiguration as jest.Mock).mockReturnValueOnce({
+  it("should use secure: true for port 465", async (): Promise<void> => {
+    (appConfiguration as Mock).mockReturnValueOnce({
       smtpConfiguration: {
         host: "smtp.example.com",
         port: 465,
@@ -81,50 +81,48 @@ describe("Nodemailer Utility", (): void => {
       },
     });
 
-    jest.isolateModules((): void => {
-      jest.requireActual("#server/utils/nodemailer");
+    vi.resetModules();
+    await vi.importActual<typeof import("#server/utils/nodemailer")>("#server/utils/nodemailer");
 
-      // Ensure, that createTransport is called with secure: true;
-      expect(createTransport).toHaveBeenCalledTimes(1);
-      expect(createTransport).toHaveBeenCalledWith({
-        host: "smtp.example.com",
-        port: 465,
-        secure: true,
-        auth: {
-          user: "tests@example.com",
-          pass: "tests-password",
-        },
-      });
+    // Ensure, that createTransport is called with secure: true;
+    expect(createTransport).toHaveBeenCalledTimes(1);
+    expect(createTransport).toHaveBeenCalledWith({
+      host: "smtp.example.com",
+      port: 465,
+      secure: true,
+      auth: {
+        user: "tests@example.com",
+        pass: "tests-password",
+      },
     });
   });
 
-  it("should successfully verify the transporter configuration", (): void => {
-    const mockVerify = jest.fn().mockImplementation((callback: (error: Error | null) => void): void => callback(null));
-    (createTransport as jest.Mock).mockReturnValueOnce({ verify: mockVerify });
+  it("should successfully verify the transporter configuration", async (): Promise<void> => {
+    const mockVerify = vi.fn().mockImplementation((callback: (error: Error | null) => void): void => callback(null));
+    (createTransport as Mock).mockReturnValueOnce({ verify: mockVerify });
 
-    jest.isolateModules((): void => {
-      jest.requireActual("#server/utils/nodemailer");
+    vi.resetModules();
 
-      expect(mockVerify).toHaveBeenCalledTimes(1);
-    });
+    await vi.importActual<typeof import("#server/utils/nodemailer")>("#server/utils/nodemailer");
+
+    expect(mockVerify).toHaveBeenCalledTimes(1);
   });
 
-  it("should throw error, if verify of the transporter configuration fails", (): void => {
-    const mockVerify = jest.fn((callback): void => callback(new Error("Verification failed")));
+  it("should throw error, if verify of the transporter configuration fails", async (): Promise<void> => {
+    const mockVerify = vi.fn((callback): void => callback(new Error("Verification failed")));
     const originalProcessExit = process.exit;
-    const mockProcessExit = jest.fn().mockImplementationOnce((code: number): void => {
+    const mockProcessExit = vi.fn().mockImplementationOnce((code: number): void => {
       throw new Error(`Process exited with code ${code}`);
     });
 
     process.exit = mockProcessExit as unknown as (code: number) => never;
 
-    (createTransport as jest.Mock).mockReturnValueOnce({ verify: mockVerify });
+    (createTransport as Mock).mockReturnValueOnce({ verify: mockVerify });
 
-    jest.isolateModules((): void => {
-      expect((): void => {
-        jest.requireActual("#server/utils/nodemailer");
-      }).toThrow("Process exited with code 1");
-    });
+    vi.resetModules();
+    await expect(async (): Promise<void> => {
+      await vi.importActual<typeof import("#server/utils/nodemailer")>("#server/utils/nodemailer");
+    }).rejects.toThrow("Process exited with code 1");
 
     process.exit = originalProcessExit;
   });

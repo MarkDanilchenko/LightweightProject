@@ -16,18 +16,22 @@ import TokensService from "#server/tokens/tokens.service";
 import { hash } from "#server/utils/hasher";
 
 // Mock nodemailer to prevent open handles;
-jest.mock("nodemailer", () => ({
-  createTransport: jest.fn(() => ({
-    verify: jest.fn((callback) => callback(null)),
-    sendMail: jest.fn((callback) => callback(null)),
+vi.mock("nodemailer", () => ({
+  createTransport: vi.fn(() => ({
+    verify: vi.fn((callback) => callback(null)),
+    sendMail: vi.fn((callback) => callback(null)),
   })),
 }));
 
 // Mock the app configuration partially;
-jest.mock("#server/configs/app.configuration", () => {
+vi.mock("#server/configs/app.configuration", async () => {
   const mockSecret = "d227161a1d43c195902210e8e03d1021d5b0cd4d0662982597c431bafa3eb884";
+  const actual = await vi.importActual<typeof import("#server/configs/app.configuration")>(
+    "#server/configs/app.configuration",
+  );
+
   const appConfiguration = {
-    ...jest.requireActual("#server/configs/app.configuration").default(),
+    ...actual.default(),
   };
 
   appConfiguration["serverConfiguration"]["cookieSecret"] = mockSecret;
@@ -43,7 +47,7 @@ jest.mock("#server/configs/app.configuration", () => {
 
   return {
     __esModule: true,
-    default: jest.fn().mockImplementation(() => appConfiguration),
+    default: vi.fn().mockImplementation(() => appConfiguration),
   };
 });
 
@@ -68,7 +72,7 @@ describe("AuthController E2E", (): void => {
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   afterAll(async (): Promise<void> => {

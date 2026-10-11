@@ -19,7 +19,7 @@ describe("Authentication Entity", (): void => {
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("Authentication repository should be defined", (): void => {

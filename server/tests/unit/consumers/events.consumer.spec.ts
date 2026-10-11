@@ -19,10 +19,11 @@ import { buildUserFactory, buildAuthenticationFactory } from "../../factories";
 import UserEntity from "#server/users/users.entity";
 import AuthenticationEntity from "#server/auth/auth.entity";
 import { EntityManager } from "typeorm";
+import { Mocked } from "vitest";
 
 describe("EventsConsumer", (): void => {
   let eventsConsumer: EventsConsumer;
-  let eventsService: jest.Mocked<EventsService>;
+  let eventsService: Mocked<EventsService>;
   let user: UserEntity;
   let authentication: AuthenticationEntity;
 
@@ -32,17 +33,17 @@ describe("EventsConsumer", (): void => {
   });
 
   beforeEach(async (): Promise<void> => {
-    const mockEventService = { createEvent: jest.fn() };
+    const mockEventService = { createEvent: vi.fn() };
     const testingModule: TestingModule = await Test.createTestingModule({
       providers: [EventsConsumer, { provide: EventsService, useValue: mockEventService }],
     }).compile();
 
     eventsConsumer = testingModule.get<EventsConsumer>(EventsConsumer);
-    eventsService = testingModule.get<jest.Mocked<EventsService>>(EventsService);
+    eventsService = testingModule.get<Mocked<EventsService>>(EventsService);
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {

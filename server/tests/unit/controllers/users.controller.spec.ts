@@ -9,29 +9,30 @@ import { UserDeactivateDto, UserDeleteDto } from "#server/auth/dto/auth.dto";
 import { clearCookie } from "#server/utils/cookie";
 import { RequestWithTokenPayload } from "#server/common/types/common.types";
 import { v4 as uuidv4 } from "uuid";
+import { Mocked } from "vitest";
 
-jest.mock("#server/utils/cookie", () => ({
-  clearCookie: jest.fn(),
+vi.mock("#server/utils/cookie", () => ({
+  clearCookie: vi.fn(),
 }));
 
 describe("UsersController", (): void => {
   const mockUser: UserEntity = buildUserFactory();
   let usersController: UsersController;
-  let usersService: jest.Mocked<UsersService>;
+  let usersService: Mocked<UsersService>;
   let mockResponse: Response;
 
   beforeEach(async (): Promise<void> => {
     const mockUsersService = {
-      findUserByPk: jest.fn(),
-      findUser: jest.fn(),
-      updateUser: jest.fn(),
-      deactivateUserProfile: jest.fn(),
-      deleteUserProfile: jest.fn(),
+      findUserByPk: vi.fn(),
+      findUser: vi.fn(),
+      updateUser: vi.fn(),
+      deactivateUserProfile: vi.fn(),
+      deleteUserProfile: vi.fn(),
     };
 
     mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      send: jest.fn().mockReturnThis(),
+      status: vi.fn().mockReturnThis(),
+      send: vi.fn().mockReturnThis(),
     } as unknown as Response;
 
     const testingModule: TestingModule = await Test.createTestingModule({
@@ -40,11 +41,11 @@ describe("UsersController", (): void => {
     }).compile();
 
     usersController = testingModule.get<UsersController>(UsersController);
-    usersService = testingModule.get<jest.Mocked<UsersService>>(UsersService);
+    usersService = testingModule.get<Mocked<UsersService>>(UsersService);
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {

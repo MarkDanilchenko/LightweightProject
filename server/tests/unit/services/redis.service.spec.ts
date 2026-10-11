@@ -5,20 +5,21 @@ import Redis from "ioredis";
 import { BadRequestException } from "@nestjs/common";
 import { REDIS_CLIENT, REDIS_KEY_MAX_BYTE_LEN, REDIS_KEY_TTL_SEC } from "#server/configs/constants";
 import { faker } from "@faker-js/faker";
+import { Mocked } from "vitest";
 
 describe("RedisService", (): void => {
   const mockKey = "mocked:key";
   const mockStringValue = "mockedString - nvELw63S";
   const mockValue = { somekey1: "zGfKvWwA", somekey2: "Ln8PAuG", somekey3: "5f1YX4L" };
   let redisService: RedisService;
-  let redisClient: jest.Mocked<Redis>;
+  let redisClient: Mocked<Redis>;
 
   beforeEach(async (): Promise<void> => {
     const mockedRedisClient = {
-      get: jest.fn(),
-      setex: jest.fn().mockResolvedValue("OK"),
-      exists: jest.fn().mockResolvedValue(1),
-      del: jest.fn().mockResolvedValue(1),
+      get: vi.fn(),
+      setex: vi.fn().mockResolvedValue("OK"),
+      exists: vi.fn().mockResolvedValue(1),
+      del: vi.fn().mockResolvedValue(1),
     };
 
     const testingModule: TestingModule = await Test.createTestingModule({
@@ -26,11 +27,11 @@ describe("RedisService", (): void => {
     }).compile();
 
     redisService = testingModule.get<RedisService>(RedisService);
-    redisClient = testingModule.get<jest.Mocked<Redis>>(REDIS_CLIENT);
+    redisClient = testingModule.get<Mocked<Redis>>(REDIS_CLIENT);
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {

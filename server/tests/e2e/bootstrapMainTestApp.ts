@@ -6,7 +6,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 
 // Mock AdminModule entirely to prevent AdminJS execution because it's not needed in the e2e tests
 // and use ESM modules instead of CommonJS modules.
-jest.mock("#server/admin/admin.module", () => {
+vi.mock("#server/admin/admin.module", () => {
   @Module({
     imports: [],
     controllers: [],
@@ -60,11 +60,11 @@ export async function bootstrapMainTestApp(): Promise<INestApplication> {
     imports: [AppModule],
   })
     .overrideProvider(RMQ_MICROSERVICE)
-    .useValue({ emit: jest.fn() })
+    .useValue({ emit: vi.fn() })
     .overrideProvider(GoogleOAuth2Strategy)
     .useValue({
-      constructor: jest.fn(),
-      validate: jest
+      constructor: vi.fn(),
+      validate: vi
         .fn()
         .mockImplementation((accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) =>
           done(null, profile),
@@ -72,8 +72,8 @@ export async function bootstrapMainTestApp(): Promise<INestApplication> {
     })
     .overrideProvider(GitHubOAuth2Strategy)
     .useValue({
-      constructor: jest.fn(),
-      validate: jest
+      constructor: vi.fn(),
+      validate: vi
         .fn()
         .mockImplementation(
           (
@@ -86,8 +86,8 @@ export async function bootstrapMainTestApp(): Promise<INestApplication> {
     })
     .overrideProvider(YandexOAuth2Strategy)
     .useValue({
-      constructor: jest.fn(),
-      validate: jest
+      constructor: vi.fn(),
+      validate: vi
         .fn()
         .mockImplementation(
           (

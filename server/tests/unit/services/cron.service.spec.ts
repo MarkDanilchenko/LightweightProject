@@ -5,28 +5,29 @@ import CronService from "#server/services/cron/cron.service";
 import UsersService from "#server/users/users.service";
 import UserEntity from "#server/users/users.entity";
 import { buildUserFactory } from "../../factories";
+import { Mocked } from "vitest";
 
 describe("CronService", (): void => {
   let cronService: CronService;
-  let usersService: jest.Mocked<UsersService>;
-  let dataSource: jest.Mocked<DataSource>;
+  let usersService: Mocked<UsersService>;
+  let dataSource: Mocked<DataSource>;
 
   const mockEntityManager = {
-    find: jest.fn(),
-    save: jest.fn(),
-    update: jest.fn(),
-    query: jest.fn(),
-  } as unknown as jest.Mocked<EntityManager>;
+    find: vi.fn(),
+    save: vi.fn(),
+    update: vi.fn(),
+    query: vi.fn(),
+  } as unknown as Mocked<EntityManager>;
 
   beforeEach(async (): Promise<void> => {
     const mockUsersService = {
-      findUsers: jest.fn(),
-      anonymizeUserProfile: jest.fn(),
-    } as unknown as jest.Mocked<UsersService>;
+      findUsers: vi.fn(),
+      anonymizeUserProfile: vi.fn(),
+    } as unknown as Mocked<UsersService>;
 
     const mockDataSource = {
-      transaction: jest.fn().mockImplementation((callback) => callback(mockEntityManager)),
-    } as unknown as jest.Mocked<DataSource>;
+      transaction: vi.fn().mockImplementation((callback) => callback(mockEntityManager)),
+    } as unknown as Mocked<DataSource>;
 
     const testingModule: TestingModule = await Test.createTestingModule({
       providers: [
@@ -37,12 +38,12 @@ describe("CronService", (): void => {
     }).compile();
 
     cronService = testingModule.get<CronService>(CronService);
-    usersService = testingModule.get<jest.Mocked<UsersService>>(UsersService);
-    dataSource = testingModule.get<jest.Mocked<DataSource>>(DataSource);
+    usersService = testingModule.get<Mocked<UsersService>>(UsersService);
+    dataSource = testingModule.get<Mocked<DataSource>>(DataSource);
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {
@@ -156,7 +157,7 @@ describe("CronService", (): void => {
       usersService.findUsers.mockResolvedValueOnce(users).mockResolvedValueOnce([]);
       usersService.anonymizeUserProfile.mockResolvedValue();
 
-      const logSpy: jest.SpyInstance = jest.spyOn((cronService as any).logger, "log");
+      const logSpy = vi.spyOn((cronService as any).logger, "log");
 
       await cronService.handleDailyUsersAnonymization();
 
@@ -169,7 +170,7 @@ describe("CronService", (): void => {
       error.stack = "Error: Anonymization failed\n    at test";
       usersService.findUsers.mockRejectedValue(error);
 
-      const errorSpy: jest.SpyInstance = jest.spyOn((cronService as any).logger, "error");
+      const errorSpy = vi.spyOn((cronService as any).logger, "error");
 
       await cronService.handleDailyUsersAnonymization();
 

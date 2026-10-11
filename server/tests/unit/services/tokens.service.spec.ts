@@ -9,11 +9,12 @@ import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import { faker } from "@faker-js/faker";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import { randomValidJwt } from "../../utils";
+import { Mocked } from "vitest";
 
 describe("TokensService", (): void => {
   let tokensService: TokensService;
-  let jwtService: jest.Mocked<JwtService>;
-  let redisService: jest.Mocked<RedisService>;
+  let jwtService: Mocked<JwtService>;
+  let redisService: Mocked<RedisService>;
   let mockTokenPayload: TokenPayload;
   let mockJwtToken: string;
 
@@ -33,18 +34,18 @@ describe("TokensService", (): void => {
     });
 
     const mockJwtService = {
-      signAsync: jest.fn().mockResolvedValue(mockJwtToken),
-      verifyAsync: jest.fn().mockResolvedValue(mockTokenPayload),
-      decode: jest.fn().mockReturnValue(mockTokenPayload),
+      signAsync: vi.fn().mockResolvedValue(mockJwtToken),
+      verifyAsync: vi.fn().mockResolvedValue(mockTokenPayload),
+      decode: vi.fn().mockReturnValue(mockTokenPayload),
     };
 
     const mockRedisService = {
-      exists: jest.fn().mockResolvedValue(false),
-      set: jest.fn().mockResolvedValue("OK"),
+      exists: vi.fn().mockResolvedValue(false),
+      set: vi.fn().mockResolvedValue("OK"),
     };
 
     const mockConfigService = {
-      get: jest.fn().mockImplementation((value: string): string | undefined => {
+      get: vi.fn().mockImplementation((value: string): string | undefined => {
         switch (value) {
           case "jwtConfiguration.refreshTokenExpiresIn":
             return "7d";
@@ -67,12 +68,12 @@ describe("TokensService", (): void => {
     }).compile();
 
     tokensService = testingModule.get<TokensService>(TokensService);
-    jwtService = testingModule.get<JwtService>(JwtService) as jest.Mocked<JwtService>;
-    redisService = testingModule.get<RedisService>(RedisService) as jest.Mocked<RedisService>;
+    jwtService = testingModule.get<JwtService>(JwtService) as Mocked<JwtService>;
+    redisService = testingModule.get<RedisService>(RedisService) as Mocked<RedisService>;
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {

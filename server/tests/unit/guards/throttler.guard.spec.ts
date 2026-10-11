@@ -4,21 +4,22 @@ import { ExecutionContext } from "@nestjs/common";
 import { ThrottlerException, ThrottlerModule } from "@nestjs/throttler";
 import CustomThrottlerGuard, { ThrottlerLimitDetailWithTimeToReset } from "#server/common/guards/throttler.guard";
 import { faker } from "@faker-js/faker";
+import { Mock, Mocked } from "vitest";
 
 describe("CustomThrottlerGuard", (): void => {
   let customThrottlerGuard: CustomThrottlerGuard;
-  let mockExecutionContext: jest.Mocked<ExecutionContext>;
-  let mockResponse: { setHeader: jest.Mock };
+  let mockExecutionContext: Mocked<ExecutionContext>;
+  let mockResponse: { setHeader: Mock };
   const originalNodeEnv = process.env.NODE_ENV;
 
   beforeEach(async (): Promise<void> => {
-    mockResponse = { setHeader: jest.fn() };
+    mockResponse = { setHeader: vi.fn() };
 
     mockExecutionContext = {
-      switchToHttp: jest.fn().mockReturnValue({
-        getResponse: jest.fn().mockReturnValue(mockResponse),
+      switchToHttp: vi.fn().mockReturnValue({
+        getResponse: vi.fn().mockReturnValue(mockResponse),
       }),
-    } as unknown as jest.Mocked<ExecutionContext>;
+    } as unknown as Mocked<ExecutionContext>;
 
     const testingModule: TestingModule = await Test.createTestingModule({
       imports: [
@@ -33,7 +34,7 @@ describe("CustomThrottlerGuard", (): void => {
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     process.env.NODE_ENV = originalNodeEnv;
   });
 
@@ -55,9 +56,9 @@ describe("CustomThrottlerGuard", (): void => {
       process.env.NODE_ENV = "development";
 
       // Spy on the parent canActivate method;
-      const canActivateSpy = jest
+      const canActivateSpy = vi
         .spyOn(Object.getPrototypeOf(Object.getPrototypeOf(customThrottlerGuard)), "canActivate")
-        .mockImplementation(() => jest.fn());
+        .mockImplementation(() => vi.fn());
 
       await customThrottlerGuard.canActivate(mockExecutionContext);
 
@@ -94,7 +95,7 @@ describe("CustomThrottlerGuard", (): void => {
       const timeToResetValues = [1, 30, 60, 120];
 
       for (const timeToReset of timeToResetValues) {
-        jest.clearAllMocks();
+        vi.clearAllMocks();
         const expectedErrorMessage = `Rate limit exceeded. Please, try again in ${timeToReset} seconds`;
         const throttlerLimitDetail: ThrottlerLimitDetailWithTimeToReset = {
           ttl: 60 * 1_000,

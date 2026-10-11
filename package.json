@@ -22,27 +22,26 @@
     ]
   },
   "scripts": {
-    "build:server": "cd server && npm run clear:server && nest build && tsc-alias",
+    "build:server": "npm run clear:server && nest build --config server/nest-cli.json && tsc-alias -p server/tsconfig.json",
     "clear:server": "rm -rf ./server/dist",
     "clear:node_modules": "rm -rf ./node_modules",
-    "start:server": "cd server && nest start",
-    "start:server:dev": "cd server && nest start --watch",
-    "start:server:debug": "cd server && nest start --debug --watch",
-    "start:server:prod": "cd server && node dist/src/main",
-    "start:microservice:rmq": "cd server && ts-node -r tsconfig-paths/register src/microservice.rmq.ts",
-    "start:microservice:rmq:dev": "cd server && nodemon --watch 'src/**/*.ts' --exec ts-node -r tsconfig-paths/register src/microservice.rmq.ts",
-    "start:microservice:rmq:prod": "cd server && node dist/src/microservice.rmq.js",
+    "start:server": "nest start --config server/nest-cli.json",
+    "start:server:dev": "nest start --watch --config server/nest-cli.json",
+    "start:server:debug": "nest start --debug --watch --config server/nest-cli.json",
+    "start:server:prod": "node server/dist/src/main",
+    "start:microservice:rmq": "ts-node -r tsconfig-paths/register server/src/microservice.rmq.ts",
+    "start:microservice:rmq:dev": "nodemon --watch 'server/src/**/*.ts' --exec ts-node -r tsconfig-paths/register server/src/microservice.rmq.ts",
+    "start:microservice:rmq:prod": "node server/dist/src/microservice.rmq.js",
     "typeorm": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "typeorm:create": "npm run typeorm migration:create",
     "typeorm:run": "npm run typeorm migration:run -- -d ./server/src/configs/typeorm.configuration.ts",
     "typeorm:revert": "npm run typeorm migration:revert -- -d ./server/src/configs/typeorm.configuration.ts",
     "typeorm:generate": "npm run typeorm migration:generate -- -d ./server/src/configs/typeorm.configuration.ts",
     "typeorm:show": "npm run typeorm migration:show -- -d ./server/src/configs/typeorm.configuration.ts",
-    "test:unit": "NODE_ENV=test jest --detectOpenHandles --forceExit --bail --passWithNoTests=false",
-    "test:e2e": "NODE_ENV=test jest --config server/tests/jest-e2e.json --detectOpenHandles --forceExit --bail --passWithNoTests=false",
-    "test:unit:cov": "NODE_ENV=test jest --coverage --detectOpenHandles --forceExit --bail --passWithNoTests=false",
-    "test:e2e:cov": "NODE_ENV=test jest --config server/tests/jest-e2e.json --coverage --detectOpenHandles --forceExit --bail --passWithNoTests=false",
-    "test:clear": "rm -rf ./server/coverage",
+    "test:unit": "NODE_ENV=test vitest run",
+    "test:unit:cov": "NODE_ENV=test vitest run --coverage",
+    "test:e2e": "NODE_ENV=test vitest run --config server/tests/vitest-e2e.config.ts",
+    "test:clear:cov": "rm -rf ./server/coverage",
     "tsc": "tsc --noEmit",
     "lint:server": "eslint ./server/src/**/*.ts server/tests/**/*.ts ./server/migrations/**/*.ts",
     "format:server": "prettier --write ./server/src/**/*.ts  ./server/tests/**/*.ts ./server/migrations/**/*.ts && eslint ./server/src/**/*.ts ./server/tests/**/*.ts ./server/migrations/**/*.ts --fix",
@@ -140,56 +139,8 @@
     "typescript": "6.0.3",
     "typescript-eslint": "8.71.0",
     "unplugin-swc": "2.0.0",
+    "vite": "8.3.4",
     "vitest": "5.0.3"
-  },
-  "jest": {
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "ts"
-    ],
-    "rootDir": "./server",
-    "testRegex": ".*\\.spec\\.ts$",
-    "transform": {
-      "^.+\\.(t|j)s$": [
-        "ts-jest",
-        {
-          "tsconfig": "./tsconfig.json"
-        }
-      ]
-    },
-    "transformIgnorePatterns": [
-      "node_modules/(?!uuid|@faker-js/faker)"
-    ],
-    "moduleNameMapper": {
-      "^#server/(.*)": "<rootDir>/src/$1",
-      "^#shared/(.*)": "<rootDir>/../shared/$1"
-    },
-    "collectCoverageFrom": [
-      "**/*.(t|j)s",
-      "!**/*.(module|types|interfaces|dto|schema|guard).(t|j)s",
-      "!**/src/configs/**",
-      "!**/coverage/**",
-      "!**/dist/**",
-      "!**/insomnia/**",
-      "!**/migrations/**",
-      "!**/templates/**",
-      "!**/tests/**"
-    ],
-    "coverageDirectory": "<rootDir>/coverage",
-    "coverageReporters": [
-      "html"
-    ],
-    "coverageThreshold": {
-      "global": {
-        "branches": 80,
-        "functions": 80,
-        "lines": 80,
-        "statements": 80
-      }
-    },
-    "testEnvironment": "node",
-    "testTimeout": 5000
   },
   "browserslist": [
     "last 2 versions",

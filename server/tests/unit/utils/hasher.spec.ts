@@ -1,18 +1,23 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-import crypto from "crypto";
+import { scrypt, timingSafeEqual } from "crypto";
 import { hash, verifyHash } from "#server/utils/hasher";
+import { vi, MockedFunction } from "vitest";
 
 // Mock the crypto module;
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
-  scrypt: jest.fn(),
-  timingSafeEqual: jest.fn(),
-}));
+vi.mock("crypto", async () => {
+  const actual = await vi.importActual<typeof import("crypto")>("crypto");
 
-// Mock the app configuration to provide complete configuration for tests;
-jest.mock("#server/configs/app.configuration", () => ({
+  return {
+    ...actual,
+    scrypt: vi.fn(),
+    timingSafeEqual: vi.fn(),
+  };
+});
+
+// 3. Мокаем конфигурацию приложения
+vi.mock("#server/configs/app.configuration", () => ({
   __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
+  default: vi.fn().mockImplementation(() => ({
     serverConfiguration: {
       host: "127.0.0.1",
       port: 3000,
@@ -28,21 +33,20 @@ jest.mock("#server/configs/app.configuration", () => ({
 
 describe("Hasher Utility", (): void => {
   const keylen = 64;
+  const toHash = "ghDkHXrKI";
+  const mockScrypt = scrypt as MockedFunction<typeof scrypt>;
+  const mockTimingSafeEqual = timingSafeEqual as MockedFunction<typeof timingSafeEqual>;
 
   describe("hash function", (): void => {
-    const toHash = "ghDkHXrKI";
-    const mockScrypt = require("crypto").scrypt as jest.MockedFunction<typeof crypto.scrypt>;
-
     beforeEach((): void => {
       mockScrypt.mockImplementation((...args: any[]): void => {
         const callback = args[args.length - 1];
-
         callback(null, Buffer.from("xRewhBtmbIpMsJ3vdn724aIKnlcMOAsi"));
       });
     });
 
     afterEach((): void => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should call scrypt with correct parameters", async (): Promise<void> => {
@@ -70,7 +74,6 @@ describe("Hasher Utility", (): void => {
 
       mockScrypt.mockImplementationOnce((...args: any[]): void => {
         const callback = args[args.length - 1];
-
         callback(error, undefined);
       });
 
@@ -79,20 +82,15 @@ describe("Hasher Utility", (): void => {
   });
 
   describe("verifyHash function", () => {
-    const toHash = "VCmEC7q0CS";
-    const mockScrypt = require("crypto").scrypt as jest.MockedFunction<typeof crypto.scrypt>;
-    const mockTimingSafeEqual = require("crypto").timingSafeEqual as jest.MockedFunction<typeof crypto.timingSafeEqual>;
-
     beforeEach((): void => {
       mockScrypt.mockImplementation((...args: any[]): void => {
         const callback = args[args.length - 1];
-
         callback(null, Buffer.from("xRewhBtmbIpMsJ3vdn724aIKnlcMOAsi"));
       });
     });
 
     afterEach((): void => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should return true for matching hash", async (): Promise<void> => {
@@ -129,7 +127,6 @@ describe("Hasher Utility", (): void => {
 
       mockScrypt.mockImplementationOnce((...args: any[]): void => {
         const callback = args[args.length - 1];
-
         callback(error);
       });
 
@@ -139,7 +136,6 @@ describe("Hasher Utility", (): void => {
     it("should use the common secret from app configuration", async (): Promise<void> => {
       await hash(toHash);
 
-      // Check that the salt is created from the common secret
       const saltArg = mockScrypt.mock.calls[0][1];
 
       expect(saltArg).toBeInstanceOf(Buffer);

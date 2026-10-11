@@ -25,21 +25,22 @@ import { UserDeactivateDto, UserDeleteDto } from "#server/auth/dto/auth.dto";
 import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import { EventName } from "#server/events/interfaces/events.interfaces";
+import { Mocked } from "vitest";
 
 describe("UsersService", (): void => {
   const mockEntityManager = {
-    update: jest.fn(),
-    softDelete: jest.fn(),
-    save: jest.fn(),
-    query: jest.fn(),
-    restore: jest.fn(),
-  } as unknown as jest.Mocked<EntityManager>;
+    update: vi.fn(),
+    softDelete: vi.fn(),
+    save: vi.fn(),
+    query: vi.fn(),
+    restore: vi.fn(),
+  } as unknown as Mocked<EntityManager>;
   let usersService: UsersService;
-  let userRepository: jest.Mocked<Repository<UserEntity>>;
-  let dataSource: jest.Mocked<DataSource>;
-  let tokensService: jest.Mocked<TokensService>;
-  let eventsService: jest.Mocked<EventsService>;
-  let rmqMicroserviceClient: jest.Mocked<ClientProxy>;
+  let userRepository: Mocked<Repository<UserEntity>>;
+  let dataSource: Mocked<DataSource>;
+  let tokensService: Mocked<TokensService>;
+  let eventsService: Mocked<EventsService>;
+  let rmqMicroserviceClient: Mocked<ClientProxy>;
   let authentication: AuthenticationEntity;
   let user: UserEntity;
 
@@ -52,29 +53,29 @@ describe("UsersService", (): void => {
     user.authentications = [authentication];
 
     const mockUserRepository = {
-      findOne: jest.fn(),
-      findOneBy: jest.fn(),
-      find: jest.fn(),
-      update: jest.fn(),
-      softDelete: jest.fn(),
-      restore: jest.fn(),
+      findOne: vi.fn(),
+      findOneBy: vi.fn(),
+      find: vi.fn(),
+      update: vi.fn(),
+      softDelete: vi.fn(),
+      restore: vi.fn(),
     };
 
     const mockDataSource = {
-      transaction: jest.fn().mockImplementation((callback) => callback(mockEntityManager)),
-    } as unknown as jest.Mocked<DataSource>;
+      transaction: vi.fn().mockImplementation((callback) => callback(mockEntityManager)),
+    } as unknown as Mocked<DataSource>;
 
     const mockTokensService = {
-      addToBlacklist: jest.fn(),
-    } as unknown as jest.Mocked<TokensService>;
+      addToBlacklist: vi.fn(),
+    } as unknown as Mocked<TokensService>;
 
     const mockEventsService = {
-      buildInstance: jest.fn(),
-    } as unknown as jest.Mocked<EventsService>;
+      buildInstance: vi.fn(),
+    } as unknown as Mocked<EventsService>;
 
     const mockRmqMicroserviceClient = {
-      emit: jest.fn(),
-    } as unknown as jest.Mocked<ClientProxy>;
+      emit: vi.fn(),
+    } as unknown as Mocked<ClientProxy>;
 
     const testingModule: TestingModule = await Test.createTestingModule({
       providers: [
@@ -88,15 +89,15 @@ describe("UsersService", (): void => {
     }).compile();
 
     usersService = testingModule.get<UsersService>(UsersService);
-    userRepository = testingModule.get<jest.Mocked<Repository<UserEntity>>>(getRepositoryToken(UserEntity));
-    dataSource = testingModule.get<jest.Mocked<DataSource>>(DataSource);
-    tokensService = testingModule.get<jest.Mocked<TokensService>>(TokensService);
-    eventsService = testingModule.get<jest.Mocked<EventsService>>(EventsService);
-    rmqMicroserviceClient = testingModule.get<jest.Mocked<ClientProxy>>(RMQ_MICROSERVICE);
+    userRepository = testingModule.get<Mocked<Repository<UserEntity>>>(getRepositoryToken(UserEntity));
+    dataSource = testingModule.get<Mocked<DataSource>>(DataSource);
+    tokensService = testingModule.get<Mocked<TokensService>>(TokensService);
+    eventsService = testingModule.get<Mocked<EventsService>>(EventsService);
+    rmqMicroserviceClient = testingModule.get<Mocked<ClientProxy>>(RMQ_MICROSERVICE);
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {
@@ -121,7 +122,7 @@ describe("UsersService", (): void => {
 
     it("should find a user by a primary key with provided entity manager", async (): Promise<void> => {
       const providedManager = {
-        findOne: jest.fn().mockResolvedValue(user),
+        findOne: vi.fn().mockResolvedValue(user),
       } as unknown as EntityManager;
 
       const result: UserEntity | null = await usersService.findUserByPk(user.id, providedManager);
@@ -159,7 +160,7 @@ describe("UsersService", (): void => {
     it("should find a user with custom options and provided entity manager", async (): Promise<void> => {
       const options: FindOneOptions<UserEntity> = { where: { email: user.email } };
       const providedManager = {
-        findOne: jest.fn().mockResolvedValue(user),
+        findOne: vi.fn().mockResolvedValue(user),
       } as unknown as EntityManager;
 
       const result: UserEntity | null = await usersService.findUser(options, providedManager);
@@ -230,7 +231,7 @@ describe("UsersService", (): void => {
     it("should find users with custom options and provided entity manager", async (): Promise<void> => {
       const options: FindManyOptions<UserEntity> = { where: { email: Like("%@example.com") } };
       const providedManager = {
-        find: jest.fn().mockResolvedValue(users),
+        find: vi.fn().mockResolvedValue(users),
       } as unknown as EntityManager;
 
       const result: UserEntity[] = await usersService.findUsers(options, providedManager);
@@ -282,7 +283,7 @@ describe("UsersService", (): void => {
 
     it("should use provided entity manager when available", async (): Promise<void> => {
       const providedManager = {
-        update: jest.fn().mockResolvedValue(updateResult),
+        update: vi.fn().mockResolvedValue(updateResult),
       } as unknown as EntityManager;
 
       const result: UpdateResult = await usersService.updateUser(whereCondition, values, providedManager);
@@ -325,7 +326,7 @@ describe("UsersService", (): void => {
 
     it("should soft delete a user with provided entity manager", async (): Promise<void> => {
       const providedManager = {
-        softDelete: jest.fn().mockResolvedValue(updateResult),
+        softDelete: vi.fn().mockResolvedValue(updateResult),
       } as unknown as EntityManager;
 
       const result: UpdateResult = await usersService.deleteUserSoft(whereCondition, providedManager);
@@ -350,7 +351,7 @@ describe("UsersService", (): void => {
     });
 
     it("should restore a soft-deleted user", async (): Promise<void> => {
-      const mockRestore = jest.fn().mockResolvedValue(updateResult);
+      const mockRestore = vi.fn().mockResolvedValue(updateResult);
       userRepository.restore = mockRestore;
 
       const result: UpdateResult = await usersService.restoreUser(whereCondition);
@@ -361,7 +362,7 @@ describe("UsersService", (): void => {
 
     it("should restore a soft-deleted user with provided entity manager", async (): Promise<void> => {
       const providedManager = {
-        restore: jest.fn().mockResolvedValue(updateResult),
+        restore: vi.fn().mockResolvedValue(updateResult),
       } as unknown as EntityManager;
 
       const result: UpdateResult = await usersService.restoreUser(whereCondition, providedManager);
@@ -705,8 +706,8 @@ describe("UsersService", (): void => {
     it("should handle errors during anonymization", async (): Promise<void> => {
       const error = new Error("Anonymization failed");
       (usersService as any).dataSource = {
-        transaction: jest.fn().mockRejectedValue(error),
-      } as unknown as jest.Mocked<DataSource>;
+        transaction: vi.fn().mockRejectedValue(error),
+      } as unknown as Mocked<DataSource>;
 
       await expect(usersService.anonymizeUserProfile(user)).rejects.toThrow(error);
     });

@@ -12,6 +12,7 @@ import {
 import { buildEventFactory, buildUserFactory } from "../../factories";
 import { EventType } from "#server/events/types/events.types";
 import UserEntity from "#server/users/users.entity";
+import { Mocked } from "vitest";
 
 describe("EventsService", (): void => {
   const randomUuid: string = "3fd5e553-73a2-486b-8120-90cd007c9843";
@@ -19,17 +20,17 @@ describe("EventsService", (): void => {
   const user: UserEntity = buildUserFactory();
   const event: EventEntity = buildEventFactory({ userId: user.id });
   let eventsService: EventsService;
-  let dataSource: jest.Mocked<Partial<DataSource>>;
-  let entityManager: jest.Mocked<Partial<EntityManager>>;
+  let dataSource: Mocked<Partial<DataSource>>;
+  let entityManager: Mocked<Partial<EntityManager>>;
 
   beforeEach(async (): Promise<void> => {
     const mockEntityManager = {
-      create: jest.fn().mockReturnValue(event),
-      save: jest.fn().mockResolvedValue(null),
+      create: vi.fn().mockReturnValue(event),
+      save: vi.fn().mockResolvedValue(null),
     };
 
     const mockDataSource = {
-      transaction: jest.fn().mockImplementation((callback) => callback(mockEntityManager)),
+      transaction: vi.fn().mockImplementation((callback) => callback(mockEntityManager)),
     };
 
     const testingModule: TestingModule = await Test.createTestingModule({
@@ -41,12 +42,12 @@ describe("EventsService", (): void => {
     }).compile();
 
     eventsService = testingModule.get<EventsService>(EventsService);
-    dataSource = testingModule.get<jest.Mocked<Partial<DataSource>>>(DataSource);
+    dataSource = testingModule.get<Mocked<Partial<DataSource>>>(DataSource);
     entityManager = mockEntityManager;
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {

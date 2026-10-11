@@ -8,20 +8,21 @@ import { Profile } from "passport-yandex";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import { buildUserFactory } from "../../factories";
 import UserEntity from "#server/users/users.entity";
+import { Mocked, MockedFunction } from "vitest";
 
 describe("YandexOAuth2Strategy", (): void => {
-  const mockDone: jest.MockedFunction<(...args: unknown[]) => void> = jest.fn();
+  const mockDone: MockedFunction<(...args: unknown[]) => void> = vi.fn();
   let yandexStrategy: YandexOAuth2Strategy;
-  let configService: jest.Mocked<ConfigService>;
-  let authService: jest.Mocked<AuthService>;
+  let configService: Mocked<ConfigService>;
+  let authService: Mocked<AuthService>;
   let user: UserEntity;
 
   beforeEach(async (): Promise<void> => {
     user = buildUserFactory();
 
-    const mockAuthService = { idPAuthentication: jest.fn() };
+    const mockAuthService = { idPAuthentication: vi.fn() };
     const mockConfigService = {
-      get: jest.fn().mockImplementation((key: string): string | undefined => {
+      get: vi.fn().mockImplementation((key: string): string | undefined => {
         switch (key) {
           case "authConfiguration.yandex.clientID": {
             return "test-yandex-client-id";
@@ -52,12 +53,12 @@ describe("YandexOAuth2Strategy", (): void => {
     }).compile();
 
     yandexStrategy = testingModule.get<YandexOAuth2Strategy>(YandexOAuth2Strategy);
-    configService = testingModule.get<jest.Mocked<ConfigService>>(ConfigService);
-    authService = testingModule.get<jest.Mocked<AuthService>>(AuthService);
+    configService = testingModule.get<Mocked<ConfigService>>(ConfigService);
+    authService = testingModule.get<Mocked<AuthService>>(AuthService);
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {
