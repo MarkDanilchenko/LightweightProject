@@ -9,11 +9,8 @@ export default defineConfig({
     globals: true,
     environment: "node",
     root: path.resolve(__dirname, "../../server"),
-    cache: {
-      dir: path.resolve(__dirname, "../../node_modules/.vite")
-    },
     include: ["**/*.spec.ts"],
-    testTimeout: 5000,
+    testTimeout: 5_000,
     alias: [
       { find: /^#server\/(.*)/, replacement: path.resolve(__dirname, "../../server/src/$1") },
       { find: /^#shared\/(.*)/, replacement: path.resolve(__dirname, "../../shared/$1") },
@@ -33,7 +30,7 @@ export default defineConfig({
         "**/templates/**",
         "**/tests/**",
         "**/.adminjs/**",
-        "**/*.(json|yaml|yml)"
+        "**/*.(json|yaml|yml)",
       ],
       thresholds: {
         branches: 80,
@@ -44,7 +41,8 @@ export default defineConfig({
     },
     bail: 1,
     fileParallelism: false,
-    teardownTimeout: 5000,
+    teardownTimeout: 5_000,
   },
+  cacheDir: path.resolve(__dirname, "../../node_modules/.vite"),
   plugins: [swc.vite()],
 });
