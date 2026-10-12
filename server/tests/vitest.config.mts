@@ -8,17 +8,20 @@ export default defineConfig({
   test: {
     globals: true,
     environment: "node",
-    root: ".",
+    root: path.resolve(__dirname, "../../server"),
+    cache: {
+      dir: path.resolve(__dirname, "../../node_modules/.vite")
+    },
     include: ["**/*.spec.ts"],
     testTimeout: 5000,
     alias: [
-      { find: /^#server\/(.*)/, replacement: path.resolve(__dirname, "server/src/$1") },
-      { find: /^#shared\/(.*)/, replacement: path.resolve(__dirname, "shared/$1") },
+      { find: /^#server\/(.*)/, replacement: path.resolve(__dirname, "../../server/src/$1") },
+      { find: /^#shared\/(.*)/, replacement: path.resolve(__dirname, "../../shared/$1") },
     ],
     coverage: {
       provider: "v8",
       reporter: ["html"],
-      reportsDirectory: "./server/coverage",
+      reportsDirectory: path.resolve(__dirname, "coverage/unit"),
       include: ["**/*.(t|j)s"],
       exclude: [
         "**/*.(module|types|interfaces|dto|schema).(t|j)s",
@@ -30,6 +33,7 @@ export default defineConfig({
         "**/templates/**",
         "**/tests/**",
         "**/.adminjs/**",
+        "**/*.(json|yaml|yml)"
       ],
       thresholds: {
         branches: 80,
