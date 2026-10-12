@@ -18,7 +18,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["html"],
-      reportsDirectory: "./coverage",
+      reportsDirectory: "./server/coverage",
       include: ["**/*.(t|j)s"],
       exclude: [
         "**/*.(module|types|interfaces|dto|schema).(t|j)s",
