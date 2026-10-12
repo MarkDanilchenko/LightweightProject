@@ -2,8 +2,8 @@
 import globals from "globals";
 import pluginJs from "@eslint/js";
 import eslintPluginPrettierRecommended from "eslint-plugin-prettier/recommended";
-import eslintPluginJest from "eslint-plugin-jest";
 import tseslint from "typescript-eslint";
+import pluginVitest from "@vitest/eslint-plugin";
 
 export default tseslint.config(
   {
@@ -15,25 +15,26 @@ export default tseslint.config(
       "**/coverage/**",
       "**/public/**",
       "**/certs/**",
-      "**/db_data/**",
+      "**/db_data*/**",
       "**/redis_data/**",
       "**/rabbitmq_data/**",
       "**/dumps/**",
       "**/screenshots/**",
       "**/insomnia/**",
+      "**/patches/**",
+      "**/.adminjs/**",
     ],
   },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommendedTypeChecked,
   eslintPluginPrettierRecommended,
-  eslintPluginJest.configs["flat/recommended"],
   {
     languageOptions: {
       globals: {
         ...globals.node,
-        ...globals.jest,
         ...globals.browser,
         ...globals.es2023,
+        ...globals.vitest,
       },
       sourceType: "module",
       parserOptions: {
@@ -44,10 +45,22 @@ export default tseslint.config(
     },
   },
   {
+    files: ["**/*.spec.ts", "**/*.e2e-spec.ts"],
+    plugins: { vitest: pluginVitest },
     rules: {
-      "prettier/prettier": ["error", { doubleQuote: true, printWidth: 120 }],
+      ...pluginVitest.configs.recommended.rules,
+    },
+  },
+  {
+    rules: {
+      "prettier/prettier": [
+        "error",
+        {
+          doubleQuote: true,
+          printWidth: 120,
+        },
+      ],
       ...pluginJs.configs.recommended.rules,
-      ...eslintPluginJest.configs.recommended.rules,
       "prefer-const": "error",
       "no-var": "error",
       "no-console": "error",
@@ -71,7 +84,7 @@ export default tseslint.config(
       "@typescript-eslint/no-unnecessary-type-assertion": "warn",
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unsafe-return": "off",
-      "@typescript-eslint/no-empty-interface": "off",
+      "@typescript-eslint/no-empty-interface": "warn",
       "@typescript-eslint/no-unused-vars": [
         "warn",
         {

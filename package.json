@@ -125,6 +125,7 @@
     "@types/passport-saml": "1.1.7",
     "@types/supertest": "7.2.1",
     "@vitest/coverage-v8": "5.0.3",
+    "@vitest/eslint-plugin": "1.6.27",
     "eslint": "10.11.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prettier": "5.5.6",
