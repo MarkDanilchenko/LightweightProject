@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "moduleResolution": "bundler",
-    "module": "esnext",
     "target": "esnext",
     "importHelpers": true,
     "allowJs": false,
