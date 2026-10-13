@@ -3,12 +3,12 @@ import * as fs from "node:fs";
 import { Test, TestingModule } from "@nestjs/testing";
 
 // Mock the nodemailer createTransport before import both RmqEmailConsumer and RmqEmailService;
-jest.mock("nodemailer", () => ({
-  createTransport: jest.fn().mockReturnValue({
-    verify: jest.fn().mockImplementation((callback: (error: Error | null) => void): void => {
+vi.mock("nodemailer", () => ({
+  createTransport: vi.fn().mockReturnValue({
+    verify: vi.fn().mockImplementation((callback: (error: Error | null) => void): void => {
       callback(null);
     }),
-    sendMail: jest.fn(),
+    sendMail: vi.fn(),
   }),
 }));
 
@@ -34,15 +34,16 @@ import transporter from "#server/utils/nodemailer";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import UsersService from "#server/users/users.service";
+import { Mock, Mocked } from "vitest";
 
-const mockEjsRenderFile = jest.fn();
-jest.mock("ejs", () => ({
+const mockEjsRenderFile = vi.fn();
+vi.mock("ejs", () => ({
   renderFile: (...args: any[]) => mockEjsRenderFile(...args),
 }));
 
-jest.mock("#server/configs/app.configuration", () => ({
+vi.mock("#server/configs/app.configuration", () => ({
   __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
+  default: vi.fn().mockImplementation(() => ({
     smtpConfiguration: {
       host: "smtp.example.com",
       port: 587,
@@ -70,22 +71,22 @@ jest.mock("#server/configs/app.configuration", () => ({
 
 describe("RmqEmailService", (): void => {
   let rmqEmailService: RmqEmailService;
-  let dataSource: jest.Mocked<DataSource>;
-  let eventEmitter2: jest.Mocked<EventEmitter2>;
-  let tokensService: jest.Mocked<TokensService>;
-  let usersService: jest.Mocked<UsersService>;
-  let authService: jest.Mocked<AuthService>;
+  let dataSource: Mocked<DataSource>;
+  let eventEmitter2: Mocked<EventEmitter2>;
+  let tokensService: Mocked<TokensService>;
+  let usersService: Mocked<UsersService>;
+  let authService: Mocked<AuthService>;
 
   const testHtml = "<html><body><h1>Test</h1></body></html>";
 
   beforeEach(async (): Promise<void> => {
-    const mockDataSource = { transaction: jest.fn() };
-    const mockEventsService = { buildInstance: jest.fn() };
-    const mockEventEmitter2 = { emit: jest.fn() };
-    const mockTokensService = { generate: jest.fn() };
-    const mockAuthService = { findAuthenticationByPk: jest.fn(), updateAuthentication: jest.fn() };
+    const mockDataSource = { transaction: vi.fn() };
+    const mockEventsService = { buildInstance: vi.fn() };
+    const mockEventEmitter2 = { emit: vi.fn() };
+    const mockTokensService = { generate: vi.fn() };
+    const mockAuthService = { findAuthenticationByPk: vi.fn(), updateAuthentication: vi.fn() };
     const mockConfigService = {
-      get: jest.fn().mockImplementation((key: string) => {
+      get: vi.fn().mockImplementation((key: string) => {
         switch (key) {
           case "smtpConfiguration":
             return { from: "no-reply@LightweightProject" };
@@ -99,10 +100,10 @@ describe("RmqEmailService", (): void => {
       }),
     };
     const mockUsersService = {
-      findUser: jest.fn(),
-      updateUser: jest.fn(),
-      findUserByPk: jest.fn(),
-      deleteUserSoft: jest.fn(),
+      findUser: vi.fn(),
+      updateUser: vi.fn(),
+      findUserByPk: vi.fn(),
+      deleteUserSoft: vi.fn(),
     };
 
     const testingModule: TestingModule = await Test.createTestingModule({
@@ -119,15 +120,15 @@ describe("RmqEmailService", (): void => {
     }).compile();
 
     rmqEmailService = testingModule.get<RmqEmailService>(RmqEmailService);
-    dataSource = testingModule.get<jest.Mocked<DataSource>>(DataSource);
-    eventEmitter2 = testingModule.get<jest.Mocked<EventEmitter2>>(EventEmitter2);
-    tokensService = testingModule.get<jest.Mocked<TokensService>>(TokensService);
-    usersService = testingModule.get<jest.Mocked<UsersService>>(UsersService);
-    authService = testingModule.get<jest.Mocked<AuthService>>(AuthService);
+    dataSource = testingModule.get<Mocked<DataSource>>(DataSource);
+    eventEmitter2 = testingModule.get<Mocked<EventEmitter2>>(EventEmitter2);
+    tokensService = testingModule.get<Mocked<TokensService>>(TokensService);
+    usersService = testingModule.get<Mocked<UsersService>>(UsersService);
+    authService = testingModule.get<Mocked<AuthService>>(AuthService);
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {
@@ -142,11 +143,11 @@ describe("RmqEmailService", (): void => {
     });
 
     afterEach((): void => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should return the correct template path", async (): Promise<void> => {
-      jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
+      vi.spyOn(fs.promises, "access").mockResolvedValue(undefined);
 
       const result = await rmqEmailService.getTemplatePath(templateName);
 
@@ -154,7 +155,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error when template path is not valid", async (): Promise<void> => {
-      jest.spyOn(fs.promises, "access").mockRejectedValue(new Error());
+      vi.spyOn(fs.promises, "access").mockRejectedValue(new Error());
 
       await expect(rmqEmailService.getTemplatePath(templateName)).rejects.toThrow(`Template ${templateName} not found`);
     });
@@ -177,10 +178,10 @@ describe("RmqEmailService", (): void => {
     };
 
     beforeEach((): void => {
-      jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
+      vi.spyOn(fs.promises, "access").mockResolvedValue(undefined);
       mockEjsRenderFile.mockResolvedValue(testHtml);
-      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockResolvedValue({} as any);
-      (dataSource.transaction as jest.Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
+      (vi.spyOn(transporter, "sendMail") as Mock).mockResolvedValue({} as any);
+      (dataSource.transaction as Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
         await callback({});
       });
 
@@ -189,7 +190,7 @@ describe("RmqEmailService", (): void => {
     });
 
     afterEach((): void => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should send a welcome verification email successfully", async (): Promise<void> => {
@@ -205,7 +206,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error if template file does not exist", async (): Promise<void> => {
-      jest.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
+      vi.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
 
       await expect(rmqEmailService.sendEmailVerification(payload)).rejects.toThrow(
         "Template localEmailVerification not found",
@@ -221,7 +222,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error when sending mail fails", async (): Promise<void> => {
-      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockRejectedValue(new Error("Send mail failed"));
+      (vi.spyOn(transporter, "sendMail") as Mock).mockRejectedValue(new Error("Send mail failed"));
 
       await expect(rmqEmailService.sendEmailVerification(payload)).rejects.toThrow("Send mail failed");
     });
@@ -241,10 +242,10 @@ describe("RmqEmailService", (): void => {
     };
 
     beforeEach((): void => {
-      jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
+      vi.spyOn(fs.promises, "access").mockResolvedValue(undefined);
       mockEjsRenderFile.mockResolvedValue(testHtml);
-      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockResolvedValue({} as any);
-      (dataSource.transaction as jest.Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
+      (vi.spyOn(transporter, "sendMail") as Mock).mockResolvedValue({} as any);
+      (dataSource.transaction as Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
         await callback({});
       });
 
@@ -253,7 +254,7 @@ describe("RmqEmailService", (): void => {
     });
 
     afterEach((): void => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should send a password reset email successfully", async (): Promise<void> => {
@@ -271,7 +272,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error if template file does not exist", async (): Promise<void> => {
-      jest.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
+      vi.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
 
       await expect(rmqEmailService.sendPasswordReset(payload)).rejects.toThrow("Template localPasswordReset not found");
     });
@@ -283,7 +284,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error when sending mail fails", async (): Promise<void> => {
-      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockRejectedValue(new Error("Send mail failed"));
+      (vi.spyOn(transporter, "sendMail") as Mock).mockRejectedValue(new Error("Send mail failed"));
 
       await expect(rmqEmailService.sendPasswordReset(payload)).rejects.toThrow("Send mail failed");
     });
@@ -302,10 +303,10 @@ describe("RmqEmailService", (): void => {
     };
 
     beforeEach((): void => {
-      jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
+      vi.spyOn(fs.promises, "access").mockResolvedValue(undefined);
       mockEjsRenderFile.mockResolvedValue(testHtml);
-      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockResolvedValue({} as any);
-      (dataSource.transaction as jest.Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
+      (vi.spyOn(transporter, "sendMail") as Mock).mockResolvedValue({} as any);
+      (dataSource.transaction as Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
         await callback({});
       });
 
@@ -313,7 +314,7 @@ describe("RmqEmailService", (): void => {
     });
 
     afterEach((): void => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should send a deactivation email successfully", async (): Promise<void> => {
@@ -329,7 +330,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error if template file does not exist", async (): Promise<void> => {
-      jest.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
+      vi.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
 
       await expect(rmqEmailService.sendUserDeactivatedNotification(payload)).rejects.toThrow(
         "Template userDeactivatedNotificationEmail not found",
@@ -345,7 +346,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error when sending mail fails", async (): Promise<void> => {
-      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockRejectedValue(new Error("Send mail failed"));
+      (vi.spyOn(transporter, "sendMail") as Mock).mockRejectedValue(new Error("Send mail failed"));
 
       await expect(rmqEmailService.sendUserDeactivatedNotification(payload)).rejects.toThrow("Send mail failed");
     });
@@ -364,10 +365,10 @@ describe("RmqEmailService", (): void => {
     };
 
     beforeEach((): void => {
-      jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
+      vi.spyOn(fs.promises, "access").mockResolvedValue(undefined);
       mockEjsRenderFile.mockResolvedValue(testHtml);
-      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockResolvedValue({} as any);
-      (dataSource.transaction as jest.Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
+      (vi.spyOn(transporter, "sendMail") as Mock).mockResolvedValue({} as any);
+      (dataSource.transaction as Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
         await callback({});
       });
 
@@ -376,7 +377,7 @@ describe("RmqEmailService", (): void => {
     });
 
     afterEach((): void => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should send a reactivation request email successfully", async (): Promise<void> => {
@@ -396,7 +397,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error if template file does not exist", async (): Promise<void> => {
-      jest.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
+      vi.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
 
       await expect(rmqEmailService.sendUserReactivation(payload)).rejects.toThrow(
         "Template localUserReactivation not found",
@@ -412,7 +413,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error when sending mail fails", async (): Promise<void> => {
-      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockRejectedValue(new Error("Send mail failed"));
+      (vi.spyOn(transporter, "sendMail") as Mock).mockRejectedValue(new Error("Send mail failed"));
 
       await expect(rmqEmailService.sendUserReactivation(payload)).rejects.toThrow("Send mail failed");
     });
@@ -431,10 +432,10 @@ describe("RmqEmailService", (): void => {
     };
 
     beforeEach((): void => {
-      jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
+      vi.spyOn(fs.promises, "access").mockResolvedValue(undefined);
       mockEjsRenderFile.mockResolvedValue(testHtml);
-      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockResolvedValue({} as any);
-      (dataSource.transaction as jest.Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
+      (vi.spyOn(transporter, "sendMail") as Mock).mockResolvedValue({} as any);
+      (dataSource.transaction as Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
         await callback({});
       });
 
@@ -442,7 +443,7 @@ describe("RmqEmailService", (): void => {
     });
 
     afterEach((): void => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should send a user deleted email successfully", async (): Promise<void> => {
@@ -459,7 +460,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error if template file does not exist", async (): Promise<void> => {
-      jest.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
+      vi.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
 
       await expect(rmqEmailService.sendUserDeletedNotification(payload)).rejects.toThrow(
         "Template userDeletedNotificationEmail not found",
@@ -473,7 +474,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error when sending mail fails", async (): Promise<void> => {
-      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockRejectedValue(new Error("Send mail failed"));
+      (vi.spyOn(transporter, "sendMail") as Mock).mockRejectedValue(new Error("Send mail failed"));
 
       await expect(rmqEmailService.sendUserDeletedNotification(payload)).rejects.toThrow("Send mail failed");
     });
@@ -492,10 +493,10 @@ describe("RmqEmailService", (): void => {
     };
 
     beforeEach((): void => {
-      jest.spyOn(fs.promises, "access").mockResolvedValue(undefined);
+      vi.spyOn(fs.promises, "access").mockResolvedValue(undefined);
       mockEjsRenderFile.mockResolvedValue(testHtml);
-      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockResolvedValue({} as any);
-      (dataSource.transaction as jest.Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
+      (vi.spyOn(transporter, "sendMail") as Mock).mockResolvedValue({} as any);
+      (dataSource.transaction as Mock).mockImplementation(async (callback: (manager: any) => Promise<void>) => {
         await callback({});
       });
 
@@ -504,7 +505,7 @@ describe("RmqEmailService", (): void => {
     });
 
     afterEach((): void => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should send a restoration request email successfully", async (): Promise<void> => {
@@ -525,7 +526,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error if template file does not exist", async (): Promise<void> => {
-      jest.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
+      vi.spyOn(fs.promises, "access").mockRejectedValue(new Error("File not found"));
 
       await expect(rmqEmailService.sendUserRestoration(payload)).rejects.toThrow(
         "Template localUserRestoration not found",
@@ -541,7 +542,7 @@ describe("RmqEmailService", (): void => {
     });
 
     it("should throw an error when sending mail fails", async (): Promise<void> => {
-      (jest.spyOn(transporter, "sendMail") as jest.Mock).mockRejectedValue(new Error("Send mail failed"));
+      (vi.spyOn(transporter, "sendMail") as Mock).mockRejectedValue(new Error("Send mail failed"));
 
       await expect(rmqEmailService.sendUserRestoration(payload)).rejects.toThrow("Send mail failed");
     });

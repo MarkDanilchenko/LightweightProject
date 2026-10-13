@@ -10,22 +10,23 @@ import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import { faker } from "@faker-js/faker";
 import { verifyHash } from "#server/utils/hasher";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
+import { Mock, Mocked, MockedFunction } from "vitest";
 
-jest.mock("#server/utils/hasher", () => ({
-  verifyHash: jest.fn(),
+vi.mock("#server/utils/hasher", () => ({
+  verifyHash: vi.fn(),
 }));
 
 describe("LocalAuthStrategy", (): void => {
-  const mockReq = {} as jest.Mocked<Request>;
-  const mockDone: jest.MockedFunction<(...args: unknown[]) => void> = jest.fn();
+  const mockReq = {} as Mocked<Request>;
+  const mockDone: MockedFunction<(...args: unknown[]) => void> = vi.fn();
   let localAuthStrategy: LocalAuthStrategy;
-  let usersService: jest.Mocked<UsersService>;
+  let usersService: Mocked<UsersService>;
   let user: UserEntity;
   let authentication: AuthenticationEntity;
   let password: string;
 
   beforeEach(async (): Promise<void> => {
-    const mockUsersService = { findUser: jest.fn() };
+    const mockUsersService = { findUser: vi.fn() };
     user = buildUserFactory();
     authentication = buildAuthenticationFactory({ userId: user.id, provider: AuthenticationProvider.LOCAL });
     password = faker.internet.password({ length: 8 });
@@ -36,11 +37,11 @@ describe("LocalAuthStrategy", (): void => {
     }).compile();
 
     localAuthStrategy = testingModule.get<LocalAuthStrategy>(LocalAuthStrategy);
-    usersService = testingModule.get<jest.Mocked<UsersService>>(UsersService);
+    usersService = testingModule.get<Mocked<UsersService>>(UsersService);
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {
@@ -57,7 +58,7 @@ describe("LocalAuthStrategy", (): void => {
     it("should validate user with correct credentials", async (): Promise<void> => {
       user.authentications = [authentication];
 
-      (verifyHash as jest.Mock).mockResolvedValue(true);
+      (verifyHash as Mock).mockResolvedValue(true);
       usersService.findUser.mockResolvedValue(user);
 
       await localAuthStrategy.validate(mockReq, user.email, password, mockDone);
@@ -109,7 +110,7 @@ describe("LocalAuthStrategy", (): void => {
       user.authentications = [authentication];
 
       usersService.findUser.mockResolvedValue(user);
-      (verifyHash as jest.Mock).mockResolvedValue(false);
+      (verifyHash as Mock).mockResolvedValue(false);
 
       await localAuthStrategy.validate(mockReq, user.email, password, mockDone);
 

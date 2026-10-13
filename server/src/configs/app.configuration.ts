@@ -5,6 +5,9 @@ import AppConfiguration from "./interfaces/appConfiguration.interfaces";
 import { utilities as nestWinstonModuleUtilities } from "nest-winston";
 import { Transport } from "@nestjs/microservices";
 import { Logger } from "@nestjs/common";
+import UserEntity from "#server/users/users.entity";
+import AuthenticationEntity from "#server/auth/auth.entity";
+import EventEntity from "#server/events/events.entity";
 
 const logger = new Logger("AppConfiguration");
 
@@ -196,7 +199,8 @@ export default (): AppConfiguration => {
     password: DATABASE_PASSWORD,
     logging: TYPEORM_LOGGING === "true",
     migrationsRun: TYPEORM_MIGRATIONS_RUN === "true",
-    entities: [path.join(__dirname, "../../**/*.entity{.ts,.js}")],
+    entities: [UserEntity, AuthenticationEntity, EventEntity],
+    autoLoadEntities: true,
     migrations: [path.join(__dirname, "../../**/migrations/*.js")],
     applicationName: "LightweightProject",
   };

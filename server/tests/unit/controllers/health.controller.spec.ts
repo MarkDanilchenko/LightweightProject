@@ -13,6 +13,7 @@ import RedisHealthIndicator from "#server/health/redis.health";
 import { RmqOptions, Transport } from "@nestjs/microservices";
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
+import { Mocked } from "vitest";
 
 describe("HealthController", (): void => {
   const mockRabbitmqUrls: NonNullable<RmqOptions["options"]>["urls"] = ["amqp://localhost:5672"];
@@ -38,23 +39,23 @@ describe("HealthController", (): void => {
   };
 
   let healthController: HealthController;
-  let healthCheckService: jest.Mocked<HealthCheckService>;
-  let dbHealthIndicator: jest.Mocked<TypeOrmHealthIndicator>;
-  let microserviceHealthIndicator: jest.Mocked<MicroserviceHealthIndicator>;
-  let redisHealthIndicator: jest.Mocked<RedisHealthIndicator>;
-  let memoryHealthIndicator: jest.Mocked<MemoryHealthIndicator>;
-  let diskHealthIndicator: jest.Mocked<DiskHealthIndicator>;
-  let httpHealthIndicator: jest.Mocked<HttpHealthIndicator>;
+  let healthCheckService: Mocked<HealthCheckService>;
+  let dbHealthIndicator: Mocked<TypeOrmHealthIndicator>;
+  let microserviceHealthIndicator: Mocked<MicroserviceHealthIndicator>;
+  let redisHealthIndicator: Mocked<RedisHealthIndicator>;
+  let memoryHealthIndicator: Mocked<MemoryHealthIndicator>;
+  let diskHealthIndicator: Mocked<DiskHealthIndicator>;
+  let httpHealthIndicator: Mocked<HttpHealthIndicator>;
 
   beforeEach(async (): Promise<void> => {
-    const mockConfigService = { get: jest.fn().mockReturnValue(mockRabbitmqUrls) };
-    const mockHealthCheckService = { check: jest.fn() };
-    const mockDbHealthIndicator = { pingCheck: jest.fn() };
-    const mockMicroserviceHealthIndicator = { pingCheck: jest.fn() };
-    const mockRedisHealthIndicator = { isHealthy: jest.fn() };
-    const mockMemoryHealthIndicator = { checkHeap: jest.fn() };
-    const mockDiskHealthIndicator = { checkStorage: jest.fn() };
-    const mockHttpHealthIndicator = { pingCheck: jest.fn() };
+    const mockConfigService = { get: vi.fn().mockReturnValue(mockRabbitmqUrls) };
+    const mockHealthCheckService = { check: vi.fn() };
+    const mockDbHealthIndicator = { pingCheck: vi.fn() };
+    const mockMicroserviceHealthIndicator = { pingCheck: vi.fn() };
+    const mockRedisHealthIndicator = { isHealthy: vi.fn() };
+    const mockMemoryHealthIndicator = { checkHeap: vi.fn() };
+    const mockDiskHealthIndicator = { checkStorage: vi.fn() };
+    const mockHttpHealthIndicator = { pingCheck: vi.fn() };
 
     const testingModule: TestingModule = await Test.createTestingModule({
       controllers: [HealthController],
@@ -71,18 +72,17 @@ describe("HealthController", (): void => {
     }).compile();
 
     healthController = testingModule.get<HealthController>(HealthController);
-    healthCheckService = testingModule.get<jest.Mocked<HealthCheckService>>(HealthCheckService);
-    dbHealthIndicator = testingModule.get<jest.Mocked<TypeOrmHealthIndicator>>(TypeOrmHealthIndicator);
-    microserviceHealthIndicator =
-      testingModule.get<jest.Mocked<MicroserviceHealthIndicator>>(MicroserviceHealthIndicator);
-    redisHealthIndicator = testingModule.get<jest.Mocked<RedisHealthIndicator>>(RedisHealthIndicator);
-    memoryHealthIndicator = testingModule.get<jest.Mocked<MemoryHealthIndicator>>(MemoryHealthIndicator);
-    diskHealthIndicator = testingModule.get<jest.Mocked<DiskHealthIndicator>>(DiskHealthIndicator);
-    httpHealthIndicator = testingModule.get<jest.Mocked<HttpHealthIndicator>>(HttpHealthIndicator);
+    healthCheckService = testingModule.get<Mocked<HealthCheckService>>(HealthCheckService);
+    dbHealthIndicator = testingModule.get<Mocked<TypeOrmHealthIndicator>>(TypeOrmHealthIndicator);
+    microserviceHealthIndicator = testingModule.get<Mocked<MicroserviceHealthIndicator>>(MicroserviceHealthIndicator);
+    redisHealthIndicator = testingModule.get<Mocked<RedisHealthIndicator>>(RedisHealthIndicator);
+    memoryHealthIndicator = testingModule.get<Mocked<MemoryHealthIndicator>>(MemoryHealthIndicator);
+    diskHealthIndicator = testingModule.get<Mocked<DiskHealthIndicator>>(DiskHealthIndicator);
+    httpHealthIndicator = testingModule.get<Mocked<HttpHealthIndicator>>(HttpHealthIndicator);
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {
@@ -91,9 +91,10 @@ describe("HealthController", (): void => {
 
   describe("healthCheck", (): void => {
     it("should call health.check with all indicators and return result", async (): Promise<void> => {
-      healthCheckService.check.mockImplementation(async (indicators): Promise<HealthCheckResult> => {
-        await Promise.all(indicators.map((indicatorFn): Promise<unknown> => indicatorFn() as Promise<unknown>));
-
+      healthCheckService.check.mockImplementation(async (indicators: any) => {
+        for (const indicator of indicators) {
+          await indicator();
+        }
         return mockHealthCheckResult;
       });
 

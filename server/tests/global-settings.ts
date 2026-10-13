@@ -1,21 +1,25 @@
 import * as dotenv from "dotenv";
 import * as fs from "fs";
 import * as path from "node:path";
-import { Logger } from "@nestjs/common";
 import { Client } from "pg";
 import { execSync } from "node:child_process";
-
-const logger = new Logger("GlobalSetup");
+import type { TestProject } from "vitest/node";
 
 /**
- * Global setup function for Jest.
- * This function is called once before all tests are executed.
- * It is used to set up all the environment and state for the tests.
+ * Global setup function for Vitest.
+ *
+ * It performs the following steps:
+ * 1. Reads test database configuration from .env file
+ * 2. Connects to the test database host and drops/recreates the test database
+ * 3. Runs TypeORM migrations on the newly created test database
+ *
+ * @param {TestProject} project
  *
  * @returns {Promise<void>} A promise that resolves when the setup is complete.
  */
-export default async function globalSetup(): Promise<void> {
-  logger.log("Global setup started");
+export async function setup(project: TestProject): Promise<void> {
+  // Write logs directly to the stdout, bypassing buffers Vitest and Node.js;
+  fs.writeSync(1, "Global setup started\n");
 
   // 1.
   // Connect to the test DB host, drop and recreate its database again;
@@ -30,7 +34,7 @@ export default async function globalSetup(): Promise<void> {
     !TEST_DATABASE_USER ||
     !TEST_DATABASE_PASSWORD
   ) {
-    logger.error("Test variables are not set properly in the .env file");
+    fs.writeSync(2, "Test variables are not set properly in the .env file\n");
 
     process.exit(1);
   }
@@ -39,7 +43,7 @@ export default async function globalSetup(): Promise<void> {
     const pgClient: Client = new Client({
       host: TEST_DATABASE_HOST,
       port: Number(TEST_DATABASE_PORT),
-      database: "postgres", // Connect to the default database, because of attempt to drop the test's database;
+      database: "postgres", // Connect to the default database, because of attempt to drop the test's database below;
       user: TEST_DATABASE_USER,
       password: TEST_DATABASE_PASSWORD,
     });
@@ -51,7 +55,7 @@ export default async function globalSetup(): Promise<void> {
 
     await pgClient.end();
   } catch (error) {
-    logger.error("Failed to drop or create the tests database", error);
+    fs.writeSync(2, "Failed to drop or create the tests database " + (error as Error).message + "\n");
 
     process.exit(1);
   }
@@ -64,10 +68,25 @@ export default async function globalSetup(): Promise<void> {
       stdio: "inherit",
     });
   } catch (error) {
-    logger.error("Failed to run migrations on the tests database", error);
+    fs.writeSync(2, "Failed to run migrations on the tests database " + (error as Error).message + "\n");
 
     process.exit(1);
+  } finally {
+    fs.writeSync(1, "Global setup completed\n");
   }
+}
 
-  logger.log("Global setup completed");
+/**
+ * Global teardown function for Vitest.
+ *
+ * It is used to perform any necessary cleanup.
+ *
+ * @returns {void} Returns with void when the global teardown is complete.
+ */
+export async function teardown(): Promise<void> {
+  fs.writeSync(1, "Global teardown started\n");
+
+  // Nothing to do here;
+
+  fs.writeSync(1, "Global teardown completed\n");
 }

@@ -16,7 +16,7 @@ describe("UserEntity", (): void => {
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("User repository should be defined", (): void => {

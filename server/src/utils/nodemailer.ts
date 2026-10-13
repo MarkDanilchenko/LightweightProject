@@ -30,7 +30,7 @@ const transporter: Transporter = createTransport({
 
 transporter.verify((error: Error | null): void => {
   if (error) {
-    logger.error("Error with SMTP configuration: " + error.message);
+    logger.error("Error with SMTP configuration: ", error.message);
 
     process.exit(1);
   }

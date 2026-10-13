@@ -4,10 +4,11 @@ import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
 import { Logger } from "@nestjs/common";
 import { Channel } from "amqplib";
+import { Mocked } from "vitest";
 
 describe("RmqRetryService", (): void => {
   let rmqRetryService: RmqRetryService;
-  let channel: jest.Mocked<Channel>;
+  let channel: Mocked<Channel>;
 
   const mainQueueOptions = {
     maxRetriesCount: 5,
@@ -26,7 +27,7 @@ describe("RmqRetryService", (): void => {
 
   beforeEach(async (): Promise<void> => {
     const mockConfigService = {
-      get: jest.fn().mockImplementation((key: string) => {
+      get: vi.fn().mockImplementation((key: string) => {
         switch (key) {
           case "rabbitmqConfiguration.mainQueueOptions.maxRetriesCount": {
             return mainQueueOptions.maxRetriesCount;
@@ -53,14 +54,14 @@ describe("RmqRetryService", (): void => {
     rmqRetryService = testingModule.get<RmqRetryService>(RmqRetryService);
 
     channel = {
-      ack: jest.fn(),
-      nack: jest.fn(),
-      sendToQueue: jest.fn(),
-    } as unknown as jest.Mocked<Channel>;
+      ack: vi.fn(),
+      nack: vi.fn(),
+      sendToQueue: vi.fn(),
+    } as unknown as Mocked<Channel>;
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {
@@ -73,8 +74,8 @@ describe("RmqRetryService", (): void => {
       const error = new Error("Consumer failed");
 
       // Cast to any to bypass type checking, because these methods are private;
-      const spyRetry = jest.spyOn(rmqRetryService as any, "sendToRetryQueue");
-      const spyDead = jest.spyOn(rmqRetryService as any, "sendToDeadQueue");
+      const spyRetry = vi.spyOn(rmqRetryService as any, "sendToRetryQueue");
+      const spyDead = vi.spyOn(rmqRetryService as any, "sendToDeadQueue");
 
       rmqRetryService.processFailedMessage(channel, originalMsg, error);
 
@@ -89,7 +90,7 @@ describe("RmqRetryService", (): void => {
       const error = new Error("Consumer failed");
 
       // Cast to any to bypass type checking, because these methods are private;
-      const spyRetry = jest.spyOn(rmqRetryService as any, "sendToRetryQueue");
+      const spyRetry = vi.spyOn(rmqRetryService as any, "sendToRetryQueue");
 
       rmqRetryService.processFailedMessage(channel, msg, error);
 
@@ -103,8 +104,8 @@ describe("RmqRetryService", (): void => {
       const error = new Error("Consumer failed");
 
       // Cast to any to bypass type checking, because these methods are private;
-      const spyRetry = jest.spyOn(rmqRetryService as any, "sendToRetryQueue");
-      const spyDead = jest.spyOn(rmqRetryService as any, "sendToDeadQueue");
+      const spyRetry = vi.spyOn(rmqRetryService as any, "sendToRetryQueue");
+      const spyDead = vi.spyOn(rmqRetryService as any, "sendToDeadQueue");
 
       rmqRetryService.processFailedMessage(channel, msg, error);
 
@@ -118,10 +119,10 @@ describe("RmqRetryService", (): void => {
       const msg = buildMsg({ headers: { "x-retry-count": 0 } });
       const error = new Error("Consumer failed");
 
-      jest.spyOn(rmqRetryService as any, "sendToRetryQueue").mockImplementation((): void => {
+      vi.spyOn(rmqRetryService as any, "sendToRetryQueue").mockImplementation((): void => {
         throw new Error("Internal error");
       });
-      const loggerErrorSpy = jest.spyOn(Logger.prototype, "error").mockImplementation(jest.fn());
+      const loggerErrorSpy = vi.spyOn(Logger.prototype, "error").mockImplementation(vi.fn());
 
       rmqRetryService.processFailedMessage(channel, msg, error);
 
@@ -141,7 +142,7 @@ describe("RmqRetryService", (): void => {
       const retriesCount = 2;
       const error = new Error("Consumer failed");
 
-      const spyLoggerWarn = jest.spyOn(Logger.prototype, "warn").mockImplementation(jest.fn());
+      const spyLoggerWarn = vi.spyOn(Logger.prototype, "warn").mockImplementation(vi.fn());
 
       // Cast to any to bypass type checking, because these methods are private;
       (rmqRetryService as any).sendToRetryQueue(channel, originalMsg, retriesCount, error);
@@ -174,7 +175,7 @@ describe("RmqRetryService", (): void => {
       });
       const error = new Error("Consumer failed");
 
-      const spyLoggerWarn = jest.spyOn(Logger.prototype, "warn").mockImplementation(jest.fn());
+      const spyLoggerWarn = vi.spyOn(Logger.prototype, "warn").mockImplementation(vi.fn());
 
       // Cast to any to bypass type checking, because these methods are private;
       (rmqRetryService as any).sendToDeadQueue(channel, originalMsg, error);

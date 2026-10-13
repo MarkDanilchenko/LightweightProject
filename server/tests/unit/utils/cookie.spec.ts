@@ -1,20 +1,21 @@
 import { Response } from "express";
 import { setCookie, clearCookie } from "#server/utils/cookie";
+import { MockedFunction } from "vitest";
 
 describe("Cookie Utility", (): void => {
   describe("setCookie", (): void => {
     let mockResponse: Partial<Response>;
-    let mockCookie: jest.MockedFunction<Response["cookie"]>;
+    let mockCookie: MockedFunction<Response["cookie"]>;
 
     beforeEach((): void => {
-      mockCookie = jest.fn();
+      mockCookie = vi.fn();
       mockResponse = {
         cookie: mockCookie,
       };
     });
 
     afterEach((): void => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should set a cookie with default options", (): void => {
@@ -66,17 +67,17 @@ describe("Cookie Utility", (): void => {
 
   describe("clearCookie", (): void => {
     let mockResponse: Partial<Response>;
-    let mockClearCookie: jest.MockedFunction<Response["clearCookie"]>;
+    let mockClearCookie: MockedFunction<Response["clearCookie"]>;
 
     beforeEach((): void => {
-      mockClearCookie = jest.fn();
+      mockClearCookie = vi.fn();
       mockResponse = {
         clearCookie: mockClearCookie,
       };
     });
 
     afterEach((): void => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should clear a cookie", (): void => {

@@ -1,7 +1,5 @@
 {
   "compilerOptions": {
-    "moduleResolution": "bundler",
-    "module": "commonjs",
     "target": "esnext",
     "importHelpers": true,
     "allowJs": false,
@@ -22,7 +20,7 @@
       "#server/*": ["./server/src/*"],
       "#shared/*": ["./shared/*"]
     },
-    "types": ["jest", "node"]
+    "types": ["node", "vitest/globals"]
   },
   "exclude": ["node_modules", "dist", "eslint.config.mjs"]
 }

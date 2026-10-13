@@ -180,13 +180,19 @@ async function bootstrap(): Promise<void> {
     });
   }
 
-  await app.listen(port, host, (): void => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-    app
-      .get(WINSTON_MODULE_NEST_PROVIDER)
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      .log(`Server is running on ${protocol}://${host}:${port}`, "NestApplication");
-  });
+  await app
+    .listen(port, host, (): void => {
+      app
+        .get(WINSTON_MODULE_NEST_PROVIDER)
+        .log(`Server is running on ${protocol}://${host}:${port}`, "NestApplication");
+    })
+    .catch((error: Error): never => {
+      app
+        .get(WINSTON_MODULE_NEST_PROVIDER)
+        .log(`Unexpected error occurred: ${error.message}`, "NestApplication");
+
+      process.exit(1);
+    });
 }
 
 void bootstrap();

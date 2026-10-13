@@ -17,7 +17,7 @@ describe("EventsEntity", (): void => {
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("Event repository should be defined", (): void => {

@@ -23,51 +23,52 @@ import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces"
 import GoogleOAuth2Guard from "#server/auth/guards/google.guard";
 import GitHubOAuth2Guard from "#server/auth/guards/github.guard";
 import YandexOAuth2Guard from "#server/auth/guards/yandex.guard";
+import { Mocked } from "vitest";
 
-jest.mock("#server/utils/cookie", () => ({
-  setCookie: jest.fn(),
-  clearCookie: jest.fn(),
+vi.mock("#server/utils/cookie", () => ({
+  setCookie: vi.fn(),
+  clearCookie: vi.fn(),
 }));
 
 describe("AuthController", (): void => {
   const user: UserEntity = buildUserFactory();
   let authController: AuthController;
-  let authService: jest.Mocked<AuthService>;
+  let authService: Mocked<AuthService>;
+  let googleOAuth2Guard: Mocked<GoogleOAuth2Guard>;
+  let githubOAuth2Guard: Mocked<GitHubOAuth2Guard>;
+  let yandexOAuth2Guard: Mocked<YandexOAuth2Guard>;
   let mockResponse: Response;
-  let googleOAuth2Guard: jest.Mocked<GoogleOAuth2Guard>;
-  let githubOAuth2Guard: jest.Mocked<GitHubOAuth2Guard>;
-  let yandexOAuth2Guard: jest.Mocked<YandexOAuth2Guard>;
 
   beforeEach(async (): Promise<void> => {
     const mockAuthService = {
-      localSignUp: jest.fn(),
-      localEmailVerification: jest.fn(),
-      localPasswordResetRequest: jest.fn(),
-      localPasswordResetConfirm: jest.fn(),
-      localReactivationConfirm: jest.fn(),
-      localRestorationConfirm: jest.fn(),
-      signIn: jest.fn(),
-      signOut: jest.fn(),
-      refreshAccessToken: jest.fn(),
-      retrieveProfile: jest.fn(),
+      localSignUp: vi.fn(),
+      localEmailVerification: vi.fn(),
+      localPasswordResetRequest: vi.fn(),
+      localPasswordResetConfirm: vi.fn(),
+      localReactivationConfirm: vi.fn(),
+      localRestorationConfirm: vi.fn(),
+      signIn: vi.fn(),
+      signOut: vi.fn(),
+      refreshAccessToken: vi.fn(),
+      retrieveProfile: vi.fn(),
     };
 
-    const mockGoogleOAuth2Guard = jest.fn().mockImplementation(() => ({
-      canActivate: jest.fn().mockReturnValue(true),
+    const mockGoogleOAuth2Guard = vi.fn().mockImplementation(() => ({
+      canActivate: vi.fn().mockReturnValue(true),
     }));
 
-    const mockGitHubOAuth2Guard = jest.fn().mockImplementation(() => ({
-      canActivate: jest.fn().mockReturnValue(true),
+    const mockGitHubOAuth2Guard = vi.fn().mockImplementation(() => ({
+      canActivate: vi.fn().mockReturnValue(true),
     }));
 
-    const mockYandexOAuth2Guard = jest.fn().mockImplementation(() => ({
-      canActivate: jest.fn().mockReturnValue(true),
+    const mockYandexOAuth2Guard = vi.fn().mockImplementation(() => ({
+      canActivate: vi.fn().mockReturnValue(true),
     }));
 
     mockResponse = {
-      status: jest.fn().mockReturnThis(),
-      send: jest.fn(),
-      redirect: jest.fn(),
+      status: vi.fn().mockReturnThis(),
+      send: vi.fn(),
+      redirect: vi.fn(),
     } as unknown as Response;
 
     const testingModule: TestingModule = await Test.createTestingModule({
@@ -81,14 +82,14 @@ describe("AuthController", (): void => {
     }).compile();
 
     authController = testingModule.get<AuthController>(AuthController);
-    authService = testingModule.get<jest.Mocked<AuthService>>(AuthService);
-    googleOAuth2Guard = testingModule.get<jest.Mocked<GoogleOAuth2Guard>>(GoogleOAuth2Guard);
-    githubOAuth2Guard = testingModule.get<jest.Mocked<GitHubOAuth2Guard>>(GitHubOAuth2Guard);
-    yandexOAuth2Guard = testingModule.get<jest.Mocked<YandexOAuth2Guard>>(YandexOAuth2Guard);
+    authService = testingModule.get<Mocked<AuthService>>(AuthService);
+    googleOAuth2Guard = testingModule.get<Mocked<GoogleOAuth2Guard>>(GoogleOAuth2Guard);
+    githubOAuth2Guard = testingModule.get<Mocked<GitHubOAuth2Guard>>(GitHubOAuth2Guard);
+    yandexOAuth2Guard = testingModule.get<Mocked<YandexOAuth2Guard>>(YandexOAuth2Guard);
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {

@@ -1,17 +1,24 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+import { createCipheriv, createDecipheriv } from "crypto";
 import { encrypt, decrypt } from "#server/utils/encrypter";
+import { MockedFunction } from "vitest";
+import { Cipheriv } from "node:crypto";
 
 // Mock the crypto module;
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
-  createCipheriv: jest.fn(),
-  createDecipheriv: jest.fn(),
-}));
+vi.mock("crypto", async () => {
+  const actual = await vi.importActual<typeof import("crypto")>("crypto");
+
+  return {
+    ...actual,
+    createCipheriv: vi.fn(),
+    createDecipheriv: vi.fn(),
+  };
+});
 
 // Mock the app configuration to provide complete configuration for tests;
-jest.mock("#server/configs/app.configuration", () => ({
+vi.mock("#server/configs/app.configuration", () => ({
   __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
+  default: vi.fn().mockImplementation(() => ({
     serverConfiguration: {
       host: "127.0.0.1",
       port: 3000,
@@ -27,22 +34,22 @@ jest.mock("#server/configs/app.configuration", () => ({
 
 describe("Encrypter Utility", (): void => {
   const algorithm = "aes-256-cbc";
+  let mockCreateCipheriv = createCipheriv as MockedFunction<typeof createCipheriv>;
+  let mockCreateDecipheriv = createDecipheriv as MockedFunction<typeof createDecipheriv>;
 
   describe("encrypt function", (): void => {
     const strToEncrypt = "XZdVBFiOqfB";
     const mockCipher = {
-      update: jest.fn().mockReturnValue("encrypted"),
-      final: jest.fn().mockReturnValue("-string"),
+      update: vi.fn().mockReturnValue("encrypted"),
+      final: vi.fn().mockReturnValue("-string"),
     };
-    let mockCreateCipheriv: jest.MockedFunction<any>;
 
     beforeEach((): void => {
-      mockCreateCipheriv = require("crypto").createCipheriv as jest.MockedFunction<any>;
-      mockCreateCipheriv.mockReturnValue(mockCipher);
+      mockCreateCipheriv.mockReturnValue(mockCipher as unknown as Cipheriv);
     });
 
     afterEach((): void => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should encrypt a string and return it in the correct format", (): void => {
@@ -67,18 +74,16 @@ describe("Encrypter Utility", (): void => {
   describe("decrypt function", (): void => {
     const encryptedString = "74657374697631323334353637383930:encrypted-string";
     const mockDecipher = {
-      update: jest.fn().mockReturnValue("decrypted"),
-      final: jest.fn().mockReturnValue("-string"),
+      update: vi.fn().mockReturnValue("decrypted"),
+      final: vi.fn().mockReturnValue("-string"),
     };
-    let mockCreateDecipheriv: jest.MockedFunction<any>;
 
     beforeEach((): void => {
-      mockCreateDecipheriv = require("crypto").createDecipheriv as jest.MockedFunction<any>;
-      mockCreateDecipheriv.mockReturnValue(mockDecipher);
+      mockCreateDecipheriv.mockReturnValue(mockDecipher as unknown as Cipheriv);
     });
 
     afterEach((): void => {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
     });
 
     it("should decrypt an encrypted string", (): void => {

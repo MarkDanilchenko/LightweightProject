@@ -8,19 +8,20 @@ import TokensService from "#server/tokens/tokens.service";
 import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import { faker } from "@faker-js/faker";
+import { Mocked, MockedFunction } from "vitest";
 
 describe("JwtStrategy", (): void => {
   const jwtSecret = "test-jwt-secret-yvqAYoIT";
-  const mockDone: jest.MockedFunction<(...args: unknown[]) => void> = jest.fn();
+  const mockDone: MockedFunction<(...args: unknown[]) => void> = vi.fn();
   let payload: TokenPayload;
   let jwtStrategy: JwtStrategy;
-  let configService: jest.Mocked<ConfigService>;
-  let tokensService: jest.Mocked<TokensService>;
+  let configService: Mocked<ConfigService>;
+  let tokensService: Mocked<TokensService>;
 
   beforeEach(async (): Promise<void> => {
-    const mockTokensService = { isBlacklisted: jest.fn() };
+    const mockTokensService = { isBlacklisted: vi.fn() };
     const mockConfigService = {
-      get: jest.fn().mockImplementation((key: string): string | undefined => {
+      get: vi.fn().mockImplementation((key: string): string | undefined => {
         switch (key) {
           case "jwtConfiguration.secret": {
             return jwtSecret;
@@ -48,12 +49,12 @@ describe("JwtStrategy", (): void => {
     }).compile();
 
     jwtStrategy = testingModule.get<JwtStrategy>(JwtStrategy);
-    tokensService = testingModule.get<jest.Mocked<TokensService>>(TokensService);
-    configService = testingModule.get<jest.Mocked<ConfigService>>(ConfigService);
+    tokensService = testingModule.get<Mocked<TokensService>>(TokensService);
+    configService = testingModule.get<Mocked<ConfigService>>(ConfigService);
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {

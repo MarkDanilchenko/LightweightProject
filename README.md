@@ -13,9 +13,9 @@ The application is designed to be containerized using Docker Compose, providing 
 ## Tech Stack
 
 ### Core Framework & Language
-- **Node.js** (>=24.0.0) - Runtime environment
+- **Node.js** (>=26.0.0) - Runtime environment
 - **TypeScript 6.0.3** - Type-safe JavaScript
-- **NestJS** - Progressive Node.js framework for building efficient backend applications
+- **NestJS 12+** - Progressive Node.js framework for building efficient backend applications
 
 ### Database & Storage
 - **PostgreSQL 16.4** - Primary relational database
@@ -53,8 +53,8 @@ The application is designed to be containerized using Docker Compose, providing 
 - **Self-signed certificates** - HTTPS support
 
 ### Development Tools
-- **Jest** - Testing framework (unit and e2e tests)
-- **ESLint** - Code linting
+- **Vitest** - Testing framework (unit and e2e tests)
+- **ESLint** - Code linting with TypeScript
 - **Prettier** - Code formatting
 - **Docker Compose** - Container orchestration
 
@@ -78,17 +78,13 @@ LightweightProject/
 │   │   ├── tokens/           # JWT token management
 │   │   ├── users/            # User management module
 │   │   ├── utils/            # Utility functions
-│   │   ├── app.module.ts     # Root application module
 │   │   └── main.ts           # Application bootstrap
 │   ├── dist/                 # Compiled JavaScript output
 │   ├── migrations/           # TypeORM database migrations
-│   ├── tests/                # E2E test configuration
+│   ├── tests/                # Test configurations (unit, e2e and coverage)
 │   └── templates/            # Email templates (EJS)
 ├── shared/                    # Shared resources between client and server
-│   └── img/                  # Shared images
 ├── nginx/                     # Nginx configuration
-│   ├── nginx.conf.conf       # Main nginx configuration
-│   └── entrypoint.sh         # Container entrypoint script
 ├── init/                      # Database initialization scripts
 │   └── db/                   # SQL scripts for database setup
 ├── certs/                     # SSL certificates
@@ -222,7 +218,8 @@ graph TB
 - **Caching Layer**: Redis integration for performance optimization
 - **SSL/TLS**: HTTPS support with Nginx SSL termination
 - **Type Safety**: TypeScript with Zod validation
-- **Testing**: Unit and e2e testing with Jest
+- **Testing**: Unit and e2e testing with Vitest
+- **Code Quality**: ESLint with TypeScript and Prettier formatting
 - **Docker Support**: Containerization with Docker Compose
 
 ## API Documentation
@@ -252,6 +249,34 @@ The application exposes a public health probe endpoint used by Docker, orchestra
 Access the AdminJS panel for database management (if configured):
 - URL: `https://localhost/admin`
 
+## Development Scripts
+
+### Build & Run
+- `npm run build:server` - Build the NestJS server
+- `npm run start:server` - Start the server (dev mode with watch)
+- `npm run start:server:prod` - Start the server from built files
+- `npm run start:microservice:rmq` - Start RabbitMQ microservice
+- `npm run start:microservice:rmq:prod` - Start RabbitMQ microservice (production)
+
+### Testing
+- `npm run test:server:unit` - Run unit tests
+- `npm run test:server:unit:cov` - Run unit tests with coverage
+- `npm run test:server:e2e` - Run e2e tests
+- `npm run test:server:e2e:cov` - Run e2e tests with coverage
+- `npm run clear:test:server:cov` - Clear test coverage reports
+
+### Code Quality
+- `npm run lint:server` - Lint server code with ESLint
+- `npm run format:server` - Format server code with Prettier
+- `npm run tsc` - Type check TypeScript without emitting files
+
+### Database Migrations
+- `npm run typeorm:create` - Create a new migration
+- `npm run typeorm:run` - Run pending migrations
+- `npm run typeorm:revert` - Revert the last migration
+- `npm run typeorm:generate` - Generate migration from entity changes
+- `npm run typeorm:show` - Show all migrations
+
 ---
 
 ## Getting Started
@@ -259,14 +284,23 @@ Access the AdminJS panel for database management (if configured):
 ### Prerequisites
 
 - Docker and Docker Compose
-- Node.js >=24.0.0
+- Node.js >=26.0.0
 - npm
 
-### Installation
+### Local Development Setup
 
 1. Clone the repository
-2. Copy environment and fill variables: `cp .env.public .env`
-3. Build and start services: `docker compose --env-file ./.env -f ./compose.yaml up -d --build`
+2. Install dependencies: `npm install`
+3. Copy environment file: `cp .env.public .env`
+4. Build the server: `npm run build:server`
+5. Start the server: `npm run start:server:dev`
+
+### Docker Setup
+
+To run the complete stack with Docker Compose:
+```bash
+docker compose --env-file ./.env -f ./compose.yaml up -d --build
+```
 
 ## License
 

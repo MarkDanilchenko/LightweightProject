@@ -16,19 +16,20 @@ import UserEntity from "#server/users/users.entity";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import AuthenticationEntity from "#server/auth/auth.entity";
 import RmqRetryService from "#server/services/rmq/rmq.retry.service";
+import { Mock, Mocked } from "vitest";
 
-jest.mock("nodemailer", () => ({
-  createTransport: jest.fn().mockReturnValue({
-    verify: jest.fn().mockImplementation((callback: (error: Error | null) => void): void => {
+vi.mock("nodemailer", () => ({
+  createTransport: vi.fn().mockReturnValue({
+    verify: vi.fn().mockImplementation((callback: (error: Error | null) => void): void => {
       callback(null);
     }),
   }),
 }));
 
 // Mock the app configuration to provide complete configuration for tests
-jest.mock("#server/configs/app.configuration", () => ({
+vi.mock("#server/configs/app.configuration", () => ({
   __esModule: true,
-  default: jest.fn().mockImplementation(() => ({
+  default: vi.fn().mockImplementation(() => ({
     smtpConfiguration: {
       host: "smtp.example.com",
       port: 587,
@@ -55,17 +56,17 @@ jest.mock("#server/configs/app.configuration", () => ({
 }));
 
 describe("RmqEmailConsumer", (): void => {
-  let mockChannel: { ack: jest.Mock; nack: jest.Mock };
+  let mockChannel: { ack: Mock; nack: Mock };
   let mockMessage: { content: Buffer; properties: object; headers: object };
   let mockRmqContext: { getChannelRef: () => typeof mockChannel; getMessage: () => typeof mockMessage };
   let rmqEmailConsumer: RmqEmailConsumer;
-  let rmqEmailService: jest.Mocked<RmqEmailService>;
-  let rmqRetryService: jest.Mocked<RmqRetryService>;
+  let rmqEmailService: Mocked<RmqEmailService>;
+  let rmqRetryService: Mocked<RmqRetryService>;
   let user: UserEntity;
   let authentication: AuthenticationEntity;
 
   beforeEach(async (): Promise<void> => {
-    mockChannel = { ack: jest.fn(), nack: jest.fn() };
+    mockChannel = { ack: vi.fn(), nack: vi.fn() };
     mockMessage = { content: Buffer.from("test"), properties: {}, headers: {} };
     mockRmqContext = {
       getChannelRef: () => mockChannel,
@@ -76,16 +77,16 @@ describe("RmqEmailConsumer", (): void => {
     authentication = buildAuthenticationFactory({ userId: user.id });
 
     const mockRmqEmailService = {
-      sendEmailVerification: jest.fn(),
-      sendPasswordReset: jest.fn(),
-      sendUserReactivation: jest.fn(),
-      sendUserDeactivatedNotification: jest.fn(),
-      sendUserDeletedNotification: jest.fn(),
-      sendUserRestoration: jest.fn(),
+      sendEmailVerification: vi.fn(),
+      sendPasswordReset: vi.fn(),
+      sendUserReactivation: vi.fn(),
+      sendUserDeactivatedNotification: vi.fn(),
+      sendUserDeletedNotification: vi.fn(),
+      sendUserRestoration: vi.fn(),
     };
 
     const mockRmqRetryService = {
-      processFailedMessage: jest.fn(),
+      processFailedMessage: vi.fn(),
     };
 
     const testingModule: TestingModule = await Test.createTestingModule({
@@ -97,12 +98,12 @@ describe("RmqEmailConsumer", (): void => {
     }).compile();
 
     rmqEmailConsumer = testingModule.get<RmqEmailConsumer>(RmqEmailConsumer);
-    rmqEmailService = testingModule.get<jest.Mocked<RmqEmailService>>(RmqEmailService);
-    rmqRetryService = testingModule.get<jest.Mocked<RmqRetryService>>(RmqRetryService);
+    rmqEmailService = testingModule.get<Mocked<RmqEmailService>>(RmqEmailService);
+    rmqRetryService = testingModule.get<Mocked<RmqRetryService>>(RmqRetryService);
   });
 
   afterEach((): void => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should be defined", (): void => {
