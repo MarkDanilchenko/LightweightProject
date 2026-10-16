@@ -99,7 +99,8 @@
     "typeorm": "1.1.1",
     "uuid": "14.0.2",
     "winston": "3.19.0",
-    "zod": "3.25.64"
+    "zod": "3.25.64",
+    "zod-openapi": "6.0.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "3.3.7",
