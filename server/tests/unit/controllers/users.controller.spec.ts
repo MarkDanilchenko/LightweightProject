@@ -5,11 +5,11 @@ import UsersService from "#server/users/users.service";
 import { Response } from "express";
 import UserEntity from "#server/users/users.entity";
 import { buildUserFactory } from "../../factories";
-import { UserDeactivateDto, UserDeleteDto } from "#server/auth/dto/auth.dto";
 import { clearCookie } from "#server/utils/cookie";
 import { RequestWithTokenPayload } from "#server/common/types/common.types";
 import { v4 as uuidv4 } from "uuid";
 import { Mocked } from "vitest";
+import { UserDeactivateDto, UserDeleteDto } from "#server/users/dto/users.dto";
 
 vi.mock("#server/utils/cookie", () => ({
   clearCookie: vi.fn(),

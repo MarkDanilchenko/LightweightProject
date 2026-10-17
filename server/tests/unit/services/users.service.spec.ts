@@ -20,12 +20,12 @@ import AuthenticationEntity from "#server/auth/auth.entity";
 import { buildAuthenticationFactory, buildUserFactory } from "../../factories";
 import TokensService from "#server/tokens/tokens.service";
 import EventsService from "#server/events/events.service";
-import { RMQ_MICROSERVICE } from "#server/configs/constants";
-import { UserDeactivateDto, UserDeleteDto } from "#server/auth/dto/auth.dto";
+import { RMQ_MICROSERVICE } from "#server/common/constants";
 import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
 import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces";
 import { EventName } from "#server/events/interfaces/events.interfaces";
 import { Mocked } from "vitest";
+import { UserDeactivateDto, UserDeleteDto } from "#server/users/dto/users.dto";
 
 describe("UsersService", (): void => {
   const mockEntityManager = {

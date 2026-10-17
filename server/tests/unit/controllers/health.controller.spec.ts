@@ -9,7 +9,7 @@ import {
   MicroserviceHealthIndicator,
   TypeOrmHealthIndicator,
 } from "@nestjs/terminus";
-import RedisHealthIndicator from "#server/health/redis.health";
+import RedisHealthIndicator from "#server/health/health.redis";
 import { RmqOptions, Transport } from "@nestjs/microservices";
 import { Test, TestingModule } from "@nestjs/testing";
 import { ConfigService } from "@nestjs/config";
