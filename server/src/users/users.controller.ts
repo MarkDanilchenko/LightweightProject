@@ -1,12 +1,12 @@
-import { Body, Controller, Delete, Post, Req, Res, UseGuards, UsePipes } from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiCookieAuth } from "@nestjs/swagger";
+import { Body, Controller, Delete, Post, Req, Res, UseGuards } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse, ApiCookieAuth } from "@nestjs/swagger";
 import { Response } from "express";
-import { ZodValidationPipe } from "@anatine/zod-nestjs";
 import UsersService from "#server/users/users.service";
-import { UserDeactivateDto, UserDeleteDto } from "#server/auth/dto/auth.dto";
 import { clearCookie } from "#server/utils/cookie";
 import JwtGuard from "#server/auth/guards/jwt.guard";
 import { RequestWithTokenPayload } from "#server/common/types/common.types";
+import { UserDeactivateDto, UserDeleteDto } from "#server/users/dto/users.dto";
+import { userDeactivateSchema, userDeleteSchema } from "#server/users/schemas/users.schemas";
 
 @ApiTags("users")
 @Controller("users")
@@ -43,12 +43,10 @@ export default class UsersController {
     description: "Too many requests.",
   })
   @ApiCookieAuth("accessToken")
-  @ApiBody({ type: UserDeactivateDto })
-  @UsePipes(ZodValidationPipe)
   @UseGuards(JwtGuard)
   async deactivateUser(
     @Req() req: RequestWithTokenPayload,
-    @Body() userDeactivateDto: UserDeactivateDto,
+    @Body({ schema: userDeactivateSchema }) userDeactivateDto: UserDeactivateDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     await this.usersService.deactivateUserProfile(req.tokenPayload, userDeactivateDto);
@@ -84,12 +82,10 @@ export default class UsersController {
     description: "Too many requests.",
   })
   @ApiCookieAuth("accessToken")
-  @ApiBody({ type: UserDeleteDto })
-  @UsePipes(ZodValidationPipe)
   @UseGuards(JwtGuard)
   async deleteUser(
     @Req() req: RequestWithTokenPayload,
-    @Body() userDeleteDto: UserDeleteDto,
+    @Body({ schema: userDeleteSchema }) userDeleteDto: UserDeleteDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     await this.usersService.deleteUserProfile(req.tokenPayload, userDeleteDto);

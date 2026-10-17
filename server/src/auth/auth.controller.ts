@@ -1,18 +1,6 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Query,
-  Req,
-  Res,
-  UnauthorizedException,
-  UseGuards,
-  UsePipes,
-} from "@nestjs/common";
-import { ApiTags, ApiOperation, ApiBody, ApiResponse, ApiQuery, ApiCookieAuth, ApiOAuth2 } from "@nestjs/swagger";
+import { Body, Controller, Get, Post, Query, Req, Res, UnauthorizedException, UseGuards } from "@nestjs/common";
+import { ApiTags, ApiOperation, ApiResponse, ApiCookieAuth, ApiOAuth2 } from "@nestjs/swagger";
 import { Response } from "express";
-import { ZodValidationPipe } from "@anatine/zod-nestjs";
 import AuthService from "#server/auth/auth.service";
 import {
   LocalEmailVerificationDto,
@@ -34,6 +22,15 @@ import { AuthenticationProvider } from "#server/auth/interfaces/auth.interfaces"
 import GitHubOAuth2Guard from "#server/auth/guards/github.guard";
 import YandexOAuth2Guard from "#server/auth/guards/yandex.guard";
 import { Throttle } from "@nestjs/throttler";
+import {
+  localEmailVerificationSchema,
+  localPasswordResetConfirmSchema,
+  localPasswordResetRequestSchema,
+  localReactivationConfirmSchema,
+  localRestorationConfirmSchema,
+  localSignInSchema,
+  localSignUpSchema,
+} from "#server/auth/schemas/auth.schema";
 
 @ApiTags("auth")
 @Controller("auth")
@@ -61,9 +58,7 @@ export default class AuthController {
     status: 429,
     description: "Too many requests.",
   })
-  @ApiBody({ type: LocalSignUpDto })
-  @UsePipes(ZodValidationPipe)
-  async localSignUp(@Body() localSignUpDto: LocalSignUpDto): Promise<void> {
+  async localSignUp(@Body({ schema: localSignUpSchema }) localSignUpDto: LocalSignUpDto): Promise<void> {
     await this.authService.localSignUp(localSignUpDto);
   }
 
@@ -94,10 +89,8 @@ export default class AuthController {
     status: 429,
     description: "Too many requests.",
   })
-  @ApiQuery({ type: LocalEmailVerificationDto })
-  @UsePipes(ZodValidationPipe)
   async localEmailVerification(
-    @Query() localEmailVerificationDto: LocalEmailVerificationDto,
+    @Query({ schema: localEmailVerificationSchema }) localEmailVerificationDto: LocalEmailVerificationDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     const accessToken = await this.authService.localEmailVerification(localEmailVerificationDto);
@@ -129,12 +122,10 @@ export default class AuthController {
     status: 429,
     description: "Too many requests.",
   })
-  @ApiBody({ type: LocalSignInDto })
-  @UsePipes(ZodValidationPipe)
   @UseGuards(LocalAuthGuard)
   async localSignIn(
     @Req() req: RequestWithUser,
-    @Body() localSignInDto: LocalSignInDto,
+    @Body({ schema: localSignInSchema }) localSignInDto: LocalSignInDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     const accessToken = await this.authService.signIn(req.user, AuthenticationProvider.LOCAL);
@@ -171,10 +162,8 @@ export default class AuthController {
     status: 429,
     description: "Too many requests.",
   })
-  @ApiQuery({ type: LocalReactivationConfirmDto })
-  @UsePipes(ZodValidationPipe)
   async localReactivationConfirm(
-    @Query() localReactivationConfirmDto: LocalReactivationConfirmDto,
+    @Query({ schema: localReactivationConfirmSchema }) localReactivationConfirmDto: LocalReactivationConfirmDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     const accessToken = await this.authService.localReactivationConfirm(localReactivationConfirmDto);
@@ -211,10 +200,8 @@ export default class AuthController {
     status: 429,
     description: "Too many requests.",
   })
-  @ApiQuery({ type: LocalRestorationConfirmDto })
-  @UsePipes(ZodValidationPipe)
   async localRestorationConfirm(
-    @Query() localRestorationConfirmDto: LocalRestorationConfirmDto,
+    @Query({ schema: localRestorationConfirmSchema }) localRestorationConfirmDto: LocalRestorationConfirmDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     const accessToken = await this.authService.localRestorationConfirm(localRestorationConfirmDto);
@@ -246,10 +233,8 @@ export default class AuthController {
     status: 429,
     description: "Too many requests.",
   })
-  @ApiBody({ type: LocalPasswordResetRequestDto })
-  @UsePipes(ZodValidationPipe)
   async localPasswordResetRequest(
-    @Body() localPasswordResetRequestDto: LocalPasswordResetRequestDto,
+    @Body({ schema: localPasswordResetRequestSchema }) localPasswordResetRequestDto: LocalPasswordResetRequestDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     // TODO: user can use this route many times at once, it is not good, so should thin about some kind of debounce;
@@ -283,10 +268,8 @@ export default class AuthController {
     status: 429,
     description: "Too many requests.",
   })
-  @ApiBody({ type: LocalPasswordResetConfirmDto })
-  @UsePipes(ZodValidationPipe)
   async localPasswordResetConfirm(
-    @Body() localPasswordResetConfirmDto: LocalPasswordResetConfirmDto,
+    @Body({ schema: localPasswordResetConfirmSchema }) localPasswordResetConfirmDto: LocalPasswordResetConfirmDto,
     @Res({ passthrough: true }) res: Response,
   ): Promise<void> {
     await this.authService.localPasswordResetConfirm(localPasswordResetConfirmDto);
