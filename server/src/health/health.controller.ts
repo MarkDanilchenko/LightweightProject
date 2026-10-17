@@ -1,5 +1,5 @@
 import { Controller, Get } from "@nestjs/common";
-import RedisHealthIndicator from "#server/health/redis.health";
+import RedisHealthIndicator from "#server/health/health.redis";
 import {
   DiskHealthIndicator,
   HealthCheck,

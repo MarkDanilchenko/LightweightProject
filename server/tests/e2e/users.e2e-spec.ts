@@ -219,7 +219,9 @@ describe("UsersController E2E", (): void => {
           .send(deactivatePayload);
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.message).toEqual(expect.arrayContaining(["confirmationWord: Required"]));
+        expect(response.body.message).toEqual(
+          expect.arrayContaining(["confirmationWord: Invalid input: expected string, received undefined"]),
+        );
       });
 
       it("should return 400 for invalid confirmationWord type", async (): Promise<void> => {
@@ -259,7 +261,7 @@ describe("UsersController E2E", (): void => {
 
         expect(response.statusCode).toBe(400);
         expect(response.body.message).toEqual(
-          expect.arrayContaining(["confirmationWord: Expected string, received number"]),
+          expect.arrayContaining(["confirmationWord: Invalid input: expected string, received number"]),
         );
       });
 
@@ -498,7 +500,9 @@ describe("UsersController E2E", (): void => {
           .send(deletePayload);
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.message).toEqual(expect.arrayContaining(["confirmationWord: Required"]));
+        expect(response.body.message).toEqual(
+          expect.arrayContaining(["confirmationWord: Invalid input: expected string, received undefined"]),
+        );
       });
 
       it("should return 400 for invalid confirmationWord type", async (): Promise<void> => {
@@ -538,7 +542,7 @@ describe("UsersController E2E", (): void => {
 
         expect(response.statusCode).toBe(400);
         expect(response.body.message).toEqual(
-          expect.arrayContaining(["confirmationWord: Expected string, received number"]),
+          expect.arrayContaining(["confirmationWord: Invalid input: expected string, received number"]),
         );
       });
 

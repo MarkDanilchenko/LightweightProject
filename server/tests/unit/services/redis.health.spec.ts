@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import { Test, TestingModule } from "@nestjs/testing";
-import RedisHealthIndicator from "#server/health/redis.health";
+import RedisHealthIndicator from "#server/health/health.redis";
 import { HealthIndicatorService } from "@nestjs/terminus";
-import { REDIS_CLIENT } from "#server/configs/constants";
+import { REDIS_CLIENT } from "#server/common/constants";
 import Redis from "ioredis";
 import { Mocked } from "vitest";
 

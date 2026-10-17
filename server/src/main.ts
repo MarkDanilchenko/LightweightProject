@@ -6,10 +6,11 @@ import { NestExpressApplication } from "@nestjs/platform-express";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "./configs/interfaces/appConfiguration.interfaces";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
-import { DocumentBuilder, OpenAPIObject, SwaggerModule } from "@nestjs/swagger";
-import { InternalServerErrorException } from "@nestjs/common";
+import { DocumentBuilder, OpenAPIObject, SwaggerDocumentOptions, SwaggerModule } from "@nestjs/swagger";
+import { InternalServerErrorException, StandardSchemaValidationPipe } from "@nestjs/common";
 import AppModule from "#server/app.module";
 import { HttpsOptions } from "@nestjs/common/interfaces/external/https-options.interface";
+import { createSchema } from "zod-openapi";
 
 /**
  * Bootstraps the NestJS application.
@@ -52,6 +53,7 @@ async function bootstrap(): Promise<void> {
   });
   app.set("trust proxy", 1); // Necessary for correct headers parsing from nginx proxy to nestjs;
   app.use(cookieParser(cookieSecret));
+  app.useGlobalPipes(new StandardSchemaValidationPipe());
 
   // Swagger configuration;
   if (swaggerEnabled) {
@@ -168,12 +170,25 @@ async function bootstrap(): Promise<void> {
       )
       .build();
 
+    const documentOptions: SwaggerDocumentOptions = {
+      standardSchemaConverter: (schema, { schemaType }) => {
+        const converted = createSchema(schema as never, {
+          io: schemaType,
+          openapiVersion: "3.0.0",
+        });
+
+        return { schema: converted.schema, components: converted.components };
+      },
+    };
+
     /**
      * Factory function for creating OpenAPI document.
      *
      * @returns {OpenAPIObject} - The OpenAPI document.
      */
-    const documentFactory = (): OpenAPIObject => SwaggerModule.createDocument(app, swaggerConfiguration);
+    const documentFactory = (): OpenAPIObject =>
+      SwaggerModule.createDocument(app, swaggerConfiguration, documentOptions);
+
     SwaggerModule.setup("docs", app, documentFactory, {
       jsonDocumentUrl: "docs/json",
       yamlDocumentUrl: "docs/yaml",
@@ -187,9 +202,7 @@ async function bootstrap(): Promise<void> {
         .log(`Server is running on ${protocol}://${host}:${port}`, "NestApplication");
     })
     .catch((error: Error): never => {
-      app
-        .get(WINSTON_MODULE_NEST_PROVIDER)
-        .log(`Unexpected error occurred: ${error.message}`, "NestApplication");
+      app.get(WINSTON_MODULE_NEST_PROVIDER).log(`Unexpected error occurred: ${error.message}`, "NestApplication");
 
       process.exit(1);
     });

@@ -29,7 +29,7 @@ import {
   LocalEmailVerificationDto,
   LocalRestorationConfirmDto,
 } from "#server/auth/dto/auth.dto";
-import { RMQ_MICROSERVICE } from "#server/configs/constants";
+import { RMQ_MICROSERVICE } from "#server/common/constants";
 import { ClientProxy } from "@nestjs/microservices";
 
 @Injectable()

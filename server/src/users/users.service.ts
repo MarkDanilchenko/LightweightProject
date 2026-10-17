@@ -12,12 +12,12 @@ import {
 } from "typeorm";
 import UserEntity from "#server/users/users.entity";
 import AuthenticationEntity from "#server/auth/auth.entity";
-import { RMQ_MICROSERVICE } from "#server/configs/constants";
+import { RMQ_MICROSERVICE } from "#server/common/constants";
 import { EventName } from "#server/events/interfaces/events.interfaces";
 import EventsService from "#server/events/events.service";
 import TokensService from "#server/tokens/tokens.service";
 import { TokenPayload } from "#server/tokens/interfaces/token.interfaces";
-import { UserDeactivateDto, UserDeleteDto } from "#server/auth/dto/auth.dto";
+import { UserDeactivateDto, UserDeleteDto } from "#server/users/dto/users.dto";
 
 @Injectable()
 export default class UsersService {
