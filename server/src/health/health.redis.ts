@@ -1,6 +1,6 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { HealthIndicatorResult, HealthIndicatorService } from "@nestjs/terminus";
-import { REDIS_CLIENT } from "#server/configs/constants";
+import { REDIS_CLIENT } from "#server/common/constants";
 import Redis from "ioredis";
 
 @Injectable()

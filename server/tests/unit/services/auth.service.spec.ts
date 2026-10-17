@@ -17,7 +17,7 @@ import {
 } from "typeorm";
 import { getRepositoryToken } from "@nestjs/typeorm";
 import { ClientProxy } from "@nestjs/microservices";
-import { RMQ_MICROSERVICE } from "#server/configs/constants";
+import { RMQ_MICROSERVICE } from "#server/common/constants";
 import TokensService from "#server/tokens/tokens.service";
 import UsersService from "#server/users/users.service";
 import EventsService from "#server/events/events.service";

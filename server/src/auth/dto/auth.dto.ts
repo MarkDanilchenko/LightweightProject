@@ -1,33 +1,21 @@
-import { createZodDto } from "@anatine/zod-nestjs";
+import { z } from "zod";
 import {
   localEmailVerificationSchema,
   localSignInSchema,
   localSignUpSchema,
   localPasswordResetRequestSchema,
   localPasswordResetConfirmSchema,
-  userDeactivateSchema,
   localReactivationConfirmSchema,
-  userDeleteSchema,
   localRestorationConfirmSchema,
 } from "#server/auth/schemas/auth.schema";
 
-class LocalSignUpDto extends createZodDto(localSignUpSchema) {}
-
-class LocalEmailVerificationDto extends createZodDto(localEmailVerificationSchema) {}
-
-class LocalSignInDto extends createZodDto(localSignInSchema) {}
-
-class LocalPasswordResetRequestDto extends createZodDto(localPasswordResetRequestSchema) {}
-
-class LocalPasswordResetConfirmDto extends createZodDto(localPasswordResetConfirmSchema) {}
-
-class LocalReactivationConfirmDto extends createZodDto(localReactivationConfirmSchema) {}
-
-class LocalRestorationConfirmDto extends createZodDto(localRestorationConfirmSchema) {}
-
-class UserDeactivateDto extends createZodDto(userDeactivateSchema) {}
-
-class UserDeleteDto extends createZodDto(userDeleteSchema) {}
+type LocalSignUpDto = z.infer<typeof localSignUpSchema>;
+type LocalSignInDto = z.infer<typeof localSignInSchema>;
+type LocalEmailVerificationDto = z.infer<typeof localEmailVerificationSchema>;
+type LocalPasswordResetRequestDto = z.infer<typeof localPasswordResetRequestSchema>;
+type LocalPasswordResetConfirmDto = z.infer<typeof localPasswordResetConfirmSchema>;
+type LocalReactivationConfirmDto = z.infer<typeof localReactivationConfirmSchema>;
+type LocalRestorationConfirmDto = z.infer<typeof localRestorationConfirmSchema>;
 
 export {
   LocalSignUpDto,
@@ -37,6 +25,4 @@ export {
   LocalPasswordResetConfirmDto,
   LocalReactivationConfirmDto,
   LocalRestorationConfirmDto,
-  UserDeactivateDto,
-  UserDeleteDto,
 };

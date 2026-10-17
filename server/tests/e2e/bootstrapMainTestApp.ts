@@ -1,7 +1,7 @@
 import * as path from "node:path";
 import * as fs from "node:fs";
 import cookieParser from "cookie-parser";
-import { INestApplication, InternalServerErrorException, Module } from "@nestjs/common";
+import { INestApplication, InternalServerErrorException, Module, StandardSchemaValidationPipe } from "@nestjs/common";
 import { Test, TestingModule } from "@nestjs/testing";
 
 // Mock AdminModule entirely to prevent AdminJS execution because it's not needed in the e2e tests
@@ -25,7 +25,7 @@ import AppModule from "#server/app.module";
 import { ConfigService } from "@nestjs/config";
 import AppConfiguration from "#server/configs/interfaces/appConfiguration.interfaces";
 import { WINSTON_MODULE_NEST_PROVIDER } from "nest-winston";
-import { RMQ_MICROSERVICE } from "#server/configs/constants";
+import { RMQ_MICROSERVICE } from "#server/common/constants";
 import { HttpsOptions } from "@nestjs/common/interfaces/external/https-options.interface";
 import { GoogleOAuth2Strategy } from "#server/auth/strategies/google.strategy";
 import { Profile, VerifyCallback } from "passport-google-oauth20";
@@ -109,6 +109,7 @@ export async function bootstrapMainTestApp(): Promise<INestApplication> {
   const { cookieSecret } = configService.get<AppConfiguration["serverConfiguration"]>("serverConfiguration")!;
 
   app.use(cookieParser(cookieSecret));
+  app.useGlobalPipes(new StandardSchemaValidationPipe());
   app.setGlobalPrefix("api/v1");
   app.useLogger(app.get(WINSTON_MODULE_NEST_PROVIDER));
 

@@ -4,7 +4,7 @@ import { Cron, CronExpression } from "@nestjs/schedule";
 import { And, DataSource, EntityManager, IsNull, LessThan, Not } from "typeorm";
 import { InjectDataSource } from "@nestjs/typeorm";
 import UserEntity from "#server/users/users.entity";
-import { CRON_USER_ANONYMIZATION_BATCH } from "#server/configs/constants";
+import { CRON_USER_ANONYMIZATION_BATCH } from "#server/common/constants";
 
 @Injectable()
 export default class CronService {

@@ -3,7 +3,7 @@ import { Test, TestingModule } from "@nestjs/testing";
 import RedisService from "#server/services/redis/redis.service";
 import Redis from "ioredis";
 import { BadRequestException } from "@nestjs/common";
-import { REDIS_CLIENT, REDIS_KEY_MAX_BYTE_LEN, REDIS_KEY_TTL_SEC } from "#server/configs/constants";
+import { REDIS_CLIENT, REDIS_KEY_MAX_BYTE_LEN, REDIS_KEY_TTL_SEC } from "#server/common/constants";
 import { faker } from "@faker-js/faker";
 import { Mocked } from "vitest";
 

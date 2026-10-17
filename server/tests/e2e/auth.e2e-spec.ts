@@ -402,7 +402,9 @@ describe("AuthController E2E", (): void => {
         const response = await httpServer.get("/api/v1/auth/local/email-verification/confirm").send();
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.message).toEqual(expect.arrayContaining(["token: Required"]));
+        expect(response.body.message).toEqual(
+          expect.arrayContaining(["token: Invalid input: expected string, received undefined"]),
+        );
       });
 
       it("should return 401 when token is invalid", async (): Promise<void> => {
@@ -702,7 +704,7 @@ describe("AuthController E2E", (): void => {
         const response = await httpServer.post("/api/v1/auth/local/password-reset/request").send(payload);
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.message).toEqual(expect.arrayContaining(["email: Invalid email"]));
+        expect(response.body.message).toEqual(expect.arrayContaining(["email: Invalid email address"]));
       });
 
       it("should return 400 for user with not verified email", async (): Promise<void> => {
@@ -846,7 +848,9 @@ describe("AuthController E2E", (): void => {
         const response = await httpServer.post("/api/v1/auth/local/password-reset/confirm").send(payload);
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.message).toEqual(expect.arrayContaining(["password: Required"]));
+        expect(response.body.message).toEqual(
+          expect.arrayContaining(["password: Invalid input: expected string, received undefined"]),
+        );
       });
     });
   });
@@ -1142,7 +1146,9 @@ describe("AuthController E2E", (): void => {
         const response = await httpServer.get("/api/v1/auth/local/reactivation/confirm").send();
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.message).toEqual(expect.arrayContaining(["token: Required"]));
+        expect(response.body.message).toEqual(
+          expect.arrayContaining(["token: Invalid input: expected string, received undefined"]),
+        );
       });
 
       it("should return 401 when token is invalid", async (): Promise<void> => {
@@ -1363,7 +1369,9 @@ describe("AuthController E2E", (): void => {
         const response = await httpServer.get("/api/v1/auth/local/restoration/confirm").send();
 
         expect(response.statusCode).toBe(400);
-        expect(response.body.message).toEqual(expect.arrayContaining(["token: Required"]));
+        expect(response.body.message).toEqual(
+          expect.arrayContaining(["token: Invalid input: expected string, received undefined"]),
+        );
       });
 
       it("should return 401 when token is invalid", async (): Promise<void> => {
