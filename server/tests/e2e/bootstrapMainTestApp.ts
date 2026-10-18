@@ -31,6 +31,7 @@ import { GoogleOAuth2Strategy } from "#server/auth/strategies/google.strategy";
 import { Profile, VerifyCallback } from "passport-google-oauth20";
 import GitHubOAuth2Strategy from "#server/auth/strategies/github.strategy";
 import YandexOAuth2Strategy from "#server/auth/strategies/yandex.strategy";
+import { MicroserviceHealthIndicator } from "@nestjs/terminus";
 
 /**
  * Bootstrap the main test app.
@@ -61,6 +62,10 @@ export async function bootstrapMainTestApp(): Promise<INestApplication> {
   })
     .overrideProvider(RMQ_MICROSERVICE)
     .useValue({ emit: vi.fn() })
+    .overrideProvider(MicroserviceHealthIndicator)
+    .useValue({
+      pingCheck: vi.fn().mockResolvedValue({ rabbitmq: { status: "up" } }),
+    })
     .overrideProvider(GoogleOAuth2Strategy)
     .useValue({
       constructor: vi.fn(),
