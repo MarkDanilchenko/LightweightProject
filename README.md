@@ -13,18 +13,18 @@ The application is designed to be containerized using Docker Compose, providing 
 ## Tech Stack
 
 ### Core Framework & Language
-- **Node.js** (>=26.0.0) - Runtime environment
-- **TypeScript 6.0.3** - Type-safe JavaScript
-- **NestJS 12+** - Progressive Node.js framework for building efficient backend applications
+- **Node.js v26** - Runtime environment
+- **TypeScript v6** - Type-safe JavaScript
+- **NestJS v12** - Progressive Node.js framework for building efficient backend applications
 
 ### Database & Storage
-- **PostgreSQL 16.4** - Primary relational database
-- **PostgreSQL 16.4 (test)** - Separate test database instance
-- **TypeORM 1.1.0** - ORM for database operations and migrations
-- **Redis 8.2.2** - Caching and session storage
+- **PostgreSQL v16** - Primary relational database
+- **PostgreSQL v16 (test)** - Separate test database instance
+- **TypeORM v1** - ORM for database operations and migrations
+- **Redis v8** - Caching and session storage
 
 ### Message Queue & Events
-- **RabbitMQ 4.1.4** - Message broker for event-driven architecture
+- **RabbitMQ v4** - Message broker for event-driven architecture
 - **RabbitMQ Worker** - Dedicated microservice worker for async event processing
 - **amqplib** - RabbitMQ client for Node.js
 
@@ -37,19 +37,22 @@ The application is designed to be containerized using Docker Compose, providing 
   - GitHub OAuth2
   - Yandex OAuth2
   - Keycloak SAML/OIDC *(not implemented yet)*
-- **bcrypt** - Password hashing
 - **Cookie-based sessions** - Secure cookie management
 
 ### API Documentation, Validation & Admin Service
 - **Swagger/OpenAPI** - Interactive API documentation
 - **AdminJS** - Admin panel for database management
-- **Zod** - Schema validation for endpoints
+- **Zod v4** - Schema validation for endpoints
+
+### Email & Communication
+- **Nodemailer** - Email sending service
+- **EJS** - Email template engine
 
 ### Monitoring & Health Checks
 - **@nestjs/terminus** - Production-grade health check GET endpoint (PostgreSQL, Redis, RabbitMQ, Memory Heap, Disk Space, External HTTP)
 
 ### Reverse Proxy & SSL
-- **Nginx 1.31.2** - Reverse proxy, SSL termination, and static file serving
+- **Nginx** - Reverse proxy, SSL termination, and static file serving
 - **Self-signed certificates** - HTTPS support
 
 ### Development Tools
@@ -78,11 +81,14 @@ LightweightProject/
 │   │   ├── tokens/           # JWT token management
 │   │   ├── users/            # User management module
 │   │   ├── utils/            # Utility functions
-│   │   └── main.ts           # Application bootstrap
+│   │   ├── main.ts           # Application bootstrap
+│   │   └── microservice.rmq.ts # RabbitMQ microservice entry point
 │   ├── dist/                 # Compiled JavaScript output
 │   ├── migrations/           # TypeORM database migrations
 │   ├── tests/                # Test configurations (unit, e2e and coverage)
-│   └── templates/            # Email templates (EJS)
+│   ├── templates/            # Email templates (EJS)
+│   ├── nest-cli.json         # NestJS CLI configuration
+│   └── tsconfig.json         # TypeScript configuration
 ├── shared/                    # Shared resources between client and server
 ├── nginx/                     # Nginx configuration
 ├── init/                      # Database initialization scripts
@@ -90,7 +96,9 @@ LightweightProject/
 ├── certs/                     # SSL certificates
 │   └── selfsigned/          # Self-signed certificates for development
 ├── compose.yaml              # Docker Compose configuration with health checks
+├── compose.development.yaml  # Docker Compose development configuration
 ├── Dockerfile                # Multi-stage Docker image build configuration (builder + production stages)
+├── patches/                  # Package patches for npm modules
 ├── package.json              # Root package.json with scripts
 ├── tsconfig.json             # TypeScript configuration
 └── .env                      # Environment variables (not committed)
@@ -119,14 +127,6 @@ The application supports multiple authentication strategies:
 - **OAuth2 Providers**: Google, GitHub, Yandex with OAuth2 flow
 - **SAML**: Keycloak SAML integration for enterprise SSO *(not implemented yet)*
 - **JWT Bearer**: Token-based authentication for API calls
-
-### Event-Driven Architecture
-
-Services emit events to RabbitMQ exchanges. Dedicated consumers listen to queues and process events asynchronously.
-
-### Caching Strategy
-
-Redis caches for frequently accessed data (tokens, user data). Stateless JWT tokens with refresh tokens stored in PostgreSQL.
 
 ## Architecture Diagram
 
@@ -162,7 +162,7 @@ graph TB
         Google[Google OAuth2]
         GitHub[GitHub OAuth2]
         Yandex[Yandex OAuth2]
-        Keycloak[Keycloak SAML/OIDC]
+        Keycloak[Keycloak SAML/OIDC<br/>(Not Implemented)]
     end
     
     Client -->|HTTPS| Nginx
@@ -180,7 +180,7 @@ graph TB
     Auth --> Google
     Auth --> GitHub
     Auth --> Yandex
-    Auth --> Keycloak
+    Auth -.-> Keycloak
     
     API -->|ORM Queries| PostgreSQL
     API -->|Cache Operations| Redis
@@ -208,16 +208,18 @@ graph TB
 
 ## Key Features
 
-- **Multi-Provider Authentication**: Support for local, JWT, and multiple OAuth2 providers
+- **Multi-Provider Authentication**: Support for local, JWT, and multiple OAuth2 providers (Google, GitHub, Yandex)
 - **Event-Driven Architecture**: RabbitMQ integration with dedicated worker for asynchronous event processing
 - **Health Checks & Monitoring**: Automated health checks (`@nestjs/terminus`) and Docker health checks for PostgreSQL, Redis, RabbitMQ, memory heap, disk space, and external services
 - **Test Database**: Separate PostgreSQL instance for testing with isolated data
 - **API Documentation**: Auto-generated Swagger/OpenAPI documentation
 - **Admin Panel**: AdminJS for database management and content administration
 - **Scheduled Tasks**: Cron jobs for periodic operations
-- **Caching Layer**: Redis integration for performance optimization
+- **Caching Layer**: Redis integration for performance optimization and session storage
 - **SSL/TLS**: HTTPS support with Nginx SSL termination
 - **Type Safety**: TypeScript with Zod validation
+- **Rate Limiting**: API rate limiting with @nestjs/throttler
+- **Email Service**: Nodemailer integration with EJS templates
 - **Testing**: Unit and e2e testing with Vitest
 - **Code Quality**: ESLint with TypeScript and Prettier formatting
 - **Docker Support**: Containerization with Docker Compose
@@ -253,9 +255,11 @@ Access the AdminJS panel for database management (if configured):
 
 ### Build & Run
 - `npm run build:server` - Build the NestJS server
-- `npm run start:server` - Start the server (dev mode with watch)
+- `npm run start:server` - Start the server
+- `npm run start:server:dev` - Start the server (dev mode with watch)
 - `npm run start:server:prod` - Start the server from built files
 - `npm run start:microservice:rmq` - Start RabbitMQ microservice
+- `npm run start:microservice:rmq:dev` - Start RabbitMQ microservice (dev mode with watch)
 - `npm run start:microservice:rmq:prod` - Start RabbitMQ microservice (production)
 
 ### Testing
@@ -269,6 +273,10 @@ Access the AdminJS panel for database management (if configured):
 - `npm run lint:server` - Lint server code with ESLint
 - `npm run format:server` - Format server code with Prettier
 - `npm run tsc` - Type check TypeScript without emitting files
+
+### Other
+- `npm run clear:server` - Remove server dist directory
+- `npm run clear:node_modules` - Remove node_modules directory
 
 ### Database Migrations
 - `npm run typeorm:create` - Create a new migration
@@ -284,8 +292,7 @@ Access the AdminJS panel for database management (if configured):
 ### Prerequisites
 
 - Docker and Docker Compose
-- Node.js >=26.0.0
-- npm
+- Node.js >= 26
 
 ### Local Development Setup
 
@@ -293,7 +300,7 @@ Access the AdminJS panel for database management (if configured):
 2. Install dependencies: `npm install`
 3. Copy environment file: `cp .env.public .env`
 4. Build the server: `npm run build:server`
-5. Start the server: `npm run start:server:dev`
+5. Start the server: `npm run start:server` or `npm run start:server:dev`
 
 ### Docker Setup
 
